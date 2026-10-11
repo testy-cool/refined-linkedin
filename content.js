@@ -277,11 +277,13 @@
     const spin = () => { status.textContent = `${SPINNER[frame++ % SPINNER.length]} Folding…`; };
     spin();
     const spinning = setInterval(() => (v.isConnected ? spin() : clearInterval(spinning)), 80);
+    status.classList.add("jfold-folding");
     v.append(seenNote(job), status);
     box.before(v);
 
     chrome.runtime.sendMessage({ type: "fold", id: job.id, text: desc }, (res) => {
       clearInterval(spinning);
+      status.classList.remove("jfold-folding");
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
       if (!res || res.error) { status.textContent = `Could not fold: ${res ? res.error : chrome.runtime.lastError?.message}`; return; }
       const share = foldLines(copy, lines, spans(desc, res.sections));
