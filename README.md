@@ -3,8 +3,8 @@
 A Chrome extension for LinkedIn job pages. It folds each job description down to the responsibilities and
 what is expected of the candidate, and greys out jobs already seen.
 
-- **Folding.** The open job's description goes to the model chosen on the settings page (the toolbar icon
-  opens it): Google Gemini (`gemini-3.8-flash`), ChatGPT with the person's own Plus or Pro plan, or any other
+- **Folding.** The open job's description goes to the model chosen on the settings page (the toolbar pop-up
+  links to it): Google Gemini (`gemini-3.8-flash`), ChatGPT with the person's own Plus or Pro plan, or any other
   OpenAI-compatible API, all asked for the same JSON. The default prompt is
   `../research/linkedin-descriptions/scripts/luna_prompt.md`; anyone can edit it on the settings page, where
   `{TEXT}` marks the description and "Restore the default prompt" brings it back. Only an edited prompt is
@@ -18,6 +18,11 @@ what is expected of the candidate, and greys out jobs already seen.
   "fold again" on the job's fold line asks anew, and "try again" appears when folding failed. The shared
   mapping from answer to text, and the sample, are in `folds.js`.
 
+- **Highlight words.** The toolbar pop-up keeps each person's words to spot, such as "remote" or "German";
+  commas add several, × removes one, and selecting text in a description offers "Highlight word" next to "Add
+  note". Every word is highlighted in light blue in the open job's description, folded copy or original, any
+  case and whole words only, and a fold chip that hides one says so ("· mentions benefits"). In `keywords.js`,
+  saved as `keywords`.
 - **Seen.** A job counts as seen once it has been open a second and was clicked or typed in, or opened
   as its own page. LinkedIn opens the first search result by itself; that alone does not count. Jobs are
   remembered by id and by title plus employer, so a repost under a new id is recognised too. Seen jobs are

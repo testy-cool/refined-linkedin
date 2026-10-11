@@ -16,8 +16,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   return true;
 });
 
-chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
-
 // The saved provider. Vlad's build seeds his Bifrost as an "Other OpenAI-compatible API", saved like any other,
 // and a provider saved by an older build as "bifrost" becomes one too. The Codex CLI bridge became Sign in with
 // ChatGPT.

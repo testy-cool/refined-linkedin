@@ -255,6 +255,19 @@
       place(pop, rect);
     });
     pop.append(add);
+    // A short selection can also become a highlight word, highlighted in every description from now on.
+    if (quote.length <= 60 && quote.split(" ").length <= 5) {
+      const word = el("button", "rl-add rl-add-word", "Highlight word");
+      word.type = "button";
+      word.addEventListener("mousedown", (e) => e.preventDefault());
+      word.addEventListener("click", (e) => {
+        e.stopPropagation();
+        self.RLKeywords?.add([quote]);
+        getSelection().removeAllRanges();
+        closePop();
+      });
+      pop.append(word);
+    }
     place(pop, rect);
   }
 

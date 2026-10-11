@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Refined LinkedIn</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1><img src="icons/icon32.png" alt="" width="20" height="20">Refined LinkedIn</h1>
+  <form id="add">
+    <label for="word">Highlight these words in job descriptions</label>
+    <div class="row">
+      <input id="word" placeholder="remote, German, Python" spellcheck="false" autocomplete="off">
+      <button type="submit">Add</button>
+    </div>
+  </form>
+  <ul id="words"></ul>
+  <p id="empty" class="hint">No words yet. Separate several with commas, or select a word in a description and
+    choose "Highlight word".</p>
+  <button type="button" id="settings" class="link">Settings: model and prompt</button>
+  <script src="keywords.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
