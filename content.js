@@ -22,6 +22,7 @@
   const keyOf = (title, company) => (title && company ? `${norm(title)}|${norm(company)}` : null);
   const lookup = (id, key) => (id && seen.ids[id]) || (key && seen.keys[key] && seen.ids[seen.keys[key]]) || null;
 
+  chrome.runtime.sendMessage({ type: "hello", build: self.BUILD });
   chrome.storage.local.get("seen").then((r) => { if (r.seen) seen = r.seen; tick(); });
   chrome.storage.onChanged.addListener((ch) => { if (ch.seen) { seen = ch.seen.newValue || seen; paintLists(); } });
 

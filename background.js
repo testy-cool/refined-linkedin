@@ -1,11 +1,12 @@
 // Asks Luna, through the Bifrost API, which passages of a job description to fold, and caches the answer per job
 // and text. The content script sends {type: "fold", id, text} and gets {sections} or {error}.
-importScripts("prompt.js", "config.local.js");
+importScripts("prompt.js", "config.local.js", "build.js");
 
 const API = "https://bifrost.voidxd.cloud/v1/chat/completions";
 const inflight = new Map();
 
 chrome.runtime.onMessage.addListener((msg, _sender, send) => {
+  if (msg.type === "hello") { checkBuild(msg.build); return; }
   if (msg.type !== "fold") return;
   fold(msg.id, msg.text).then(send, (e) => send({ error: String(e.message || e) }));
   return true;
@@ -54,3 +55,24 @@ async function askLuna(text) {
   }
   throw last;
 }
+
+// Chrome keeps running the files an unpacked extension was loaded with, and turning it off and on does not
+// reread them. Each LinkedIn page says which build it was loaded with; when build.sh has written a newer one,
+// the extension reloads itself and then the LinkedIn tabs, once per build.
+async function checkBuild(pageBuild) {
+  const disk = (await (await fetch(chrome.runtime.getURL("build.js"), { cache: "no-store" })).text()).match(/BUILD = "(\w+)"/);
+  if (!disk || disk[1] === pageBuild) return;
+  const { reloadedFor } = await chrome.storage.local.get("reloadedFor");
+  if (reloadedFor === disk[1]) return;
+  await chrome.storage.local.set({ reloadedFor: disk[1], reloadTabs: true });
+  chrome.runtime.reload();
+}
+
+async function reloadTabsAfterUpdate() {
+  const { reloadTabs } = await chrome.storage.local.get("reloadTabs");
+  if (!reloadTabs) return;
+  await chrome.storage.local.remove("reloadTabs");
+  for (const t of await chrome.tabs.query({ url: "https://www.linkedin.com/*" })) chrome.tabs.reload(t.id);
+}
+chrome.runtime.onInstalled.addListener(reloadTabsAfterUpdate);
+reloadTabsAfterUpdate();

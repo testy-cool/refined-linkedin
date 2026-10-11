@@ -25,6 +25,8 @@ Where each LinkedIn hook comes from: `../research/linkedin-descriptions/LINKEDIN
 
 `./build.sh` writes `prompt.js` from the research prompt and `config.local.js` with the Bifrost key from
 the `llm` key store (git-ignored). Then load this folder in `chrome://extensions` with "Load unpacked".
-Rerun `./build.sh` after changing the prompt. In Vlad's Chrome the unpacked extension's id is
-`bdlghefmfdemiefhmacoeedfjlbjoncj`; `crxctl reload bdlghefmfdemiefhmacoeedfjlbjoncj` applies a change, and
-open LinkedIn tabs need a page reload to pick it up.
+Rerun `./build.sh` after any change. It also writes `build.js`, a stamp of every file the extension runs.
+Chrome keeps running the files an unpacked extension was loaded with, and `crxctl reload` (a disable and
+enable) does not reread them. So each LinkedIn page reports the stamp it was loaded with, and when
+`build.js` on disk differs, the extension reloads itself and the open LinkedIn tabs, once per build. This
+needs developer mode on in `chrome://extensions`, which loading it unpacked already requires.
