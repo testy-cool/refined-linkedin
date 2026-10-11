@@ -309,8 +309,9 @@
       clearInterval(spinning);
       status.classList.remove("jfold-folding");
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
-      if (["NO_KEY", "NO_ACCESS", "NO_SIGNIN"].includes(res?.error)) {
+      if (["NO_CONSENT", "NO_KEY", "NO_ACCESS", "NO_SIGNIN"].includes(res?.error)) {
         status.textContent = {
+          NO_CONSENT: "Not folded: allow sending job descriptions to an AI service in ",
           NO_KEY: "Not folded: choose a model provider and API key in ",
           NO_ACCESS: "Not folded: allow calls to the model's address by saving it once in ",
           NO_SIGNIN: "Not folded: sign in with ChatGPT in ",
