@@ -17,6 +17,10 @@ const $ = (id) => document.getElementById(id);
 
 for (const [kind, p] of Object.entries(PROVIDERS)) $("kind").append(new Option(p.label, kind));
 
+// Nothing is sent to an AI service until this box is ticked; unticking it stops folding again.
+chrome.storage.local.get("consent").then(({ consent }) => { $("consent").checked = !!consent; });
+$("consent").addEventListener("change", () => chrome.storage.local.set({ consent: $("consent").checked }));
+
 let saved = null; // what the background is using now, without its key
 
 function show(kind, fill) {
@@ -124,6 +128,7 @@ $("save").addEventListener("click", async () => {
   result.className = "";
   $("preview").hidden = true;
   const prompt = $("promptBox").value.trim();
+  if (!$("consent").checked) { result.className = "bad"; result.textContent = "Tick the box at the top to allow sending job descriptions."; return; }
   if (!prompt.includes("{TEXT}")) { result.className = "bad"; result.textContent = "The prompt needs {TEXT} where the job description goes."; return; }
   if (kind === "chatgpt" && !(await ChatGPT.status()).signedIn) { result.className = "bad"; result.textContent = "Sign in with ChatGPT first."; return; }
   if (kind === "chatgpt" && !$("chatgptModel").value) { result.className = "bad"; result.textContent = "Choose a model first."; return; }

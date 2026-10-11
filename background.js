@@ -28,9 +28,11 @@ async function settings() {
   return provider || null;
 }
 
-// ChatGPT needs a sign-in, which also grants access to OpenAI's addresses. An API needs a key, and a custom
-// address is reachable only after Chrome grants access to its host, which happens when it is saved in the settings.
+// Nothing goes out until the person has agreed, in the settings, to send job descriptions. ChatGPT needs a sign-in,
+// which also grants access to OpenAI's addresses. An API needs a key, and a custom address is reachable only after
+// Chrome grants access to its host, which happens when it is saved in the settings.
 async function ready(s) {
+  if (!(await chrome.storage.local.get("consent")).consent) throw new Error("NO_CONSENT");
   if (s?.kind === "chatgpt") {
     if (!(await chrome.permissions.contains({ origins: ChatGPT.ORIGINS }))) throw new Error("NO_SIGNIN");
     if (!s.model) throw new Error("choose a ChatGPT model in the Refined LinkedIn settings");

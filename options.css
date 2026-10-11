@@ -2,7 +2,10 @@
 body { margin: 0; background: #f4f2ee; color: #1d1d1d; font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
 main { max-width: 640px; margin: 48px auto; padding: 28px 32px; background: #fff; border: 1px solid #e0dfdc; border-radius: 8px; }
 h1 { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; font-size: 22px; }
-.lead { margin: 0 0 24px; color: #555; }
+.consent { margin: 0 0 8px; padding: 14px 16px; background: #f4f2ee; border-radius: 6px; }
+.consent p { margin: 0 0 10px; }
+label.check { display: flex; align-items: center; gap: 10px; margin: 0; }
+label.check input { width: 16px; height: 16px; margin: 0; flex: none; }
 label { display: block; margin: 16px 0 6px; font-weight: 600; }
 h2 { margin: 32px 0 6px; padding-top: 24px; border-top: 1px solid #e0dfdc; font-size: 17px; }
 textarea { box-sizing: border-box; width: 100%; padding: 8px 10px; font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace; border: 1px solid #b9b9b6; border-radius: 4px; resize: vertical; }
