@@ -50,7 +50,8 @@ needs developer mode on in `chrome://extensions`, which loading it unpacked alre
 `CHANGELOG.md`, in plain words, in the same pull request. After it merges, the version gets a tag and a GitHub
 release with that entry as its notes, and `./package.sh` makes the zip attached to the release
 (`gh release upload vX.Y.Z dist/refined-linkedin-X.Y.Z.zip`). The zip holds only the files the extension runs, and
-the script refuses to package `config.local.js` or a Bifrost key. It adds the public key in `release-key.txt` to the
+the script refuses to package `config.local.js` or a Bifrost key. `./package.sh --store` makes the Chrome Web Store
+zip instead, without the fixed key, and `docs/store/listing.md` has the text for every field of the store listing. It adds the public key in `release-key.txt` to the
 packaged `manifest.json`. That gives every release the same extension id, `ifoliilkfnpcgiolncjghkoppghmifhm`, so
 loading a newer release from a new folder replaces the old one and keeps its storage; without it, Chrome derives the
 id from the folder and installs a second, empty copy (both measured on 2026-10-12). Only the public key is needed for
