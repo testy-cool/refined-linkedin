@@ -45,6 +45,10 @@ enable) does not reread them. So each LinkedIn page reports the stamp it was loa
 `build.js` on disk differs, the extension reloads itself and the open LinkedIn tabs, once per build. This
 needs developer mode on in `chrome://extensions`, which loading it unpacked already requires.
 
+**Releases.** A change people can notice bumps the version in `manifest.json` and adds an entry to
+`CHANGELOG.md`, in plain words, in the same pull request. After it merges, the version gets a tag and a GitHub
+release with that entry as its notes.
+
 ## ChatGPT with a Plus or Pro plan
 
 "Sign in with ChatGPT" on the settings page follows OpenAI's flow for open-source and personal local apps
