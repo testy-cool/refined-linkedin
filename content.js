@@ -134,6 +134,15 @@
 
   const SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
 
+  // The first words of a folded run, so its chip says what it hides. A short heading such as "Benefits" is
+  // joined to the start of the line after it: "Benefits: Private medical insurance…".
+  function excerpt(lines, words = 8) {
+    const [first, next] = lines.filter((l) => l.s >= 0).map((l) => l.text.replace(/\s+/g, " ").trim());
+    let w = first.split(" ");
+    if (next && w.length <= 4 && !/[.!]$/.test(first)) w = [...w.slice(0, -1), w[w.length - 1].replace(/([^:?])$/, "$1:"), ...next.split(" ")];
+    return w.length > words ? `${w.slice(0, words).join(" ").replace(/[,:;]$/, "")}…` : w.join(" ");
+  }
+
   // Hides the folded lines in the copy and puts a chip where each folded run starts. Returns the share folded.
   function foldLines(root, lines, folds) {
     const runs = [];
@@ -187,7 +196,8 @@
       chip.className = "jfold-chip";
       chip.setAttribute("role", "button");
       chip.tabIndex = 0;
-      const label = (opened) => { chip.textContent = opened ? `hide ${r.words} words` : `folded, ${r.words} words`; };
+      r.start = excerpt(r.lines);
+      const label = (opened) => { chip.textContent = opened ? `hide ${r.words} words` : `folded, ${r.words} words "${r.start}"`; };
       label(false);
       chip.addEventListener("click", (e) => {
         e.stopPropagation();
