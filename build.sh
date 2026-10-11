@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Writes prompt.js from the research prompt, config.local.js with Vlad's Bifrost as a seeded provider, and build.js. Run after any change.
+# Writes prompt.js from the research prompt, config.local.js with Vlad's Bifrost as a seeded provider when his key is
+# there, and build.js. Run after any change.
 set -euo pipefail
 cd "$(dirname "$0")"
 # The prompt's source is jobathan's research folder when this checkout sits in jobathan; elsewhere, such as a
@@ -15,12 +16,17 @@ print("self.PROMPT = %s;" % json.dumps(prompt, ensure_ascii=False))
 print("self.SCHEMA = %s;" % json.dumps(schema))
 PY
 fi
-python3 - > config.local.js <<'PY'
+# Vlad's copy seeds his Bifrost as the provider, from the BIFROST_API_KEY variable or the llm key store; any other
+# copy starts with no provider and the settings page asks for one.
+if key=$(python3 -c 'import json, os; print(os.environ.get("BIFROST_API_KEY") or json.load(open(os.path.expanduser("~/.config/io.datasette.llm/keys.json")))["bifrost"])' 2>/dev/null); then
+KEY="$key" python3 - > config.local.js <<'PY'
 import json, os
-key = os.environ.get("BIFROST_API_KEY") or json.load(open(os.path.expanduser("~/.config/io.datasette.llm/keys.json")))["bifrost"]
-seed = {"kind": "custom", "base": "https://bifrost.voidxd.cloud/v1", "model": "azure/gpt-6-luna", "effort": "medium", "key": key}
+seed = {"kind": "custom", "base": "https://bifrost.voidxd.cloud/v1", "model": "azure/gpt-6-luna", "effort": "medium", "key": os.environ["KEY"]}
 print("self.SEED_PROVIDER = %s; // Vlad's Bifrost, saved as an Other OpenAI-compatible API on first run" % json.dumps(seed))
 PY
+else
+  rm -f config.local.js
+fi
 # A stamp of every file the extension runs. A LinkedIn page reports the stamp it was loaded with, and the
 # background reloads the extension when the one on disk differs, so a rebuild applies itself.
 echo "self.BUILD = \"$(cat manifest.json background.js providers.js chatgpt.js folds.js content.js notes.js keywords.js content.css prompt.js | sha1sum | cut -c1-12)\";" > build.js
