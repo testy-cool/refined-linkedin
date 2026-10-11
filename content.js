@@ -413,8 +413,7 @@
       .map((e) => e.textContent.trim());
   }
 
-  // A seen card turns grey and keeps its coloured posting age, followed by when it was viewed: "3 weeks ago
-  // 👁 1 min ago". A card LinkedIn labels "Viewed" counts as seen too, and the label goes, since grey already says
+  // A seen card turns grey, posting age included, followed by when it was viewed: "3 weeks ago 👁 1 min ago". A card LinkedIn labels "Viewed" counts as seen too, and the label goes, since grey already says
   // it. Where LinkedIn dropped the age for "Viewed", the remembered one stands in its place.
   function mark(el, rec, id) {
     const viewed = [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Viewed");
@@ -424,7 +423,7 @@
     if (age) notePosted(id, age.dataset.jfoldAge);
     const known = !age && id && posted[id] && (rec || viewed) ? posted[id] : null;
     const parts = [];
-    if (known) parts.push(["jfold-age", postedLabel(known), Math.round(ageHue((Date.now() - known) / 864e5))]);
+    if (known) parts.push(["jfold-age", postedLabel(known)]);
     if (rec) parts.push(["jfold-eye", `👁 ${shortAgo(rec.last || rec.first)}`]);
     const sig = JSON.stringify(parts);
     let slot = el.querySelector(".jfold-slot");
@@ -440,11 +439,10 @@
     if (!age && viewed) slot.className = viewedClass;
     slot.classList.add("jfold-slot", age ? "jfold-slot-after" : viewed ? "jfold-slot-instead" : "jfold-slot-line");
     slot.dataset.sig = sig;
-    for (const [cls, text, hue] of parts) {
+    for (const [cls, text] of parts) {
       const span = document.createElement("span");
       span.className = cls;
       span.textContent = text;
-      if (hue !== undefined) span.style.setProperty("color", `hsl(${hue} 90% 32%)`, "important");
       slot.append(span);
     }
     if (age) age.after(slot); else if (viewed) viewed.after(slot); else el.append(slot);
@@ -532,7 +530,7 @@
       if (!m || !el || el.dataset.jfoldAge === t || el.closest(".jfold-view, [data-jfold], .jfold-slot")) continue;
       const n = /^\d+$/.test(m[1]) ? Number(m[1]) : 1;
       const hue = Math.round(ageHue(n * DAYS[m[2].toLowerCase()]));
-      el.style.setProperty("color", `hsl(${hue} 90% 32%)`, "important");
+      el.style.setProperty("--jfold-age-color", `hsl(${hue} 90% 32%)`); // content.css applies it, grey on seen cards
       el.style.setProperty("font-weight", "600");
       el.dataset.jfoldAge = t;
     }
