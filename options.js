@@ -2,6 +2,19 @@
 // "provider" and read by the background for every new job.
 const $ = (id) => document.getElementById(id);
 
+// Chrome keeps the manifest an unpacked extension was loaded with until it reloads, while this page is read from
+// disk. When the two differ, the extension reloads once for that manifest and the background reopens this page, so
+// the permissions this page asks for are declared.
+(async () => {
+  const pick = (m) => JSON.stringify([m.version, m.permissions, m.host_permissions, m.optional_host_permissions]);
+  const disk = pick(await (await fetch(chrome.runtime.getURL("manifest.json"), { cache: "no-store" })).json());
+  if (disk === pick(chrome.runtime.getManifest())) return;
+  const { reloadedForManifest } = await chrome.storage.local.get("reloadedForManifest");
+  if (reloadedForManifest === disk) return;
+  await chrome.storage.local.set({ reloadedForManifest: disk, reopenOptions: true });
+  chrome.runtime.reload();
+})();
+
 for (const [kind, p] of Object.entries(PROVIDERS)) $("kind").append(new Option(p.label, kind));
 
 let saved = null; // what the background is using now, without its key
@@ -46,8 +59,12 @@ $("signIn").addEventListener("click", async () => {
   const result = $("result");
   result.className = "";
   // Chrome asks for access to OpenAI's addresses only inside the click.
-  const granted = await chrome.permissions.request({ origins: ChatGPT.ORIGINS }).catch(() => false);
-  if (!granted) { result.className = "bad"; result.textContent = "Chrome did not allow calls to OpenAI."; return; }
+  const granted = await chrome.permissions.request({ origins: ChatGPT.ORIGINS }).catch((e) => e);
+  if (granted !== true) {
+    result.className = "bad";
+    result.textContent = granted instanceof Error ? `Chrome refused access to OpenAI: ${granted.message}` : "Chrome did not allow calls to OpenAI.";
+    return;
+  }
   result.textContent = "Signing in, in a new tab…";
   const here = await chrome.tabs.getCurrent();
   try {

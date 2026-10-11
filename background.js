@@ -133,7 +133,11 @@ async function checkBuild(pageBuild) {
 }
 
 async function reloadTabsAfterUpdate() {
-  const { reloadTabs } = await chrome.storage.local.get("reloadTabs");
+  const { reloadTabs, reopenOptions } = await chrome.storage.local.get(["reloadTabs", "reopenOptions"]);
+  if (reopenOptions) {
+    await chrome.storage.local.remove("reopenOptions");
+    chrome.runtime.openOptionsPage();
+  }
   if (!reloadTabs) return;
   await chrome.storage.local.remove("reloadTabs");
   for (const t of await chrome.tabs.query({ url: "https://www.linkedin.com/*" })) chrome.tabs.reload(t.id);
