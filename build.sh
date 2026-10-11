@@ -2,7 +2,10 @@
 # Writes prompt.js from the research prompt, config.local.js with Vlad's Bifrost as a seeded provider, and build.js. Run after any change.
 set -euo pipefail
 cd "$(dirname "$0")"
+# The prompt's source is jobathan's research folder when this checkout sits in jobathan; elsewhere, such as a
+# worktree for a branch, the committed prompt.js is used as it is.
 R=../research/linkedin-descriptions/scripts
+if [ -d "$R" ]; then
 python3 - "$R/luna_prompt.md" "$R/luna_schema.json" > prompt.js <<'PY'
 import json, sys
 prompt, schema = open(sys.argv[1]).read(), json.load(open(sys.argv[2]))
@@ -11,6 +14,7 @@ print("self.MODEL = \"azure/gpt-6-luna\";")
 print("self.PROMPT = %s;" % json.dumps(prompt, ensure_ascii=False))
 print("self.SCHEMA = %s;" % json.dumps(schema))
 PY
+fi
 python3 - > config.local.js <<'PY'
 import json, os
 key = os.environ.get("BIFROST_API_KEY") or json.load(open(os.path.expanduser("~/.config/io.datasette.llm/keys.json")))["bifrost"]
