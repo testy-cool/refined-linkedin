@@ -81,3 +81,4 @@ Chrome replaces the old version and keeps your notes, words and history. You can
 
 - [What's new](CHANGELOG.md), version by version.
 - [How it works, and how to build it](docs/DEVELOPMENT.md).
+- Free and open source, under the [MIT licence](LICENSE).
