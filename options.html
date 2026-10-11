@@ -49,10 +49,27 @@
       <option value="high">High: slowest</option>
     </select>
 
+    <h2>Prompt</h2>
+    <p class="hint">What the model is asked for each job. <code>{TEXT}</code> is where the job description goes. The
+      answer always comes back in the same format, a list of passages to fold, so only the instructions change.</p>
+    <textarea id="promptBox" rows="14" spellcheck="false"></textarea>
+    <button type="button" id="defaultPrompt" class="link">Restore the default prompt</button>
+
+    <label for="sample">Test description</label>
+    <textarea id="sample" rows="8" spellcheck="false"></textarea>
+    <p class="hint">Save and test folds this description with the prompt above. Paste any job description to try
+      it on that.</p>
+
     <button id="save">Save and test</button>
     <p id="result" role="status"></p>
+    <div id="preview" hidden>
+      <p class="hint">Grey parts would be folded.</p>
+      <div id="previewText"></div>
+    </div>
   </main>
   <script src="providers.js"></script>
+  <script src="prompt.js"></script>
+  <script src="folds.js"></script>
   <script src="chatgpt.js"></script>
   <script src="options.js"></script>
 </body>

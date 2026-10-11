@@ -5,14 +5,18 @@ what is expected of the candidate, and greys out jobs already seen.
 
 - **Folding.** The open job's description goes to the model chosen on the settings page (the toolbar icon
   opens it): Google Gemini (`gemini-3.8-flash`), ChatGPT with the person's own Plus or Pro plan, or any other
-  OpenAI-compatible API, all asked for the same JSON, with
-  the prompt in `../research/linkedin-descriptions/scripts/luna_prompt.md`. "Save and test" folds a short sample
-  to prove the key works; saving a custom address asks Chrome for access to that host. Vlad's build seeds his
+  OpenAI-compatible API, all asked for the same JSON. The default prompt is
+  `../research/linkedin-descriptions/scripts/luna_prompt.md`; anyone can edit it on the settings page, where
+  `{TEXT}` marks the description and "Restore the default prompt" brings it back. Only an edited prompt is
+  saved, so a newer default reaches everyone else. "Save and test" folds the test description (a short sample,
+  or any pasted one) and greys out what would fold; saving a custom address asks Chrome for access to that host. Vlad's build seeds his
   Bifrost (Luna 6, `azure/gpt-6-luna`) as such a custom API. The model answers with
   regexes for the passages to fold. The page hides those lines in a copy of LinkedIn's own description, so
   what stays keeps its bullets, bold and spacing, and a grey "folded" chip opens each hidden run in place. A check
   keeps any folded line about years of experience, degrees, must-haves or language levels visible. The
-  answer is cached per job and text, so a job is asked about once (about 10 seconds the first time).
+  answer is cached per job, text and prompt, so a job is asked about once (about 10 seconds the first time);
+  "fold again" on the job's fold line asks anew, and "try again" appears when folding failed. The shared
+  mapping from answer to text, and the sample, are in `folds.js`.
 
 - **Seen.** A job counts as seen once it has been open a second and was clicked or typed in, or opened
   as its own page. LinkedIn opens the first search result by itself; that alone does not count. Jobs are
