@@ -274,7 +274,10 @@
     const status = document.createElement("div");
     status.className = "jfold-status";
     let frame = 0;
-    const spin = () => { status.textContent = `${SPINNER[frame++ % SPINNER.length]} Folding…`; };
+    const glyph = document.createElement("span");
+    glyph.className = "jfold-spinner";
+    status.replaceChildren(glyph, "Folding…");
+    const spin = () => { glyph.textContent = SPINNER[frame++ % SPINNER.length]; };
     spin();
     const spinning = setInterval(() => (v.isConnected ? spin() : clearInterval(spinning)), 80);
     status.classList.add("jfold-folding");
