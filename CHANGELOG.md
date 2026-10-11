@@ -2,6 +2,12 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.7.0 (12 October 2026): asks before sending anything
+
+- Nothing is sent to an AI service until you tick "I agree to send the job descriptions I open to the AI service I
+  choose" at the top of the settings. Until then a job says where to allow it. Untick the box to stop.
+- The settings open by themselves when you first install the extension.
+
 ## 0.6.0 (11 October 2026): highlight your own words
 
 - Click the toolbar icon to keep a list of words to spot, such as "remote" or "German". Add several at once
