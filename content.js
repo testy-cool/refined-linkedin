@@ -4,22 +4,13 @@
 (() => {
   const SEEN_AFTER_MS = 1000;
 
-  // A line inside a fold that states a hard requirement stays visible. Luna folded "Minimum 3 years of
-  // experience" on one of two identical ING postings, so this check runs after it.
-  const LANGS = "English|German|French|Romanian|Spanish|Italian|Dutch|Polish|Portuguese";
-  const KEEP = new RegExp([
-    `fluen(t|cy) (in )?(${LANGS})`, `(${LANGS})[^.\\n]{0,30}\\b(fluen|proficien|[ABC][12]\\b|native)`, "native speaker",
-    "\\d+\\+? years?( of| in|['’]|\\s)+(relevant |professional |hands-on )?experience",
-    "years of (relevant |professional )?experience", "must[- ]have", "\\bdegree\\b", "bachelor", "master['’]?s\\b",
-    "security clearance", "driving licen[cs]e",
-  ].join("|"), "i");
-
   let seen = { ids: {}, keys: {} };
   // When each job was posted, worked out from "3 weeks ago" while LinkedIn still shows it: on some lists a card
   // marked "Viewed" loses its age.
   let posted = {};
   let postedDirty = false;
   let current = null; // {id, prior, timer}
+  let again = null; // the job whose description is being folded again, asking the model anew
   self.RL = { openJob, descriptionBox }; // for notes.js
 
   const norm = (s) => (s || "").toLowerCase().replace(/\(verified job\)|with verification/g, " ")
@@ -290,7 +281,7 @@
     let frame = 0;
     const glyph = document.createElement("span");
     glyph.className = "jfold-spinner";
-    status.replaceChildren(glyph, "Folding…");
+    status.replaceChildren(glyph, again === job.id ? "Folding parts of the description again…" : "Folding parts of the description…");
     const spin = () => { glyph.textContent = SPINNER[frame++ % SPINNER.length]; };
     spin();
     const spinning = setInterval(() => (v.isConnected ? spin() : clearInterval(spinning)), 80);
@@ -298,7 +289,22 @@
     v.append(seenNote(job), status);
     box.before(v);
 
-    chrome.runtime.sendMessage({ type: "fold", id: job.id, text: desc }, (res) => {
+    // Folding again drops this view and builds a new one, asking the model instead of using its saved answer.
+    const refold = (label) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.onclick = () => {
+        again = job.id;
+        v.remove();
+        box.style.display = "";
+        for (const m of moreButtons(box)) m.style.removeProperty("display");
+        delete box.dataset.jfold;
+        foldDescription(box, job);
+      };
+      return b;
+    };
+    chrome.runtime.sendMessage({ type: "fold", id: job.id, text: desc, again: again === job.id }, (res) => {
+      if (again === job.id) again = null;
       clearInterval(spinning);
       status.classList.remove("jfold-folding");
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
@@ -314,23 +320,33 @@
         status.append(open);
         return;
       }
-      if (!res || res.error) { status.textContent = `Could not fold: ${res ? res.error : chrome.runtime.lastError?.message}`; return; }
-      const share = foldLines(copy, lines, spans(desc, res.sections));
+      if (!res || res.error) {
+        status.textContent = `Could not fold: ${res ? res.error : chrome.runtime.lastError?.message} · `;
+        status.append(refold("try again"));
+        return;
+      }
+      const share = foldLines(copy, lines, Folds.spans(desc, res.sections));
+      const parts = copy.querySelectorAll(".jfold-chip").length;
       copy.classList.add("jfold-clone");
       copy.removeAttribute("data-testid");
       for (const e of [copy, ...copy.querySelectorAll("[id]")]) e.removeAttribute("id");
       const more = moreButtons(box);
-      status.textContent = `Folded ${share}% · `;
+      if (!parts) {
+        status.textContent = "Nothing to fold in this description · ";
+        status.append(refold("fold again"));
+        return;
+      }
+      status.textContent = `Folded ${parts} part${parts === 1 ? "" : "s"}, ${share}% of the description · `;
       const toggle = document.createElement("button");
-      toggle.textContent = "show original";
+      toggle.textContent = "show full description";
       toggle.onclick = () => {
         const orig = box.style.display === "none";
         box.style.display = orig ? "" : "none";
         copy.style.display = orig ? "none" : "";
         for (const b of more) b.style.setProperty("display", orig ? "" : "none");
-        toggle.textContent = orig ? "show folded" : "show original";
+        toggle.textContent = orig ? "show folded" : "show full description";
       };
-      status.append(toggle);
+      status.append(toggle, " · ", refold("fold again"));
       v.append(copy);
       box.style.display = "none";
       for (const b of more) b.style.setProperty("display", "none");
@@ -361,56 +377,6 @@
 
   // Luna's regexes, each used only when it matches exactly once, then the requirement check, then folds that
   // touch or sit next to each other merged into one.
-  function spans(desc, sections) {
-    const raw = [];
-    for (const s of sections || []) {
-      let re;
-      try { re = new RegExp(s.regex, "g"); } catch { continue; }
-      const ms = [...desc.matchAll(re)];
-      if (ms.length !== 1 || !ms[0][0]) continue;
-      let start = ms[0].index;
-      const end = start + ms[0][0].length;
-      // A short opening such as "Team" can first occur above the passage Luna meant; start at its last occurrence.
-      const head = (s.starts_with || "").trim();
-      const again = head ? ms[0][0].lastIndexOf(head) : -1;
-      if (again > 0) start += again;
-      raw.push(...guard(desc, start, end));
-    }
-    raw.sort((x, y) => x[0] - y[0]);
-    const out = [];
-    for (const [a, b] of raw) {
-      const last = out[out.length - 1];
-      if (last && a <= last[1]) last[1] = Math.max(last[1], b);
-      else if (last && !desc.slice(last[1], a).trim()) last[1] = b;
-      else out.push([a, b]);
-    }
-    return out;
-  }
-
-  function guard(desc, start, end) {
-    const lines = desc.slice(start, end).match(/[^\n]*\n?/g).filter((l, i, all) => l || i < all.length - 1);
-    const base = lines.map((l) => KEEP.test(l));
-    const keep = [...base];
-    const heading = (l) => { const s = l.trim(); return s.length > 0 && s.length <= 60 && !/[.!,]$/.test(s); };
-    base.forEach((k, n) => {
-      if (!k) return;
-      let p = n - 1;
-      while (p >= 0 && !lines[p].trim()) p--;
-      if (p >= 0 && heading(lines[p])) keep[p] = true;
-    });
-    const out = [];
-    let pos = start, run = null;
-    lines.forEach((l, n) => {
-      if (keep[n]) { if (run !== null) { out.push([run, pos]); run = null; } } else if (run === null) run = pos;
-      pos += l.length;
-    });
-    if (run !== null) out.push([run, pos]);
-    return out.map(([a, b]) => {
-      const piece = desc.slice(a, b);
-      return [a + piece.length - piece.trimStart().length, b - (piece.length - piece.trimEnd().length)];
-    }).filter(([a, b]) => b > a);
-  }
-
   // ---- the lists ---------------------------------------------------------------------------------------------
 
   function leaves(root) {

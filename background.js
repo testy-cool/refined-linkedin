@@ -1,6 +1,7 @@
-// Asks the model chosen in the settings which passages of a job description to fold, and caches the answer per job
-// and text. The content script sends {type: "fold", id, text} and gets {sections} or {error}.
-importScripts("prompt.js", "providers.js", "build.js", "chatgpt.js");
+// Asks the model chosen in the settings which passages of a job description to fold, and caches the answer per job,
+// text and prompt. The content script sends {type: "fold", id, text, again} and gets {sections} or {error}; "again"
+// asks the model anew instead of using the saved answer.
+importScripts("prompt.js", "providers.js", "build.js", "chatgpt.js", "folds.js");
 try { importScripts("config.local.js"); } catch { /* only Vlad's build seeds a provider */ }
 
 const inflight = new Map();
@@ -9,9 +10,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   if (msg.type === "hello") { checkBuild(msg.build); return; }
   if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
-  if (msg.type === "test") { test().then(send, (e) => send({ error: String(e.message || e) })); return true; }
+  if (msg.type === "test") { test(msg.text).then(send, (e) => send({ error: String(e.message || e) })); return true; }
   if (msg.type !== "fold") return;
-  fold(msg.id, msg.text).then(send, (e) => send({ error: String(e.message || e) }));
+  fold(msg.id, msg.text, msg.again).then(send, (e) => send({ error: String(e.message || e) }));
   return true;
 });
 
@@ -48,13 +49,22 @@ function hash(text) {
   return (h >>> 0).toString(16);
 }
 
-async function fold(id, text) {
-  const key = `fold:${id}:${hash(text)}`;
-  const got = await chrome.storage.local.get(key);
-  if (got[key]) return got[key];
+// The prompt in the settings, or the default one. Folds made with the default prompt keep their old cache keys.
+async function promptText() {
+  const { prompt } = await chrome.storage.local.get("prompt");
+  return prompt || self.PROMPT;
+}
+
+async function fold(id, text, again = false) {
+  const prompt = await promptText();
+  const key = `fold:${id}:${hash(text)}${prompt === self.PROMPT ? "" : `:${hash(prompt)}`}`;
+  if (!again) {
+    const got = await chrome.storage.local.get(key);
+    if (got[key]) return got[key];
+  }
   if (!inflight.has(key)) {
     const p = settings()
-      .then(async (s) => { await ready(s); return ask(s, text); })
+      .then(async (s) => { await ready(s); return ask(s, fill(prompt, text)); })
       .then(async (r) => { await chrome.storage.local.set({ [key]: r }); return r; })
       .finally(() => inflight.delete(key));
     inflight.set(key, p);
@@ -62,15 +72,19 @@ async function fold(id, text) {
   return inflight.get(key);
 }
 
-async function ask(s, text) {
+// The prompt with the description in place of {TEXT}. A function keeps "$" in a description from being read as a
+// replacement pattern.
+const fill = (prompt, text) => prompt.replace("{TEXT}", () => text);
+
+async function ask(s, prompt) {
   if (s.kind === "chatgpt") {
-    const answer = await ChatGPT.respond({ model: s.model, effort: s.effort || "medium", prompt: self.PROMPT.replace("{TEXT}", text), schema: self.SCHEMA });
+    const answer = await ChatGPT.respond({ model: s.model, effort: s.effort || "medium", prompt, schema: self.SCHEMA });
     return { sections: JSON.parse(answer).sections, at: Date.now(), model: s.model };
   }
   const body = {
     model: s.model,
     reasoning_effort: s.effort || "medium",
-    messages: [{ role: "user", content: self.PROMPT.replace("{TEXT}", text) }],
+    messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_schema", json_schema: { name: "folds", schema: self.SCHEMA, strict: true } },
   };
   let last;
@@ -96,28 +110,14 @@ async function ask(s, text) {
   throw last;
 }
 
-// The settings page's "Save and test": one real fold of a short made-up description.
-const SAMPLE = `About us
-Acme Bakeries Software has helped 2,000 bakeries since 2009 and is proud of its friendly culture.
 
-What you will do
-- Run discovery with bakery owners and turn it into a roadmap.
-- Write specifications with the engineering team.
-
-What we expect
-- 3+ years as a product manager.
-- Fluent English.
-
-What we offer
-- 25 days of leave, a gym card and team trips.
-- We are an equal opportunity employer.`;
-
-async function test() {
+// The settings page's "Save and test": one real fold of its test description with the saved prompt.
+async function test(text) {
   const s = await settings();
   await ready(s);
   const started = Date.now();
-  const r = await ask(s, SAMPLE);
-  return { passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model || "The model" };
+  const r = await ask(s, fill(await promptText(), text || Folds.SAMPLE));
+  return { sections: r.sections, passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model || "The model" };
 }
 
 // Chrome keeps running the files an unpacked extension was loaded with, and turning it off and on does not

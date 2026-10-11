@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Refined LinkedIn",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Folds LinkedIn job descriptions down to responsibilities and expectations, and greys out jobs already seen.",
   "icons": {
     "16": "icons/icon16.png",
@@ -44,6 +44,7 @@
       ],
       "js": [
         "build.js",
+        "folds.js",
         "content.js",
         "notes.js"
       ],

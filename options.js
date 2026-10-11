@@ -86,6 +86,28 @@ $("signOut").addEventListener("click", async () => {
   showChatGPT();
 });
 
+// The prompt box shows the saved prompt or the default one; the test description starts as the sample.
+chrome.storage.local.get("prompt").then(({ prompt }) => { $("promptBox").value = prompt || self.PROMPT; });
+$("sample").value = Folds.SAMPLE;
+$("defaultPrompt").addEventListener("click", () => { $("promptBox").value = self.PROMPT; });
+
+// The test description with the folded passages greyed out.
+function preview(text, sections) {
+  const parts = [];
+  let at = 0;
+  for (const [a, b] of Folds.spans(text, sections)) {
+    parts.push(text.slice(at, a));
+    const f = document.createElement("span");
+    f.className = "folded";
+    f.textContent = text.slice(a, b);
+    parts.push(f);
+    at = b;
+  }
+  parts.push(text.slice(at));
+  $("previewText").replaceChildren(...parts);
+  $("preview").hidden = false;
+}
+
 chrome.runtime.sendMessage({ type: "settings" }, (s) => {
   saved = s;
   const kind = s?.kind || "gemini";
@@ -100,6 +122,9 @@ $("save").addEventListener("click", async () => {
   const base = kind === "custom" ? $("base").value.trim() : PROVIDERS[kind].base || "";
   const result = $("result");
   result.className = "";
+  $("preview").hidden = true;
+  const prompt = $("promptBox").value.trim();
+  if (!prompt.includes("{TEXT}")) { result.className = "bad"; result.textContent = "The prompt needs {TEXT} where the job description goes."; return; }
   if (kind === "chatgpt" && !(await ChatGPT.status()).signedIn) { result.className = "bad"; result.textContent = "Sign in with ChatGPT first."; return; }
   if (kind === "chatgpt" && !$("chatgptModel").value) { result.className = "bad"; result.textContent = "Choose a model first."; return; }
   if (kind !== "chatgpt") {
@@ -114,11 +139,15 @@ $("save").addEventListener("click", async () => {
   const key = typed || (old && old.kind === kind ? old.key : "");
   const model = kind === "chatgpt" ? $("chatgptModel").value : $("model").value.trim() || PROVIDERS[kind].model || "";
   await chrome.storage.local.set({ provider: { kind, base, key, model, effort: $("effort").value } });
+  // The default prompt is not saved, so a newer default reaches everyone who did not change it.
+  if (prompt === self.PROMPT.trim()) await chrome.storage.local.remove("prompt");
+  else await chrome.storage.local.set({ prompt });
+  const sample = $("sample").value.trim() || Folds.SAMPLE;
   $("key").value = "";
 
   $("save").disabled = true;
-  result.textContent = "Testing on a short sample description…";
-  chrome.runtime.sendMessage({ type: "test" }, (r) => {
+  result.textContent = "Testing on the test description…";
+  chrome.runtime.sendMessage({ type: "test", text: sample }, (r) => {
     $("save").disabled = false;
     if (!r || r.error) {
       result.className = "bad";
@@ -129,7 +158,8 @@ $("save").addEventListener("click", async () => {
     }
     saved = { kind, hasKey: true, model };
     result.className = "ok";
-    result.textContent = `Saved. ${r.model} answered in ${r.seconds} s and folded ${r.passages} passage${r.passages === 1 ? "" : "s"} of the sample.`;
+    result.textContent = `Saved. ${r.model} answered in ${r.seconds} s and named ${r.passages} passage${r.passages === 1 ? "" : "s"} to fold.`;
+    preview(sample, r.sections);
     show(kind, false);
   });
 });

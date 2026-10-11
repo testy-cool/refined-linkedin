@@ -1,9 +1,16 @@
 /* Text sizes stay at 12px or more. */
 body { margin: 0; background: #f4f2ee; color: #1d1d1d; font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
-main { max-width: 520px; margin: 48px auto; padding: 28px 32px; background: #fff; border: 1px solid #e0dfdc; border-radius: 8px; }
+main { max-width: 640px; margin: 48px auto; padding: 28px 32px; background: #fff; border: 1px solid #e0dfdc; border-radius: 8px; }
 h1 { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; font-size: 22px; }
 .lead { margin: 0 0 24px; color: #555; }
 label { display: block; margin: 16px 0 6px; font-weight: 600; }
+h2 { margin: 32px 0 6px; padding-top: 24px; border-top: 1px solid #e0dfdc; font-size: 17px; }
+textarea { box-sizing: border-box; width: 100%; padding: 8px 10px; font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace; border: 1px solid #b9b9b6; border-radius: 4px; resize: vertical; }
+textarea:focus { outline: 2px solid #0a66c2; outline-offset: 0; border-color: #0a66c2; }
+code { font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace; }
+#defaultPrompt { margin-top: 6px; font-size: 13px; }
+#previewText { padding: 10px 12px; border: 1px solid #e0dfdc; border-radius: 4px; white-space: pre-wrap; }
+#previewText .folded { color: #9a9a9a; background: #f4f2ee; }
 input, select { box-sizing: border-box; width: 100%; padding: 8px 10px; font: inherit; border: 1px solid #b9b9b6; border-radius: 4px; background: #fff; }
 input:focus, select:focus { outline: 2px solid #0a66c2; outline-offset: 0; border-color: #0a66c2; }
 .hint { margin: 6px 0 0; color: #666; font-size: 13px; }
