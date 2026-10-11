@@ -1,73 +1,83 @@
-# Refined LinkedIn
+# Refined LinkedIn 🪗
 
-A Chrome extension for LinkedIn job pages. It folds each job description down to the responsibilities and
-what is expected of the candidate, and greys out jobs already seen.
+**LinkedIn job descriptions, folded down to the job.**
 
-- **Folding.** The open job's description goes to the model chosen on the settings page (the toolbar pop-up
-  links to it): Google Gemini (`gemini-3.8-flash`), ChatGPT with the person's own Plus or Pro plan, or any other
-  OpenAI-compatible API, all asked for the same JSON. The default prompt is
-  `../research/linkedin-descriptions/scripts/luna_prompt.md`; anyone can edit it on the settings page, where
-  `{TEXT}` marks the description and "Restore the default prompt" brings it back. Only an edited prompt is
-  saved, so a newer default reaches everyone else. "Save and test" folds the test description (a short sample,
-  or any pasted one) and greys out what would fold; saving a custom address asks Chrome for access to that host. Vlad's build seeds his
-  Bifrost (Luna 6, `azure/gpt-6-luna`) as such a custom API. The model answers with
-  regexes for the passages to fold. The page hides those lines in a copy of LinkedIn's own description, so
-  what stays keeps its bullets, bold and spacing, and a grey "folded" chip opens each hidden run in place. A check
-  keeps any folded line about years of experience, degrees, must-haves or language levels visible. The
-  answer is cached per job, text and prompt, so a job is asked about once (about 10 seconds the first time);
-  "fold again" on the job's fold line asks anew, and "try again" appears when folding failed. The shared
-  mapping from answer to text, and the sample, are in `folds.js`.
+A LinkedIn job post buries the job under the company pitch, the perks and the legal text. Refined LinkedIn is a
+Chrome extension that folds those parts away, so you see what you would do and what they expect from you. It also
+remembers which jobs you already opened.
 
-- **Highlight words.** The toolbar pop-up keeps each person's words to spot, such as "remote" or "German";
-  commas add several, × removes one, and selecting text in a description offers "Highlight word" next to "Add
-  note". Every word is highlighted in light blue in the open job's description, folded copy or original, any
-  case and whole words only, and a fold chip that hides one says so ("· mentions benefits"). In `keywords.js`,
-  saved as `keywords`.
-- **Seen.** A job counts as seen once it has been open a second and was clicked or typed in, or opened
-  as its own page. LinkedIn opens the first search result by itself; that alone does not count. Jobs are
-  remembered by id and by title plus employer, so a repost under a new id is recognised too. Seen jobs are
-  greyed out in the classic search, the collections, the new search-results page and the "More jobs"
-  cards; an open job seen before says "Seen before, <date>".
+![A LinkedIn job description with its company pitch folded into one grey line, highlight words in blue and a noted passage in yellow](docs/images/folded.png)
 
-- **Posting age.** "2 weeks ago" next to a job is coloured from green (a day old) through yellow (two
-  weeks) and orange (a month) to red (two months or more), on job pages, search cards and the top card.
+## What you get
 
-Where each LinkedIn hook comes from: `../research/linkedin-descriptions/LINKEDIN-DOM.md`.
+- **Only the job.** Each hidden part becomes one grey line that says how many words it hides and how they start.
+  Click the line to read the part. A line at the top sums it up: "Folded 3 parts, 65% of the description". Lines
+  about years of experience, degrees or language levels stay visible even inside a fold.
+- **Your words, highlighted.** Keep a list such as "remote", "German" or "SQL", and they show in blue in every
+  description. If one is inside a folded part, its grey line says so: "· mentions remote".
+- **Notes that stay with the job.** Write a note on a job, or select a sentence in the description and attach a
+  note to it. Your notes sit under the Apply button, and the job list shows a note icon you can hover without
+  opening the job.
+- **Seen jobs stay seen.** Jobs you opened turn grey in every list, with the time you saw them: "👁 3 days ago".
+  If a company reposts the job under a new link, it still shows as seen.
+- **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
+  (two months).
+- **You choose the AI that folds.** Use your ChatGPT Plus or Pro plan, a Google Gemini account, or another AI
+  service. You can read and change the instructions the AI follows, and try them out in the settings.
 
-## Build and load
+**Notes under the Apply button**
 
-`./build.sh` writes `prompt.js` from the research prompt and, for Vlad's copy, `config.local.js`, which seeds
-his Bifrost with the key from the `llm` key store (git-ignored; without it the settings page asks for a
-provider). Then load this folder in `chrome://extensions` with "Load unpacked".
-Rerun `./build.sh` after any change. It also writes `build.js`, a stamp of every file the extension runs.
-Chrome keeps running the files an unpacked extension was loaded with, and `crxctl reload` (a disable and
-enable) does not reread them. So each LinkedIn page reports the stamp it was loaded with, and when
-`build.js` on disk differs, the extension reloads itself and the open LinkedIn tabs, once per build. This
-needs developer mode on in `chrome://extensions`, which loading it unpacked already requires.
+![Notes under a job's Apply button](docs/images/notes.png)
 
-**Releases.** A change people can notice bumps the version in `manifest.json` and adds an entry to
-`CHANGELOG.md`, in plain words, in the same pull request. After it merges, the version gets a tag and a GitHub
-release with that entry as its notes.
+**Seen jobs greyed out, ages in colour, and a job's notes on hover**
 
-## ChatGPT with a Plus or Pro plan
+![The job list with seen jobs greyed and a note shown on hover](docs/images/list.png)
 
-"Sign in with ChatGPT" on the settings page follows OpenAI's flow for open-source and personal local apps
-(https://developers.openai.com/siwc/token-sharing-open-source). The first sign-in registers this installation with
-OpenAI as an app called Refined LinkedIn, and the person allows it to use their plan; folds then go to
-`https://api.openai.com/v1/responses` with their access token, `store: false` and `stream: true`, and count against
-their plan, not API billing. OpenAI only accepts a callback on `http://127.0.0.1:<port>/auth/callback`, and an
-extension cannot listen on a port, so the settings page watches the sign-in tab and reads the code from the address
-OpenAI sends it to. The ID token is checked against OpenAI's published keys. Tokens refresh on their own; a refused
-refresh asks for a new sign-in. Everything is in `chatgpt.js`.
+**Your words, in the pop-up behind the toolbar icon**
 
-Giving the extension to other people needs it to be open source, or OpenAI's approval for private or paid apps.
+![The toolbar pop-up listing highlight words](docs/images/popup.png)
 
-## Notes
+## Install
 
-A note can be left on a whole job, and on any passage of its description: select text, click "Add note" next to
-the selection, and write. The open job shows its notes under the Apply and Save buttons, the job's note first, then
-each passage with its note; the passages stay highlighted in the description, folded or original. A passage is found
-again by its characters without whitespace and the 32 around it, so it survives LinkedIn's line breaks and the
-folded copy. In the job list, a job with notes shows a note icon with their count; hovering it shows them, whichever
-job is open. Notes are kept in `chrome.storage.local` under `notes`, by job id.
+Refined LinkedIn is not in the Chrome Web Store yet, so Chrome loads it from a folder on your computer.
 
+1. Download the `.zip` file from the [latest release](https://github.com/testy-cool/refined-linkedin/releases/latest).
+   Its name starts with `refined-linkedin-`.
+2. Unzip it somewhere you will keep it, such as your `Documents` folder. Chrome runs the extension from that
+   folder, so do not delete it.
+3. In Chrome's address bar, type `chrome://extensions` and press Enter.
+4. Turn on **Developer mode**, the switch at the top right. It lets Chrome load an extension from a folder.
+5. Click **Load unpacked** and pick the folder you unzipped, the one that contains `manifest.json`.
+6. Pin the extension: click the puzzle piece next to the address bar, then the pin next to Refined LinkedIn.
+7. Click its icon, then **Settings: model and prompt**, and choose the AI that folds the descriptions:
+   - **ChatGPT, with your Plus or Pro plan**: click **Sign in with ChatGPT**, then sign in on the OpenAI page that
+     opens and allow Refined LinkedIn to use your plan. Then pick a model from the list. No key needed.
+   - **Google Gemini**: paste a key from [Google AI Studio](https://aistudio.google.com/apikey).
+   - **Other OpenAI-compatible API**: its address, key and model.
+
+   Then click **Save and test**.
+8. Open any job on LinkedIn. After a few seconds the description shows a grey line where each part was folded,
+   like the first screenshot above.
+
+**Updating:** download and unzip the new version, then click **Load unpacked** again and pick the new folder.
+Chrome replaces the old version and keeps your notes, words and history. You can then delete the old folder.
+
+## What leaves your browser
+
+- The text of a job description you open goes to the AI you chose, once. The extension keeps the answer, so it
+  sends that job again only if you click **fold again**.
+- Nothing else is sent anywhere. Your notes, your words, the jobs you saw and your settings stay in Chrome on your
+  computer. There is no Refined LinkedIn server.
+- Without an AI chosen, everything except folding still works.
+
+## Good to know
+
+- It works in Chrome on a computer. Other browsers built on Chromium may work, but have not been tried.
+- LinkedIn changes its pages often. If something stops working, please
+  [open an issue](https://github.com/testy-cool/refined-linkedin/issues).
+- Each fold uses some of your ChatGPT plan's usage, if you fold with ChatGPT.
+
+## More
+
+- [What's new](CHANGELOG.md), version by version.
+- [How it works, and how to build it](docs/DEVELOPMENT.md).
