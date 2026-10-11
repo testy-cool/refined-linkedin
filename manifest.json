@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Refined LinkedIn",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Folds LinkedIn job descriptions down to responsibilities and expectations, and greys out jobs already seen.",
   "icons": {
     "16": "icons/icon16.png",
@@ -44,7 +44,8 @@
       ],
       "js": [
         "build.js",
-        "content.js"
+        "content.js",
+        "notes.js"
       ],
       "css": [
         "content.css"

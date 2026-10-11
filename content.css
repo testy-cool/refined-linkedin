@@ -29,3 +29,33 @@
   color: #666; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: normal; white-space: normal;
   list-style: none; cursor: pointer; }
 .jfold-chip:hover, .jfold-chip.jfold-opened { background: #e2e2dc; }
+
+/* Notes (issue #1). */
+::highlight(rl-note) { background-color: #fff0a6; }
+.rl-notes { margin: 12px 0; font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
+.rl-job-note { margin: 0 0 10px; padding: 10px 12px; border-radius: 6px; background: #f4f2ee; }
+.rl-job-note-text { font-size: 15px; white-space: pre-wrap; }
+.rl-mark { margin: 0 0 10px; }
+.rl-quote { display: inline; padding: 1px 2px; font-size: 13px; color: #444; background: #fff0a6; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.rl-mark-note { margin-top: 2px; white-space: pre-wrap; }
+.rl-actions, .rl-foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; margin-top: 2px; }
+.rl-link { padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #0a66c2; cursor: pointer; text-decoration: underline; }
+.rl-hint, .rl-keys { font-size: 13px; color: #777; }
+.rl-editor { margin: 4px 0 10px; }
+.rl-editor textarea { box-sizing: border-box; width: 100%; padding: 6px 8px; font-family: inherit; font-size: 14px; line-height: 1.5; color: #1d1d1d; border: 1px solid #b9b9b6; border-radius: 4px; resize: vertical; }
+.rl-editor textarea:focus { outline: 2px solid #0a66c2; outline-offset: 0; border-color: #0a66c2; }
+.rl-editor-actions { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
+.rl-save, .rl-add { padding: 4px 14px; border: 0; border-radius: 16px; font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1.5; color: #fff; background: #0a66c2; cursor: pointer; }
+.rl-save:hover, .rl-add:hover { background: #004182; }
+.rl-pop, .rl-tip { position: fixed; z-index: 2147483000; box-sizing: border-box; background: #fff; color: #1d1d1d; border: 1px solid #d6d4cf;
+  border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16); font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; white-space: normal; }
+.rl-pop { padding: 6px; }
+.rl-pop.rl-pop-open { width: 340px; padding: 8px 10px; }
+.rl-pop .rl-editor { margin: 0; }
+.rl-tip { max-width: 340px; padding: 10px 12px; font-size: 13px; pointer-events: none; }
+.rl-tip-job { margin-bottom: 8px; font-size: 14px; font-weight: 600; white-space: pre-wrap; }
+.rl-tip-mark + .rl-tip-mark { margin-top: 8px; }
+.rl-card-notes { display: inline-flex; gap: 3px; align-items: center; font-weight: 600; color: #0a66c2; cursor: default; }
+.jfold-seen .jfold-slot .rl-card-notes { color: #0a66c2 !important; }
+.rl-card-notes svg.rl-icon { display: inline-block; flex: none; width: 14px; height: 14px; opacity: 1; filter: none; }
+.jfold-slot > span + .rl-card-notes { margin-left: 8px; }
