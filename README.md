@@ -1,4 +1,4 @@
-# Jobathan for LinkedIn
+# Refined LinkedIn
 
 A Chrome extension for LinkedIn job pages. It folds each job description down to the responsibilities and
 what is expected of the candidate, and greys out jobs already seen.

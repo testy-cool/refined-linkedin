@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Jobathan for LinkedIn",
+  "name": "Refined LinkedIn",
   "version": "0.1.0",
   "description": "Folds LinkedIn job descriptions down to responsibilities and expectations, and greys out jobs already seen.",
   "permissions": ["storage", "unlimitedStorage"],
