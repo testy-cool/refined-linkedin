@@ -44,3 +44,13 @@ read-only sandbox, as a throwaway session, with the user's MCP servers turned of
 uses whatever account `codex login` signed in. `native/install.sh <extension id>` registers it for Chrome and
 Chromium on Linux; the settings page shows the command with the id filled in and says whether the bridge is
 found. A fold takes about 10 seconds.
+
+## Notes
+
+A note can be left on a whole job, and on any passage of its description: select text, click "Add note" next to
+the selection, and write. The open job shows its notes under the Apply and Save buttons, the job's note first, then
+each passage with its note; the passages stay highlighted in the description, folded or original. A passage is found
+again by its characters without whitespace and the 32 around it, so it survives LinkedIn's line breaks and the
+folded copy. In the job list, a job with notes shows a note icon with their count; hovering it shows them, whichever
+job is open. Notes are kept in `chrome.storage.local` under `notes`, by job id.
+

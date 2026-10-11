@@ -20,6 +20,7 @@
   let posted = {};
   let postedDirty = false;
   let current = null; // {id, prior, timer}
+  self.RL = { openJob, descriptionBox }; // for notes.js
 
   const norm = (s) => (s || "").toLowerCase().replace(/\(verified job\)|with verification/g, " ")
     .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -429,6 +430,8 @@
     const parts = [];
     if (known) parts.push(["jfold-age", postedLabel(known)]);
     if (rec) parts.push(["jfold-eye", `👁 ${shortAgo(rec.last || rec.first)}`]);
+    const noteCount = self.RLNotes?.count(id) || 0;
+    if (noteCount) parts.push(["rl-card-notes", String(noteCount)]);
     const sig = JSON.stringify(parts);
     let slot = el.querySelector(".jfold-slot");
     if (slot?.dataset.sig === sig) return;
@@ -447,9 +450,27 @@
       const span = document.createElement("span");
       span.className = cls;
       span.textContent = text;
+      if (cls === "rl-card-notes") {
+        span.prepend(noteIcon());
+        self.RLNotes.hover(span, id);
+      }
       slot.append(span);
     }
     if (age) age.after(slot); else if (viewed) viewed.after(slot); else el.append(slot);
+  }
+
+  // A speech bubble with lines, drawn in the text colour.
+  function noteIcon() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    for (const [k, v] of Object.entries({ viewBox: "0 0 16 16", width: 14, height: 14, "aria-hidden": "true", fill: "none",
+      stroke: "currentColor", "stroke-width": 1.5, "stroke-linejoin": "round", "stroke-linecap": "round", class: "rl-icon" })) svg.setAttribute(k, v);
+    for (const d of ["M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z", "M5 6h6M5 8h4"]) {
+      const path = document.createElementNS(ns, "path");
+      path.setAttribute("d", d);
+      svg.append(path);
+    }
+    return svg;
   }
 
   function postedLabel(t) {
@@ -551,6 +572,7 @@
     paintAges();
     notePostedFromHeader(job);
     paintLists();
+    self.RLNotes?.tick(job);
   }
 
   let queued = false;
