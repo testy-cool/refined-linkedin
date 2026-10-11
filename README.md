@@ -71,6 +71,7 @@ Chrome replaces the old version and keeps your notes, words and history. You can
 - Nothing else is sent anywhere. Your notes, your words, the jobs you saw and your settings stay in Chrome on your
   computer. There is no Refined LinkedIn server.
 - Without an AI chosen, everything except folding still works.
+- The full [privacy policy](PRIVACY.md) lists everything the extension keeps and sends.
 
 ## Good to know
 
