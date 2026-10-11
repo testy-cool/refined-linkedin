@@ -9,6 +9,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   if (msg.type === "hello") { checkBuild(msg.build); return; }
   if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
+  if (msg.type === "bridge") { codex({ ping: true }).then(send, (e) => send({ error: String(e.message || e) })); return true; }
   if (msg.type === "test") { test().then(send, (e) => send({ error: String(e.message || e) })); return true; }
   if (msg.type !== "fold") return;
   fold(msg.id, msg.text).then(send, (e) => send({ error: String(e.message || e) }));
@@ -27,10 +28,21 @@ async function settings() {
   return provider || null;
 }
 
-// A custom address is reachable only after Chrome grants access to its host, which happens when it is saved on
-// the settings page.
-async function reachable(s) {
-  return chrome.permissions.contains({ origins: [`${new URL(s.base).origin}/*`] });
+// Codex needs no key. An API needs a key, and a custom address is reachable only after Chrome grants access to
+// its host, which happens when it is saved on the settings page.
+async function ready(s) {
+  if (s?.kind === "codex") return;
+  if (!s?.key) throw new Error("NO_KEY");
+  if (!(await chrome.permissions.contains({ origins: [`${new URL(s.base).origin}/*`] }))) throw new Error("NO_ACCESS");
+}
+
+function codex(msg) {
+  return new Promise((resolve, reject) => chrome.runtime.sendNativeMessage(PROVIDERS.codex.host, msg, (r) => {
+    const err = chrome.runtime.lastError;
+    if (err) reject(new Error(/not found|forbidden/i.test(err.message) ? "NO_BRIDGE" : err.message));
+    else if (!r || r.error) reject(new Error(r ? r.error : "Codex gave no answer"));
+    else resolve(r);
+  }));
 }
 
 function hash(text) {
@@ -45,11 +57,7 @@ async function fold(id, text) {
   if (got[key]) return got[key];
   if (!inflight.has(key)) {
     const p = settings()
-      .then(async (s) => {
-        if (!s?.key) throw new Error("NO_KEY");
-        if (!(await reachable(s))) throw new Error("NO_ACCESS");
-        return ask(s, text);
-      })
+      .then(async (s) => { await ready(s); return ask(s, text); })
       .then(async (r) => { await chrome.storage.local.set({ [key]: r }); return r; })
       .finally(() => inflight.delete(key));
     inflight.set(key, p);
@@ -58,6 +66,10 @@ async function fold(id, text) {
 }
 
 async function ask(s, text) {
+  if (s.kind === "codex") {
+    const r = await codex({ prompt: self.PROMPT.replace("{TEXT}", text), schema: self.SCHEMA, model: s.model, effort: s.effort || "medium" });
+    return { sections: JSON.parse(r.content).sections, at: Date.now(), model: s.model || "Codex default" };
+  }
   const body = {
     model: s.model,
     reasoning_effort: s.effort || "medium",
@@ -105,11 +117,10 @@ What we offer
 
 async function test() {
   const s = await settings();
-  if (!s?.key) throw new Error("NO_KEY");
-  if (!(await reachable(s))) throw new Error("NO_ACCESS");
+  await ready(s);
   const started = Date.now();
   const r = await ask(s, SAMPLE);
-  return { passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model };
+  return { passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model || (s.kind === "codex" ? "Codex" : "The model") };
 }
 
 // Chrome keeps running the files an unpacked extension was loaded with, and turning it off and on does not

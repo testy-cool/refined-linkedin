@@ -24,7 +24,8 @@
   },
   "permissions": [
     "storage",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "https://www.linkedin.com/*",

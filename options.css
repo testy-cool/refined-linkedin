@@ -9,6 +9,9 @@ input:focus, select:focus { outline: 2px solid #0a66c2; outline-offset: 0; borde
 .hint { margin: 6px 0 0; color: #666; font-size: 13px; }
 .hint:empty { display: none; }
 .hint a { color: #0a66c2; }
+.note { margin: 16px 0 8px; }
+code, pre { font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace; }
+pre { margin: 0; padding: 8px 10px; background: #f4f2ee; border-radius: 4px; white-space: pre-wrap; word-break: break-all; user-select: all; }
 button { margin-top: 24px; padding: 8px 20px; font: inherit; font-weight: 600; color: #fff; background: #0a66c2; border: 0; border-radius: 20px; cursor: pointer; }
 button:hover { background: #004182; }
 button:disabled { background: #8db3dc; cursor: default; }

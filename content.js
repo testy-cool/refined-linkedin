@@ -301,9 +301,12 @@
       clearInterval(spinning);
       status.classList.remove("jfold-folding");
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
-      if (res?.error === "NO_KEY" || res?.error === "NO_ACCESS") {
-        status.textContent = res.error === "NO_KEY" ? "Not folded: choose a model provider and API key in "
-          : "Not folded: allow calls to the model's address by saving it once in ";
+      if (["NO_KEY", "NO_ACCESS", "NO_BRIDGE"].includes(res?.error)) {
+        status.textContent = {
+          NO_KEY: "Not folded: choose a model provider and API key in ",
+          NO_ACCESS: "Not folded: allow calls to the model's address by saving it once in ",
+          NO_BRIDGE: "Not folded: install the Codex bridge, as shown in ",
+        }[res.error];
         const open = document.createElement("button");
         open.textContent = "Refined LinkedIn settings";
         open.onclick = () => chrome.runtime.sendMessage({ type: "options" });
