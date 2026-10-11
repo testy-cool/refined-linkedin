@@ -221,6 +221,7 @@
       chip.setAttribute("role", "button");
       chip.tabIndex = 0;
       r.start = excerpt(r.lines);
+      chip.dataset.folded = r.lines.map((l) => l.text).join("\n"); // keywords.js names the words it hides
       const label = (opened) => { chip.textContent = opened ? `hide ${r.words} words` : `folded, ${r.words} words "${r.start}"`; };
       label(false);
       chip.addEventListener("click", (e) => {
@@ -539,6 +540,7 @@
     notePostedFromHeader(job);
     paintLists();
     self.RLNotes?.tick(job);
+    self.RLKeywords?.tick(job);
   }
 
   let queued = false;

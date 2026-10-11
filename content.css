@@ -59,3 +59,10 @@
 .jfold-seen .jfold-slot .rl-card-notes { color: #0a66c2 !important; }
 .rl-card-notes svg.rl-icon { display: inline-block; flex: none; width: 14px; height: 14px; opacity: 1; filter: none; }
 .jfold-slot > span + .rl-card-notes { margin-left: 8px; }
+
+/* Highlight words (issue #9): light blue, apart from the yellow of noted passages. */
+::highlight(rl-keyword) { background-color: #cde4ff; }
+.jfold-chip[data-words]::after { content: " · " attr(data-words); color: #0a4f96; font-weight: 600; }
+.rl-pop .rl-add-word { margin-left: 6px; color: #0a66c2; background: #fff; box-shadow: inset 0 0 0 1px #0a66c2; }
+.rl-pop .rl-add-word:hover { background: #eef5fc; }
+
