@@ -143,4 +143,6 @@ async function reloadTabsAfterUpdate() {
   for (const t of await chrome.tabs.query({ url: "https://www.linkedin.com/*" })) chrome.tabs.reload(t.id);
 }
 chrome.runtime.onInstalled.addListener(reloadTabsAfterUpdate);
+// A new install opens the settings, where the person agrees to sending descriptions and picks the AI service.
+chrome.runtime.onInstalled.addListener(({ reason }) => { if (reason === "install") chrome.runtime.openOptionsPage(); });
 reloadTabsAfterUpdate();
