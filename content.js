@@ -285,6 +285,14 @@
       clearInterval(spinning);
       status.classList.remove("jfold-folding");
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
+      if (res?.error === "NO_KEY") {
+        status.textContent = "Not folded: choose a model provider and API key in ";
+        const open = document.createElement("button");
+        open.textContent = "Refined LinkedIn settings";
+        open.onclick = () => chrome.runtime.sendMessage({ type: "options" });
+        status.append(open);
+        return;
+      }
       if (!res || res.error) { status.textContent = `Could not fold: ${res ? res.error : chrome.runtime.lastError?.message}`; return; }
       const share = foldLines(copy, lines, spans(desc, res.sections));
       copy.classList.add("jfold-clone");

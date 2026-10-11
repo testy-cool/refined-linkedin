@@ -18,5 +18,5 @@ print("self.BIFROST_KEY = %s;" % json.dumps(key))
 PY
 # A stamp of every file the extension runs. A LinkedIn page reports the stamp it was loaded with, and the
 # background reloads the extension when the one on disk differs, so a rebuild applies itself.
-echo "self.BUILD = \"$(cat manifest.json background.js content.js content.css prompt.js | sha1sum | cut -c1-12)\";" > build.js
+echo "self.BUILD = \"$(cat manifest.json background.js providers.js content.js content.css prompt.js | sha1sum | cut -c1-12)\";" > build.js
 echo "built $(pwd), $(cat build.js)"

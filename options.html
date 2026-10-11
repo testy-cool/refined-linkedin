@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Refined LinkedIn settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1><img src="icons/icon48.png" alt="" width="32" height="32">Refined LinkedIn</h1>
+    <p class="lead">Folding a job description sends its text to the model chosen here. Each answer is saved, so a job
+      is sent once.</p>
+
+    <label for="kind">Model provider</label>
+    <select id="kind"></select>
+
+    <div id="baseRow">
+      <label for="base">API address</label>
+      <input id="base" type="url" placeholder="https://example.com/v1" spellcheck="false">
+    </div>
+
+    <label for="key">API key</label>
+    <input id="key" type="password" autocomplete="off" spellcheck="false">
+    <p class="hint" id="keyHint"></p>
+
+    <label for="model">Model</label>
+    <input id="model" spellcheck="false">
+
+    <label for="effort">Reasoning effort</label>
+    <select id="effort">
+      <option value="low">Low: fastest</option>
+      <option value="medium">Medium</option>
+      <option value="high">High: slowest</option>
+    </select>
+
+    <button id="save">Save and test</button>
+    <p id="result" role="status"></p>
+  </main>
+  <script src="providers.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
