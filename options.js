@@ -13,8 +13,7 @@ function show(kind, fill) {
   $("keyHint").replaceChildren(before);
   if (url) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.textContent = url.replace("https://", ""); $("keyHint").append(a); }
   if (fill) { $("base").value = p.base; $("model").value = p.model; }
-  $("key").placeholder = saved?.kind === kind && saved.keyFromBuild ? "Using the key built into this copy"
-    : saved?.kind === kind && saved.hasKey ? "Saved; type a new one to replace it" : "";
+  $("key").placeholder = saved?.kind === kind && saved.hasKey ? "Saved; type a new one to replace it" : "";
 }
 
 $("kind").addEventListener("change", () => show($("kind").value, true));
@@ -52,7 +51,8 @@ $("save").addEventListener("click", async () => {
     $("save").disabled = false;
     if (!r || r.error) {
       result.className = "bad";
-      result.textContent = r?.error === "NO_KEY" ? "Saved, but there is no API key yet." : `Saved, but the test failed: ${r ? r.error : "no answer"}`;
+      result.textContent = r?.error === "NO_KEY" ? "Saved, but there is no API key yet."
+        : r?.error === "NO_ACCESS" ? "Saved, but Chrome has not allowed calls to that address." : `Saved, but the test failed: ${r ? r.error : "no answer"}`;
       return;
     }
     saved = { kind, hasKey: true };

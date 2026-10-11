@@ -1,7 +1,7 @@
 // Asks the model chosen in the settings which passages of a job description to fold, and caches the answer per job
 // and text. The content script sends {type: "fold", id, text} and gets {sections} or {error}.
 importScripts("prompt.js", "providers.js", "build.js");
-try { importScripts("config.local.js"); } catch { /* only Vlad's build has a Bifrost key baked in */ }
+try { importScripts("config.local.js"); } catch { /* only Vlad's build seeds a provider */ }
 
 const inflight = new Map();
 
@@ -17,17 +17,20 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
 
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
-// The saved provider. On Vlad's build, which has a Bifrost key baked in, Bifrost with that key until he saves another.
+// The saved provider. Vlad's build seeds his Bifrost as an "Other OpenAI-compatible API", saved like any other,
+// and a provider saved by an older build as "bifrost" becomes one too.
 async function settings() {
-  const { provider } = await chrome.storage.local.get("provider");
-  if (provider) {
-    if (!provider.key && provider.kind === "bifrost" && self.BIFROST_KEY) return { ...provider, key: self.BIFROST_KEY, keyFromBuild: true };
-    return provider;
-  }
-  if (self.BIFROST_KEY) {
-    return { kind: "bifrost", base: PROVIDERS.bifrost.base, model: PROVIDERS.bifrost.model, effort: "medium", key: self.BIFROST_KEY, keyFromBuild: true };
-  }
-  return null;
+  let { provider } = await chrome.storage.local.get("provider");
+  if (provider?.kind === "bifrost") provider = { ...provider, kind: "custom" };
+  if (!provider && self.SEED_PROVIDER) provider = self.SEED_PROVIDER;
+  if (provider) await chrome.storage.local.set({ provider });
+  return provider || null;
+}
+
+// A custom address is reachable only after Chrome grants access to its host, which happens when it is saved on
+// the settings page.
+async function reachable(s) {
+  return chrome.permissions.contains({ origins: [`${new URL(s.base).origin}/*`] });
 }
 
 function hash(text) {
@@ -42,7 +45,11 @@ async function fold(id, text) {
   if (got[key]) return got[key];
   if (!inflight.has(key)) {
     const p = settings()
-      .then((s) => { if (!s?.key) throw new Error("NO_KEY"); return ask(s, text); })
+      .then(async (s) => {
+        if (!s?.key) throw new Error("NO_KEY");
+        if (!(await reachable(s))) throw new Error("NO_ACCESS");
+        return ask(s, text);
+      })
       .then(async (r) => { await chrome.storage.local.set({ [key]: r }); return r; })
       .finally(() => inflight.delete(key));
     inflight.set(key, p);
@@ -99,6 +106,7 @@ What we offer
 async function test() {
   const s = await settings();
   if (!s?.key) throw new Error("NO_KEY");
+  if (!(await reachable(s))) throw new Error("NO_ACCESS");
   const started = Date.now();
   const r = await ask(s, SAMPLE);
   return { passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model };

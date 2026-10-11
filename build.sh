@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Writes prompt.js from the research prompt and config.local.js with the Bifrost key. Run after changing the prompt.
+# Writes prompt.js from the research prompt, config.local.js with Vlad's Bifrost as a seeded provider, and build.js. Run after any change.
 set -euo pipefail
 cd "$(dirname "$0")"
 R=../research/linkedin-descriptions/scripts
@@ -14,7 +14,8 @@ PY
 python3 - > config.local.js <<'PY'
 import json, os
 key = os.environ.get("BIFROST_API_KEY") or json.load(open(os.path.expanduser("~/.config/io.datasette.llm/keys.json")))["bifrost"]
-print("self.BIFROST_KEY = %s;" % json.dumps(key))
+seed = {"kind": "custom", "base": "https://bifrost.voidxd.cloud/v1", "model": "azure/gpt-6-luna", "effort": "medium", "key": key}
+print("self.SEED_PROVIDER = %s; // Vlad's Bifrost, saved as an Other OpenAI-compatible API on first run" % json.dumps(seed))
 PY
 # A stamp of every file the extension runs. A LinkedIn page reports the stamp it was loaded with, and the
 # background reloads the extension when the one on disk differs, so a rebuild applies itself.
