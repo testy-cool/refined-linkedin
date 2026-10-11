@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Jobathan for LinkedIn",
+  "version": "0.1.0",
+  "description": "Folds LinkedIn job descriptions down to responsibilities and expectations, and greys out jobs already seen.",
+  "permissions": ["storage", "unlimitedStorage"],
+  "host_permissions": ["https://www.linkedin.com/*", "https://bifrost.voidxd.cloud/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{
+    "matches": ["https://www.linkedin.com/*"],
+    "js": ["content.js"],
+    "css": ["content.css"],
+    "run_at": "document_idle"
+  }]
+}
