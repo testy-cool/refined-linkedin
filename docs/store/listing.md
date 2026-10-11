@@ -10,22 +10,22 @@ from `./package.sh --store`; the summary comes from `description` in `manifest.j
 **Description:**
 
 ```
-LinkedIn job posts bury the job under the company pitch, the perks and the legal text. Refined LinkedIn folds those parts away, so you see what you would do and what is expected of you.
+Much of a LinkedIn job post is about the company, the perks and the small print. Refined LinkedIn folds them away, so you see what the job is and what they want from you.
 
-What you get:
-• Only the job. Each hidden part becomes one grey line that says how many words it hides. Click it to read the part. Lines about years of experience, degrees or language levels stay visible.
-• Your words, highlighted. Keep a list such as "remote", "German" or "SQL", and they show in blue in every description.
-• Notes that stay with the job. Note a whole job, or select a sentence and note that. Hover the note icon in the job list to read them without opening the job.
-• Seen jobs stay seen. Jobs you opened turn grey in every list, with the time you saw them, even when the job is reposted under a new link.
-• Fresh or stale at a glance. Each job's age is coloured from green (a day old) to red (two months).
+Open a job. A few seconds later, those parts shrink into grey lines. Each line says how many words it hides; click to open it. Lines about years of experience, degrees and languages stay visible.
 
-You choose the AI that folds: your ChatGPT Plus or Pro plan (just sign in, no key), a Google Gemini key, or another OpenAI-compatible service. You can read and change the instructions it follows.
+Refined LinkedIn also keeps track of your search:
+- Jobs you've opened turn grey in the list, with how long ago you saw them. Reposts under a new link still count as seen.
+- Each job's age is coloured from green (a day old) to red (two months).
+- Write a note on a job or on one passage; hover the note icon in the list to read it.
+- Words you add, like "remote" or "Python", show up in blue in every description.
 
-Private by design: nothing is sent until you agree in the settings. Then only the text of each job description you open goes to the AI you chose, once. Your notes, words and history stay in Chrome on your computer. There is no Refined LinkedIn server.
+The folding uses an AI you pick: sign in with your ChatGPT Plus or Pro plan, paste a Google Gemini key, or connect any OpenAI-compatible service. You can change its instructions.
 
-Free and open source: https://github.com/testy-cool/refined-linkedin
+The extension sends nothing to the AI until you tick a box in the settings. Then only the job descriptions you open go to the AI, once per job. Notes, words and history stay on your computer. There is no Refined LinkedIn server.
 
-Refined LinkedIn is an independent project, not made or endorsed by LinkedIn or Microsoft.
+Free, open source: https://github.com/testy-cool/refined-linkedin
+Not made or endorsed by LinkedIn.
 ```
 
 **Category:** Workflow & Planning. **Language:** English.
