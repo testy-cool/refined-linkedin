@@ -1,5 +1,7 @@
 # Chrome Web Store listing
 
+The item: `gindiffhjdbhhgjdlcgeoakfcjcclabh`, in the testycool publisher's developer console.
+
 What goes into each field of the developer console for Refined LinkedIn. Upload `dist/refined-linkedin-<version>-store.zip`
 from `./package.sh --store`; the summary comes from `description` in `manifest.json`.
 
@@ -70,6 +72,15 @@ Tick all three certifications: no selling or transfer for unrelated purposes, no
 no use for creditworthiness or lending.
 
 **Privacy policy:** https://github.com/testy-cool/refined-linkedin/blob/main/PRIVACY.md
+
+## Test instructions
+
+Optional; the field takes 500 characters. Its "Save changes" button stayed disabled when filled from a script, so
+paste it by hand if wanted.
+
+```
+Open any LinkedIn job. Without an AI service: seen jobs turn grey with the time seen, posting ages are coloured, "Add note" appears when you select text, and the toolbar icon adds highlight words. To test folding: in the settings (they open after install) tick the agreement box, choose Google Gemini, paste a free key from aistudio.google.com/apikey, and click Save and test. A job then folds parts into grey lines; click one to open it. While the box is unticked, nothing is sent.
+```
 
 ## Distribution
 
