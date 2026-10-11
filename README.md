@@ -6,7 +6,7 @@ A LinkedIn job post buries the job under the company pitch, the perks and the le
 Chrome extension that folds those parts away, so you see what you would do and what they expect from you. It also
 remembers which jobs you already opened.
 
-![A LinkedIn job description with its company pitch folded into one grey line, highlight words in blue and a noted passage in yellow](docs/images/folded.png)
+![A LinkedIn job description folding: the company pitch collapses into one grey line, which opens and closes with a click](docs/images/fold.gif)
 
 ## What you get
 
@@ -57,7 +57,7 @@ Refined LinkedIn is not in the Chrome Web Store yet, so Chrome loads it from a f
 
    Then click **Save and test**.
 8. Open any job on LinkedIn. After a few seconds the description shows a grey line where each part was folded,
-   like the first screenshot above.
+   like the animation above.
 
 **Updating:** download and unzip the new version, then click **Load unpacked** again and pick the new folder.
 Chrome replaces the old version and keeps your notes, words and history. You can then delete the old folder.
