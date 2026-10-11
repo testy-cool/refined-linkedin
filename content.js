@@ -351,6 +351,39 @@
     }
   }
 
+  // ---- posting age -------------------------------------------------------------------------------------------
+
+  // "2 weeks ago" next to a job turns from green (a day old) through yellow (two weeks) and orange (a month) to
+  // red (two months or more). LinkedIn writes it as a span holding only that text, on every layout.
+  const AGE = /^(?:(?:re)?posted )?(\d+|an?|one) (minute|hour|day|week|month|year)s? ago$/i;
+  const DAYS = { minute: 1 / 1440, hour: 1 / 24, day: 1, week: 7, month: 30, year: 365 };
+  const HUES = [[1, 120], [14, 50], [30, 28], [60, 0]]; // [days old, hue]
+
+  function ageHue(days) {
+    if (days <= HUES[0][0]) return HUES[0][1];
+    for (let i = 1; i < HUES.length; i++) {
+      const [d0, h0] = HUES[i - 1], [d1, h1] = HUES[i];
+      if (days <= d1) return h0 + ((h1 - h0) * (days - d0)) / (d1 - d0);
+    }
+    return HUES[HUES.length - 1][1];
+  }
+
+  function paintAges() {
+    const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (tw.nextNode()) {
+      const t = tw.currentNode.data;
+      if (t.length > 40 || !t.includes("ago")) continue;
+      const m = t.trim().match(AGE);
+      const el = tw.currentNode.parentElement;
+      if (!m || !el || el.dataset.jfoldAge === t || el.closest(".jfold-view, [data-jfold]")) continue;
+      const n = /^\d+$/.test(m[1]) ? Number(m[1]) : 1;
+      const hue = Math.round(ageHue(n * DAYS[m[2].toLowerCase()]));
+      el.style.setProperty("color", `hsl(${hue} 90% 32%)`, "important");
+      el.style.setProperty("font-weight", "600");
+      el.dataset.jfoldAge = t;
+    }
+  }
+
   // ---- loop --------------------------------------------------------------------------------------------------
 
   function tick() {
@@ -360,6 +393,7 @@
     const box = descriptionBox();
     if (box && job) foldDescription(box, job);
     paintLists();
+    paintAges();
   }
 
   let queued = false;

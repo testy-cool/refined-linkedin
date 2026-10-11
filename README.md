@@ -16,6 +16,9 @@ what is expected of the candidate, and greys out jobs already seen.
   greyed out in the classic search, the collections, the new search-results page and the "More jobs"
   cards; an open job seen before says "Seen before, <date>".
 
+- **Posting age.** "2 weeks ago" next to a job is coloured from green (a day old) through yellow (two
+  weeks) and orange (a month) to red (two months or more), on job pages, search cards and the top card.
+
 Where each LinkedIn hook comes from: `../research/linkedin-descriptions/LINKEDIN-DOM.md`.
 
 ## Build and load
