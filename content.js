@@ -302,11 +302,11 @@
       clearInterval(spinning);
       status.classList.remove("jfold-folding");
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
-      if (["NO_KEY", "NO_ACCESS", "NO_BRIDGE"].includes(res?.error)) {
+      if (["NO_KEY", "NO_ACCESS", "NO_SIGNIN"].includes(res?.error)) {
         status.textContent = {
           NO_KEY: "Not folded: choose a model provider and API key in ",
           NO_ACCESS: "Not folded: allow calls to the model's address by saving it once in ",
-          NO_BRIDGE: "Not folded: install the Codex bridge, as shown in ",
+          NO_SIGNIN: "Not folded: sign in with ChatGPT in ",
         }[res.error];
         const open = document.createElement("button");
         open.textContent = "Refined LinkedIn settings";

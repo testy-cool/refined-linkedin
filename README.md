@@ -4,8 +4,8 @@ A Chrome extension for LinkedIn job pages. It folds each job description down to
 what is expected of the candidate, and greys out jobs already seen.
 
 - **Folding.** The open job's description goes to the model chosen on the settings page (the toolbar icon
-  opens it): Google Gemini (`gemini-3.8-flash`), ChatGPT through the user's own Codex CLI, or any other
-  OpenAI-compatible API, all asked the same way, with
+  opens it): Google Gemini (`gemini-3.8-flash`), ChatGPT with the person's own Plus or Pro plan, or any other
+  OpenAI-compatible API, all asked for the same JSON, with
   the prompt in `../research/linkedin-descriptions/scripts/luna_prompt.md`. "Save and test" folds a short sample
   to prove the key works; saving a custom address asks Chrome for access to that host. Vlad's build seeds his
   Bifrost (Luna 6, `azure/gpt-6-luna`) as such a custom API. The model answers with
@@ -36,14 +36,18 @@ enable) does not reread them. So each LinkedIn page reports the stamp it was loa
 `build.js` on disk differs, the extension reloads itself and the open LinkedIn tabs, once per build. This
 needs developer mode on in `chrome://extensions`, which loading it unpacked already requires.
 
-## ChatGPT through Codex
+## ChatGPT with a Plus or Pro plan
 
-An extension cannot start programs, so ChatGPT goes through `native/codex_host.py`, a Chrome native messaging
-host. For each job Chrome starts it, and it runs `codex exec` with the prompt and the answer's JSON schema, in a
-read-only sandbox, as a throwaway session, with the user's MCP servers turned off, and returns the answer. It
-uses whatever account `codex login` signed in. `native/install.sh <extension id>` registers it for Chrome and
-Chromium on Linux; the settings page shows the command with the id filled in and says whether the bridge is
-found. A fold takes about 10 seconds.
+"Sign in with ChatGPT" on the settings page follows OpenAI's flow for open-source and personal local apps
+(https://developers.openai.com/siwc/token-sharing-open-source). The first sign-in registers this installation with
+OpenAI as an app called Refined LinkedIn, and the person allows it to use their plan; folds then go to
+`https://api.openai.com/v1/responses` with their access token, `store: false` and `stream: true`, and count against
+their plan, not API billing. OpenAI only accepts a callback on `http://127.0.0.1:<port>/auth/callback`, and an
+extension cannot listen on a port, so the settings page watches the sign-in tab and reads the code from the address
+OpenAI sends it to. The ID token is checked against OpenAI's published keys. Tokens refresh on their own; a refused
+refresh asks for a new sign-in. Everything is in `chatgpt.js`.
+
+Giving the extension to other people needs it to be open source, or OpenAI's approval for private or paid apps.
 
 ## Notes
 

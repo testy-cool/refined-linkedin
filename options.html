@@ -25,15 +25,22 @@
       <p class="hint" id="keyHint"></p>
     </div>
 
-    <div id="codexRow" hidden>
-      <p class="note">Uses the Codex CLI you are signed in to with ChatGPT (<code>codex login</code>). Chrome reaches it
-        through a small bridge. Install it once, from a terminal in this extension's folder:</p>
-      <pre id="installCmd"></pre>
-      <p class="hint" id="bridgeState"></p>
+    <div id="chatgptRow" hidden>
+      <p class="note" id="chatgptState"></p>
+      <div class="actions">
+        <button type="button" id="signIn">Sign in with ChatGPT</button>
+        <button type="button" id="signOut" class="link" hidden>Sign out</button>
+      </div>
+      <div id="chatgptModelRow" hidden>
+        <label for="chatgptModel">Model</label>
+        <select id="chatgptModel"></select>
+      </div>
     </div>
 
-    <label for="model">Model</label>
-    <input id="model" spellcheck="false">
+    <div id="modelRow">
+      <label for="model">Model</label>
+      <input id="model" spellcheck="false">
+    </div>
 
     <label for="effort">Reasoning effort</label>
     <select id="effort">
@@ -46,6 +53,7 @@
     <p id="result" role="status"></p>
   </main>
   <script src="providers.js"></script>
+  <script src="chatgpt.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

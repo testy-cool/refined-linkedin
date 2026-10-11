@@ -1,6 +1,6 @@
 // Asks the model chosen in the settings which passages of a job description to fold, and caches the answer per job
 // and text. The content script sends {type: "fold", id, text} and gets {sections} or {error}.
-importScripts("prompt.js", "providers.js", "build.js");
+importScripts("prompt.js", "providers.js", "build.js", "chatgpt.js");
 try { importScripts("config.local.js"); } catch { /* only Vlad's build seeds a provider */ }
 
 const inflight = new Map();
@@ -9,7 +9,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   if (msg.type === "hello") { checkBuild(msg.build); return; }
   if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
-  if (msg.type === "bridge") { codex({ ping: true }).then(send, (e) => send({ error: String(e.message || e) })); return true; }
   if (msg.type === "test") { test().then(send, (e) => send({ error: String(e.message || e) })); return true; }
   if (msg.type !== "fold") return;
   fold(msg.id, msg.text).then(send, (e) => send({ error: String(e.message || e) }));
@@ -19,30 +18,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 // The saved provider. Vlad's build seeds his Bifrost as an "Other OpenAI-compatible API", saved like any other,
-// and a provider saved by an older build as "bifrost" becomes one too.
+// and a provider saved by an older build as "bifrost" becomes one too. The Codex CLI bridge became Sign in with
+// ChatGPT.
 async function settings() {
   let { provider } = await chrome.storage.local.get("provider");
   if (provider?.kind === "bifrost") provider = { ...provider, kind: "custom" };
+  if (provider?.kind === "codex") provider = { ...provider, kind: "chatgpt", model: "" };
   if (!provider && self.SEED_PROVIDER) provider = self.SEED_PROVIDER;
   if (provider) await chrome.storage.local.set({ provider });
   return provider || null;
 }
 
-// Codex needs no key. An API needs a key, and a custom address is reachable only after Chrome grants access to
-// its host, which happens when it is saved on the settings page.
+// ChatGPT needs a sign-in, which also grants access to OpenAI's addresses. An API needs a key, and a custom
+// address is reachable only after Chrome grants access to its host, which happens when it is saved in the settings.
 async function ready(s) {
-  if (s?.kind === "codex") return;
+  if (s?.kind === "chatgpt") {
+    if (!(await chrome.permissions.contains({ origins: ChatGPT.ORIGINS }))) throw new Error("NO_SIGNIN");
+    if (!s.model) throw new Error("choose a ChatGPT model in the Refined LinkedIn settings");
+    await ChatGPT.token();
+    return;
+  }
   if (!s?.key) throw new Error("NO_KEY");
   if (!(await chrome.permissions.contains({ origins: [`${new URL(s.base).origin}/*`] }))) throw new Error("NO_ACCESS");
-}
-
-function codex(msg) {
-  return new Promise((resolve, reject) => chrome.runtime.sendNativeMessage(PROVIDERS.codex.host, msg, (r) => {
-    const err = chrome.runtime.lastError;
-    if (err) reject(new Error(/not found|forbidden/i.test(err.message) ? "NO_BRIDGE" : err.message));
-    else if (!r || r.error) reject(new Error(r ? r.error : "Codex gave no answer"));
-    else resolve(r);
-  }));
 }
 
 function hash(text) {
@@ -66,9 +63,9 @@ async function fold(id, text) {
 }
 
 async function ask(s, text) {
-  if (s.kind === "codex") {
-    const r = await codex({ prompt: self.PROMPT.replace("{TEXT}", text), schema: self.SCHEMA, model: s.model, effort: s.effort || "medium" });
-    return { sections: JSON.parse(r.content).sections, at: Date.now(), model: s.model || "Codex default" };
+  if (s.kind === "chatgpt") {
+    const answer = await ChatGPT.respond({ model: s.model, effort: s.effort || "medium", prompt: self.PROMPT.replace("{TEXT}", text), schema: self.SCHEMA });
+    return { sections: JSON.parse(answer).sections, at: Date.now(), model: s.model };
   }
   const body = {
     model: s.model,
@@ -120,7 +117,7 @@ async function test() {
   await ready(s);
   const started = Date.now();
   const r = await ask(s, SAMPLE);
-  return { passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model || (s.kind === "codex" ? "Codex" : "The model") };
+  return { passages: r.sections.length, seconds: Math.round((Date.now() - started) / 100) / 10, model: s.model || "The model" };
 }
 
 // Chrome keeps running the files an unpacked extension was loaded with, and turning it off and on does not
