@@ -15,6 +15,10 @@
   ].join("|"), "i");
 
   let seen = { ids: {}, keys: {} };
+  // When each job was posted, worked out from "3 weeks ago" while LinkedIn still shows it: on some lists a card
+  // marked "Viewed" loses its age.
+  let posted = {};
+  let postedDirty = false;
   let current = null; // {id, prior, timer}
 
   const norm = (s) => (s || "").toLowerCase().replace(/\(verified job\)|with verification/g, " ")
@@ -32,7 +36,16 @@
     }
     tick();
   });
+  chrome.storage.local.get("posted").then((r) => { posted = { ...r.posted, ...posted }; });
   chrome.storage.onChanged.addListener((ch) => { if (ch.seen) { seen = ch.seen.newValue || seen; paintLists(); } });
+  setInterval(() => { if (postedDirty) { postedDirty = false; chrome.storage.local.set({ posted }); } }, 3000);
+
+  function notePosted(id, ageText) {
+    const days = ageDays(ageText);
+    if (!id || days === null || posted[id]) return;
+    posted[id] = Date.now() - days * 864e5;
+    postedDirty = true;
+  }
 
   // ---- the open job ------------------------------------------------------------------------------------------
 
@@ -400,30 +413,49 @@
       .map((e) => e.textContent.trim());
   }
 
-  // A seen card turns grey, keeps its coloured posting age, and says when it was viewed on the same line. A card
-  // LinkedIn itself labels "Viewed" counts as seen too; the label goes, since grey already says it.
-  function mark(el, rec) {
+  // A seen card turns grey and keeps its coloured posting age, followed by when it was viewed: "3 weeks ago
+  // 👁 1 min ago". A card LinkedIn labels "Viewed" counts as seen too, and the label goes, since grey already says
+  // it. Where LinkedIn dropped the age for "Viewed", the remembered one stands in its place.
+  function mark(el, rec, id) {
     const viewed = [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Viewed");
     el.classList.toggle("jfold-seen", !!(rec || viewed));
-    if (viewed) {
-      viewed.classList.add("jfold-hide");
-      const sep = viewed.nextElementSibling;
-      if (sep?.textContent.trim() === "·") sep.classList.add("jfold-hide");
+    const ages = [...el.querySelectorAll("[data-jfold-age]")].filter((a) => !a.closest(".jfold-slot"));
+    const age = ages[ages.length - 1];
+    if (age) notePosted(id, age.dataset.jfoldAge);
+    const known = !age && id && posted[id] && (rec || viewed) ? posted[id] : null;
+    const parts = [];
+    if (known) parts.push(["jfold-age", postedLabel(known), Math.round(ageHue((Date.now() - known) / 864e5))]);
+    if (rec) parts.push(["jfold-eye", `👁 ${shortAgo(rec.last || rec.first)}`]);
+    const sig = JSON.stringify(parts);
+    let slot = el.querySelector(".jfold-slot");
+    if (slot?.dataset.sig === sig) return;
+    slot?.remove();
+    const viewedClass = viewed ? viewed.className.replace(/\bjfold-hide\b/, "").trim() : "";
+    const sep = viewed?.nextElementSibling?.textContent.trim() === "·" ? viewed.nextElementSibling : null;
+    viewed?.classList.add("jfold-hide");
+    // The dot after "Viewed" stays only when the slot stands where "Viewed" was.
+    sep?.classList.toggle("jfold-hide", !parts.length || !!age);
+    if (!parts.length) return;
+    slot = document.createElement(age ? "span" : viewed ? viewed.tagName : "span");
+    if (!age && viewed) slot.className = viewedClass;
+    slot.classList.add("jfold-slot", age ? "jfold-slot-after" : viewed ? "jfold-slot-instead" : "jfold-slot-line");
+    slot.dataset.sig = sig;
+    for (const [cls, text, hue] of parts) {
+      const span = document.createElement("span");
+      span.className = cls;
+      span.textContent = text;
+      if (hue !== undefined) span.style.setProperty("color", `hsl(${hue} 90% 32%)`, "important");
+      slot.append(span);
     }
-    let badge = el.querySelector(".jfold-eye");
-    if (!rec) { badge?.remove(); return; }
-    const text = `👁 ${shortAgo(rec.last || rec.first)}`;
-    if (badge?.textContent === text) return;
-    if (!badge) {
-      const ages = el.querySelectorAll("[data-jfold-age]");
-      badge = document.createElement(!ages.length && viewed?.tagName === "LI" ? "li" : "span");
-      if (ages.length) ages[ages.length - 1].after(badge);
-      else if (viewed) { badge.className = viewed.className; viewed.after(badge); } // classic search: where "Viewed" was
-      else { badge.classList.add("jfold-eye-line"); el.append(badge); }
-      badge.classList.remove("jfold-hide");
-      badge.classList.add("jfold-eye");
-    }
-    badge.textContent = text;
+    if (age) age.after(slot); else if (viewed) viewed.after(slot); else el.append(slot);
+  }
+
+  function postedLabel(t) {
+    const d = (Date.now() - t) / 864e5;
+    if (d < 1) { const h = Math.max(1, Math.floor(d * 24)); return `${h} hour${h === 1 ? "" : "s"} ago`; }
+    const [unit, size] = d < 7 ? ["day", 1] : d < 30 ? ["week", 7] : d < 365 ? ["month", 30] : ["year", 365];
+    const n = Math.floor(d / size);
+    return `${n} ${unit}${n === 1 ? "" : "s"} ago`;
   }
 
   function shortAgo(t) {
@@ -439,11 +471,13 @@
   function paintLists() {
     // classic search and collections
     for (const li of document.querySelectorAll("li[data-occludable-job-id]")) {
-      mark(li, lookup(li.getAttribute("data-occludable-job-id"), keyOf(...cardNames(li))));
+      const id = li.getAttribute("data-occludable-job-id");
+      mark(li, lookup(id, keyOf(...cardNames(li))), id);
     }
     // new search-results page
     for (const card of document.querySelectorAll('[role="button"][componentkey^="job-card-component-ref-"]')) {
-      mark(card, lookup(card.getAttribute("componentkey").split("-").pop(), keyOf(...cardNames(card))));
+      const id = card.getAttribute("componentkey").split("-").pop();
+      mark(card, lookup(id, keyOf(...cardNames(card))), id);
     }
     // "More jobs" under a job: no id, only title and employer
     for (const a of document.querySelectorAll('[componentkey^="JobDetailsSimilarJobsSlot_"] a[href]')) {
@@ -469,6 +503,25 @@
     return HUES[HUES.length - 1][1];
   }
 
+  function ageDays(text) {
+    const m = (text || "").trim().match(AGE);
+    return m ? (/^\d+$/.test(m[1]) ? Number(m[1]) : 1) * DAYS[m[2].toLowerCase()] : null;
+  }
+
+  // The open job's own age, from its header: the first age on the page outside the job lists, once the header
+  // shows this job.
+  function notePostedFromHeader(job) {
+    if (!job || posted[job.id]) return;
+    const about = document.querySelector('[componentkey^="JobDetails_AboutTheJob_"]');
+    const oldHeader = document.querySelector(".job-details-jobs-unified-top-card__job-title a");
+    const isThisJob = about ? about.getAttribute("componentkey").endsWith(`_${job.id}`)
+      : oldHeader ? oldHeader.href.includes(job.id) : location.pathname.includes(job.id);
+    if (!isThisJob) return;
+    const age = [...document.querySelectorAll("[data-jfold-age]")].find((a) => !a.closest(
+      'li[data-occludable-job-id], [componentkey^="job-card-component-ref-"], [componentkey^="JobDetailsSimilarJobsSlot_"], .jfold-slot'));
+    if (age) notePosted(job.id, age.dataset.jfoldAge);
+  }
+
   function paintAges() {
     const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     while (tw.nextNode()) {
@@ -476,7 +529,7 @@
       if (t.length > 40 || !t.includes("ago")) continue;
       const m = t.trim().match(AGE);
       const el = tw.currentNode.parentElement;
-      if (!m || !el || el.dataset.jfoldAge === t || el.closest(".jfold-view, [data-jfold]")) continue;
+      if (!m || !el || el.dataset.jfoldAge === t || el.closest(".jfold-view, [data-jfold], .jfold-slot")) continue;
       const n = /^\d+$/.test(m[1]) ? Number(m[1]) : 1;
       const hue = Math.round(ageHue(n * DAYS[m[2].toLowerCase()]));
       el.style.setProperty("color", `hsl(${hue} 90% 32%)`, "important");
@@ -494,6 +547,7 @@
     const box = descriptionBox();
     if (box && job) foldDescription(box, job);
     paintAges();
+    notePostedFromHeader(job);
     paintLists();
   }
 
