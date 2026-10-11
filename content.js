@@ -212,11 +212,27 @@
     return total ? Math.round((100 * runs.reduce((s, r) => s + r.chars, 0)) / total) : 0;
   }
 
+  // LinkedIn cuts the description off after a few lines behind a "… more" button, which also sits on top of
+  // the last line of the folded view. It is pressed once per job, and hidden while the folded view shows.
+  function moreButtons(box) {
+    const area = box.closest('[componentkey^="JobDetails_AboutTheJob_"], .show-more-less-html') || box.parentElement;
+    return area ? [...area.querySelectorAll('[data-testid="expandable-text-button"], .show-more-less-html__button--more')] : [];
+  }
+
   function foldDescription(box, job) {
     const view = box.previousElementSibling?.classList.contains("jfold-view") ? box.previousElementSibling : null;
-    if (box.dataset.jfold === job.id && view) return;
+    if (box.dataset.jfold === job.id && view) {
+      // LinkedIn puts its "… more" button back when it measures the hidden original; keep it hidden.
+      if (box.style.display === "none") for (const btn of moreButtons(box)) btn.style.setProperty("display", "none");
+      return;
+    }
     if (view) view.remove();
     box.style.display = "";
+    for (const b of moreButtons(box)) {
+      if (b.dataset.jfoldOpened === job.id || !/more/i.test(b.textContent)) continue;
+      b.dataset.jfoldOpened = job.id;
+      b.click();
+    }
     const copy = box.cloneNode(true);
     const { lines, text: desc } = readLines(copy, /^pre/.test(getComputedStyle(box).whiteSpace));
     if (desc.length < 200) return; // not loaded yet
@@ -243,7 +259,7 @@
       copy.classList.add("jfold-clone");
       copy.removeAttribute("data-testid");
       for (const e of [copy, ...copy.querySelectorAll("[id]")]) e.removeAttribute("id");
-      const more = box.parentElement?.querySelector('[data-testid="expandable-text-button"]');
+      const more = moreButtons(box);
       status.textContent = `Folded ${share}% · `;
       const toggle = document.createElement("button");
       toggle.textContent = "show original";
@@ -251,13 +267,13 @@
         const orig = box.style.display === "none";
         box.style.display = orig ? "" : "none";
         copy.style.display = orig ? "none" : "";
-        more?.style.setProperty("display", orig ? "" : "none");
+        for (const b of more) b.style.setProperty("display", orig ? "" : "none");
         toggle.textContent = orig ? "show folded" : "show original";
       };
       status.append(toggle);
       v.append(copy);
       box.style.display = "none";
-      more?.style.setProperty("display", "none");
+      for (const b of more) b.style.setProperty("display", "none");
     });
   }
 
