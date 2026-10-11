@@ -207,6 +207,12 @@
         label(opened);
       });
       first.before(chip);
+      // A list item holding nothing visible but the chip loses its bullet until the chip opens.
+      const li = chip.parentElement.tagName === "LI" ? chip.parentElement : null;
+      if (li && ![...li.childNodes].some((c) => c !== chip && visibleText(c))) {
+        li.classList.add("jfold-nobullet");
+        chip.addEventListener("click", () => li.classList.toggle("jfold-nobullet", !chip.classList.contains("jfold-opened")));
+      }
     }
     const total = lines.reduce((s, l) => s + Math.max(0, l.e - l.s), 0);
     return total ? Math.round((100 * runs.reduce((s, r) => s + r.chars, 0)) / total) : 0;
@@ -217,6 +223,11 @@
   function moreButtons(box) {
     const area = box.closest('[componentkey^="JobDetails_AboutTheJob_"], .show-more-less-html') || box.parentElement;
     return area ? [...area.querySelectorAll('[data-testid="expandable-text-button"], .show-more-less-html__button--more')] : [];
+  }
+
+  function visibleText(n) {
+    if (n.nodeType === 3) return !!n.data.trim();
+    return n.nodeType === 1 && !n.classList.contains("jfold-hide") && [...n.childNodes].some(visibleText);
   }
 
   function foldDescription(box, job) {

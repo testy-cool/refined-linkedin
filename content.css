@@ -10,6 +10,7 @@
    which also stacks every inline span on its own line, so the copy is a plain block with no limit. */
 .jfold-clone { display: block !important; -webkit-line-clamp: unset !important; max-height: none !important; overflow: visible !important; }
 .jfold-hide { display: none !important; }
+.jfold-nobullet { list-style: none !important; }
 .jfold-shown { color: #666; }
 .jfold-chip { display: block; width: fit-content; margin: 4px 0; padding: 1px 8px; border-radius: 4px; background: #efefeb;
   color: #666; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: normal; white-space: normal;
