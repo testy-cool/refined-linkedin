@@ -23,7 +23,15 @@
   const lookup = (id, key) => (id && seen.ids[id]) || (key && seen.keys[key] && seen.ids[seen.keys[key]]) || null;
 
   chrome.runtime.sendMessage({ type: "hello", build: self.BUILD });
-  chrome.storage.local.get("seen").then((r) => { if (r.seen) seen = r.seen; tick(); });
+  chrome.storage.local.get("seen").then((r) => {
+    if (r.seen) seen = r.seen;
+    // Builds before v2 could file a job under the previous job's title, so their repost keys are dropped.
+    if (seen.v !== 2) {
+      seen = { v: 2, keys: {}, ids: Object.fromEntries(Object.entries(seen.ids).map(([k, r]) => [k, { first: r.first, last: r.last }])) };
+      chrome.storage.local.set({ seen });
+    }
+    tick();
+  });
   chrome.storage.onChanged.addListener((ch) => { if (ch.seen) { seen = ch.seen.newValue || seen; paintLists(); } });
 
   // ---- the open job ------------------------------------------------------------------------------------------
@@ -35,13 +43,24 @@
     const about = document.querySelector('[componentkey^="JobDetails_AboutTheJob_"]');
     if (about) id = about.getAttribute("componentkey").split("_").pop();
     if (!id) return null;
-    let title = text(document.querySelector(".job-details-jobs-unified-top-card__job-title, .jobs-search__job-details h1, .top-card-layout__title"));
-    let company = text(document.querySelector(".job-details-jobs-unified-top-card__company-name, .topcard__org-name-link"));
-    if (!title || !company) {
+    // Title and employer come from the job's own card in the list. The tab title and the detail pane still show
+    // the previous job for a moment after a click, so they are only used on the job's own page.
+    const card = document.querySelector(`li[data-occludable-job-id="${id}"], [role="button"][componentkey="job-card-component-ref-${id}"]`);
+    let [title, company] = card ? cardNames(card) : [];
+    if ((!title || !company) && path && path[1] === id) {
       const parts = document.title.replace(/^\(\d+\)\s*/, "").split(" | ");
       if (parts.length >= 3) { title = parts.slice(0, -2).join(" | "); company = parts[parts.length - 2]; }
     }
     return { id, title, company };
+  }
+
+  function cardNames(card) {
+    if (card.matches("li")) {
+      return [text(card.querySelector(".job-card-list__title--link strong")) || card.querySelector(".job-card-list__title--link")?.getAttribute("aria-label"),
+        text(card.querySelector(".artdeco-entity-lockup__subtitle"))];
+    }
+    const l = leaves(card); // title, then employer, then place
+    return [l[0], l[1]];
   }
 
   function text(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
@@ -55,8 +74,7 @@
   }
 
   function onOpen(job) {
-    current = { id: job.id, prior: lookup(job.id, keyOf(job.title, job.company)), sameId: !!seen.ids[job.id],
-      openedAt: Date.now(), byPage: /^\/jobs\/view\//.test(location.pathname) };
+    current = { id: job.id, prior: seen.ids[job.id] || null, openedAt: Date.now(), byPage: /^\/jobs\/view\//.test(location.pathname) };
     setTimeout(maybeRecord, SEEN_AFTER_MS);
   }
 
@@ -292,9 +310,12 @@
     const el = document.createElement("div");
     el.className = "jfold-seen-note";
     const prior = current && current.id === job.id ? current.prior : null;
-    if (prior) {
-      const when = new Date(prior.last || prior.first).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-      el.textContent = current.sameId ? `Seen before, ${when}` : `Seen before as another posting, ${when}`;
+    const now = openJob(), key = now && now.id === job.id ? keyOf(now.title, now.company) : null;
+    const other = key && seen.keys[key] && seen.keys[key] !== job.id ? seen.ids[seen.keys[key]] : null;
+    const rec = prior || other;
+    if (rec) {
+      const when = new Date(rec.last || rec.first).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+      el.textContent = prior ? `Seen before, ${when}` : `Seen before as another posting, ${when}`;
     }
     return el;
   }
@@ -363,14 +384,11 @@
   function paintLists() {
     // classic search and collections
     for (const li of document.querySelectorAll("li[data-occludable-job-id]")) {
-      const t = text(li.querySelector(".job-card-list__title--link strong")) || li.querySelector(".job-card-list__title--link")?.getAttribute("aria-label");
-      const c = text(li.querySelector(".artdeco-entity-lockup__subtitle"));
-      mark(li, lookup(li.getAttribute("data-occludable-job-id"), keyOf(t, c)));
+      mark(li, lookup(li.getAttribute("data-occludable-job-id"), keyOf(...cardNames(li))));
     }
     // new search-results page
     for (const card of document.querySelectorAll('[role="button"][componentkey^="job-card-component-ref-"]')) {
-      const l = leaves(card);
-      mark(card, lookup(card.getAttribute("componentkey").split("-").pop(), keyOf(l[0], text(card.querySelector("p")))));
+      mark(card, lookup(card.getAttribute("componentkey").split("-").pop(), keyOf(...cardNames(card))));
     }
     // "More jobs" under a job: no id, only title and employer
     for (const a of document.querySelectorAll('[componentkey^="JobDetailsSimilarJobsSlot_"] a[href]')) {
