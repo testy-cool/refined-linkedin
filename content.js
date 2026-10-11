@@ -387,21 +387,40 @@
       .map((e) => e.textContent.trim());
   }
 
-  // A seen card turns grey, keeps its coloured posting age, and says when it was viewed next to that age.
+  // A seen card turns grey, keeps its coloured posting age, and says when it was viewed on the same line. A card
+  // LinkedIn itself labels "Viewed" counts as seen too; the label goes, since grey already says it.
   function mark(el, rec) {
-    el.classList.toggle("jfold-seen", !!rec);
+    const viewed = [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Viewed");
+    el.classList.toggle("jfold-seen", !!(rec || viewed));
+    if (viewed) {
+      viewed.classList.add("jfold-hide");
+      const sep = viewed.nextElementSibling;
+      if (sep?.textContent.trim() === "·") sep.classList.add("jfold-hide");
+    }
     let badge = el.querySelector(".jfold-eye");
     if (!rec) { badge?.remove(); return; }
-    const text = `👁 ${ago(rec.last || rec.first)}`;
+    const text = `👁 ${shortAgo(rec.last || rec.first)}`;
     if (badge?.textContent === text) return;
     if (!badge) {
-      badge = document.createElement("span");
-      badge.className = "jfold-eye";
       const ages = el.querySelectorAll("[data-jfold-age]");
+      badge = document.createElement(!ages.length && viewed?.tagName === "LI" ? "li" : "span");
       if (ages.length) ages[ages.length - 1].after(badge);
+      else if (viewed) { badge.className = viewed.className; viewed.after(badge); } // classic search: where "Viewed" was
       else { badge.classList.add("jfold-eye-line"); el.append(badge); }
+      badge.classList.remove("jfold-hide");
+      badge.classList.add("jfold-eye");
     }
     badge.textContent = text;
+  }
+
+  function shortAgo(t) {
+    const m = Math.floor((Date.now() - t) / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+    if (m < 1) return "now";
+    if (m < 60) return `${m} min ago`;
+    if (h < 24) return `${h} h ago`;
+    if (d < 14) return `${d} d ago`;
+    if (d < 60) return `${Math.floor(d / 7)} wk ago`;
+    return `${Math.floor(d / 30)} mo ago`;
   }
 
   function paintLists() {
