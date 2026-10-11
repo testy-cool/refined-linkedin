@@ -1,6 +1,10 @@
 /* Text sizes stay at 12px or more. */
-.jfold-seen { opacity: 0.4; }
-.jfold-seen:hover { opacity: 0.75; }
+/* A seen card goes grey; its posting age keeps its colour (set inline, so it wins) and gains a 👁 badge. */
+.jfold-seen { background-color: #f3f3f1 !important; }
+.jfold-seen, .jfold-seen * { color: #9a9a9a !important; }
+.jfold-seen img, .jfold-seen svg { opacity: 0.35; filter: grayscale(1); }
+.jfold-seen .jfold-eye { color: #555 !important; font-size: 12px; font-weight: 600; margin-left: 8px; white-space: nowrap; }
+.jfold-seen .jfold-eye-line { display: block; margin: 4px 0 0; }
 .jfold-seen-note { font-size: 13px; line-height: 1.5; font-weight: 600; color: #8a5a00; white-space: normal; }
 .jfold-seen-note:empty { display: none; }
 .jfold-status { font-size: 13px; line-height: 1.5; color: #666; margin: 0 0 8px; white-space: normal; }

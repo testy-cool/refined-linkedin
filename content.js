@@ -312,12 +312,20 @@
     const prior = current && current.id === job.id ? current.prior : null;
     const now = openJob(), key = now && now.id === job.id ? keyOf(now.title, now.company) : null;
     const other = key && seen.keys[key] && seen.keys[key] !== job.id ? seen.ids[seen.keys[key]] : null;
-    const rec = prior || other;
-    if (rec) {
-      const when = new Date(rec.last || rec.first).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-      el.textContent = prior ? `Seen before, ${when}` : `Seen before as another posting, ${when}`;
-    }
+    if (prior) el.textContent = `👁 You viewed this job ${ago(prior.last || prior.first)}`;
+    else if (other) el.textContent = `👁 You viewed this job ${ago(other.last || other.first)}, in another listing with the same title and employer`;
     return el;
+  }
+
+  function ago(t) {
+    const m = Math.floor((Date.now() - t) / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m} minute${m === 1 ? "" : "s"} ago`;
+    if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+    if (d === 1) return "yesterday";
+    if (d < 14) return `${d} days ago`;
+    if (d < 60) return `${Math.floor(d / 7)} weeks ago`;
+    return `${Math.floor(d / 30)} months ago`;
   }
 
   // Luna's regexes, each used only when it matches exactly once, then the requirement check, then folds that
@@ -379,7 +387,22 @@
       .map((e) => e.textContent.trim());
   }
 
-  function mark(el, isSeen) { el.classList.toggle("jfold-seen", !!isSeen); }
+  // A seen card turns grey, keeps its coloured posting age, and says when it was viewed next to that age.
+  function mark(el, rec) {
+    el.classList.toggle("jfold-seen", !!rec);
+    let badge = el.querySelector(".jfold-eye");
+    if (!rec) { badge?.remove(); return; }
+    const text = `👁 ${ago(rec.last || rec.first)}`;
+    if (badge?.textContent === text) return;
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "jfold-eye";
+      const ages = el.querySelectorAll("[data-jfold-age]");
+      if (ages.length) ages[ages.length - 1].after(badge);
+      else { badge.classList.add("jfold-eye-line"); el.append(badge); }
+    }
+    badge.textContent = text;
+  }
 
   function paintLists() {
     // classic search and collections
@@ -438,8 +461,8 @@
     if (job && job.id !== current?.id) onOpen(job);
     const box = descriptionBox();
     if (box && job) foldDescription(box, job);
-    paintLists();
     paintAges();
+    paintLists();
   }
 
   let queued = false;
