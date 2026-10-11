@@ -1,14 +1,17 @@
 /* Text sizes stay at 12px or more. */
 .jfold-seen { opacity: 0.4; }
 .jfold-seen:hover { opacity: 0.75; }
-.jfold-view { font-size: 14px; line-height: 1.55; }
-.jfold-seen-note { font-size: 13px; font-weight: 600; color: #8a5a00; }
+.jfold-seen-note { font-size: 13px; line-height: 1.5; font-weight: 600; color: #8a5a00; white-space: normal; }
 .jfold-seen-note:empty { display: none; }
-.jfold-status { font-size: 13px; color: #666; margin: 0 0 8px; }
+.jfold-status { font-size: 13px; line-height: 1.5; color: #666; margin: 0 0 8px; white-space: normal; }
 .jfold-status button { font-size: 13px; color: #0a66c2; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
-.jfold-text { white-space: pre-wrap; }
-.jfold-text details { display: inline; }
-.jfold-text summary { display: inline; cursor: pointer; list-style: none; font-size: 13px; color: #666; background: #efefeb; border-radius: 4px; padding: 1px 8px; }
-.jfold-text summary::-webkit-details-marker { display: none; }
-.jfold-text details[open] summary { background: #e2e2dc; }
-.jfold-text details > div { color: #666; background: #f7f7f5; border-radius: 4px; padding: 6px 10px; margin: 4px 0; }
+
+/* The folded copy of LinkedIn's description. LinkedIn clamps the original to six lines with display: -webkit-box,
+   which also stacks every inline span on its own line, so the copy is a plain block with no limit. */
+.jfold-clone { display: block !important; -webkit-line-clamp: unset !important; max-height: none !important; overflow: visible !important; }
+.jfold-hide { display: none !important; }
+.jfold-shown { color: #666; }
+.jfold-chip { display: block; width: fit-content; margin: 4px 0; padding: 1px 8px; border-radius: 4px; background: #efefeb;
+  color: #666; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: normal; white-space: normal;
+  list-style: none; cursor: pointer; }
+.jfold-chip:hover, .jfold-chip.jfold-opened { background: #e2e2dc; }

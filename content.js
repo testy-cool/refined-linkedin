@@ -78,11 +78,125 @@
   function descriptionBox() {
     return document.querySelector('[componentkey^="JobDetails_AboutTheJob_"] [data-testid="expandable-text-box"]')
       || document.querySelector("#job-details")
-      || document.querySelector(".show-more-less-html__markup");
+      || document.querySelector(".show-more-less-html__markup:not(.jfold-clone)");
   }
 
-  function readText(box) {
-    return box.innerText.replace(/\n*(…\s*more|Show more|Show less)\s*$/i, "").trim().replace(/\n{3,}/g, "\n\n");
+  // The description is folded in a copy of LinkedIn's own markup, line by line, so what stays visible keeps its
+  // bullets, bold and spacing. A line is the text nodes and <br> between two line breaks.
+  const BLOCK = /^(P|DIV|UL|OL|LI|H[1-6]|SECTION|ARTICLE|BLOCKQUOTE|TABLE|TR|DL|DT|DD)$/;
+
+  function readLines(root, pre) {
+    if (pre) { // under white-space: pre*, a "\n" inside a text node breaks the line too, so give each its own node
+      const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (tw.nextNode()) nodes.push(tw.currentNode);
+      for (let n of nodes) {
+        let i;
+        while (n.data.length > 1 && (i = n.data.indexOf("\n")) !== -1) n = n.splitText(i || 1);
+      }
+    }
+    const lines = [];
+    let cur = { nodes: [], text: "" };
+    const end = (hard) => {
+      if (!hard && !cur.text.trim()) return; // a block edge with nothing before it adds no empty line
+      lines.push(cur);
+      cur = { nodes: [], text: "" };
+    };
+    const walk = (n) => {
+      if (n.nodeType === 3) {
+        cur.nodes.push(n);
+        if (pre && n.data === "\n") end(true); else cur.text += n.data;
+        return;
+      }
+      if (n.nodeType !== 1 || /^(SCRIPT|STYLE|BUTTON)$/.test(n.tagName)) return;
+      if (/^H[12]$/.test(n.tagName) && /^about the job$/i.test(n.textContent.trim())) return;
+      if (n.tagName === "BR") { cur.nodes.push(n); end(true); return; }
+      const block = BLOCK.test(n.tagName);
+      if (block) end(false);
+      for (const c of [...n.childNodes]) walk(c);
+      if (block) end(false);
+    };
+    for (const c of [...root.childNodes]) walk(c);
+    end(false);
+    // The text Luna reads: one line per line, and one empty line wherever the description has any.
+    let text = "", gap = "";
+    for (const l of lines) {
+      const t = l.text.replace(/\s+/g, " ").trim();
+      if (!t) { l.s = l.e = -1; if (text) gap = "\n\n"; continue; }
+      text += gap;
+      l.s = text.length;
+      text += t;
+      l.e = text.length;
+      gap = "\n";
+    }
+    return { lines, text };
+  }
+
+  // Hides the folded lines in the copy and puts a chip where each folded run starts. Returns the share folded.
+  function foldLines(root, lines, folds) {
+    const runs = [];
+    let open = false, gaps = [];
+    for (const l of lines) {
+      if (l.s < 0) { if (open) gaps.push(l); continue; }
+      let covered = 0;
+      for (const [a, b] of folds) covered += Math.max(0, Math.min(b, l.e) - Math.max(a, l.s));
+      if (covered * 2 < l.e - l.s) { open = false; gaps = []; continue; }
+      if (!open) runs.push({ lines: [], chars: 0, words: 0, nodes: [] });
+      const run = runs[runs.length - 1];
+      if (open) run.lines.push(...gaps);
+      run.lines.push(l);
+      run.chars += l.e - l.s;
+      run.words += l.text.trim().split(/\s+/).length;
+      open = true;
+      gaps = [];
+    }
+    const atoms = new Map(); // node -> run index, or -1 when it stays visible
+    for (const l of lines) for (const n of l.nodes) atoms.set(n, -1);
+    runs.forEach((r, i) => r.lines.forEach((l) => l.nodes.forEach((n) => atoms.set(n, i))));
+
+    // Hide the largest element whose lines are all folded, so a folded list item loses its bullet too.
+    const visit = (el) => {
+      let n = 0, h = 0, run = -1;
+      const kids = [];
+      for (const c of [...el.childNodes]) {
+        const r = c.nodeType === 1 && c.tagName !== "BR" ? visit(c)
+          : atoms.has(c) ? { n: 1, h: atoms.get(c) >= 0 ? 1 : 0, run: atoms.get(c) } : { n: 0, h: 0, run: -1 };
+        kids.push([c, r]);
+        n += r.n;
+        h += r.h;
+        if (r.h) run = r.run;
+      }
+      if (n && h === n && el !== root) return { n, h, run };
+      for (const [c, r] of kids) {
+        if (!r.n || r.h !== r.n) continue;
+        let node = c;
+        if (c.nodeType === 3) { node = document.createElement("span"); c.before(node); node.append(c); }
+        node.classList.add("jfold-hide");
+        runs[r.run].nodes.push(node);
+      }
+      return { n, h, run };
+    };
+    visit(root);
+
+    for (const r of runs) {
+      if (!r.nodes.length) continue;
+      const first = r.nodes[0];
+      const chip = document.createElement(/^(UL|OL)$/.test(first.parentElement.tagName) ? "li" : "span");
+      chip.className = "jfold-chip";
+      chip.setAttribute("role", "button");
+      chip.tabIndex = 0;
+      const label = (opened) => { chip.textContent = opened ? `hide ${r.words} words` : `folded, ${r.words} words`; };
+      label(false);
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const opened = chip.classList.toggle("jfold-opened");
+        for (const x of r.nodes) { x.classList.toggle("jfold-hide", !opened); x.classList.toggle("jfold-shown", opened); }
+        label(opened);
+      });
+      first.before(chip);
+    }
+    const total = lines.reduce((s, l) => s + Math.max(0, l.e - l.s), 0);
+    return total ? Math.round((100 * runs.reduce((s, r) => s + r.chars, 0)) / total) : 0;
   }
 
   function foldDescription(box, job) {
@@ -90,7 +204,8 @@
     if (box.dataset.jfold === job.id && view) return;
     if (view) view.remove();
     box.style.display = "";
-    const desc = readText(box);
+    const copy = box.cloneNode(true);
+    const { lines, text: desc } = readLines(copy, /^pre/.test(getComputedStyle(box).whiteSpace));
     if (desc.length < 200) return; // not loaded yet
     if (box.dataset.jfold && box.dataset.jfold !== job.id && desc === box.dataset.jfoldText) return; // still the last job's text
     box.dataset.jfold = job.id;
@@ -107,37 +222,25 @@
     chrome.runtime.sendMessage({ type: "fold", id: job.id, text: desc }, (res) => {
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
       if (!res || res.error) { status.textContent = `Could not fold: ${res ? res.error : chrome.runtime.lastError?.message}`; return; }
-      const folds = spans(desc, res.sections);
-      const body = document.createElement("div");
-      body.className = "jfold-text";
-      let pos = 0;
-      const shown = (t) => t.replace(/\n{2,}/g, "\n");
-      for (const [a, b] of folds) {
-        body.append(shown(desc.slice(pos, a)));
-        const d = document.createElement("details");
-        const s = document.createElement("summary");
-        s.textContent = `folded, ${desc.slice(a, b).split(/\s+/).length} words`;
-        const inner = document.createElement("div");
-        inner.textContent = shown(desc.slice(a, b)).trim();
-        d.append(s, inner);
-        body.append(d);
-        pos = b;
-      }
-      body.append(shown(desc.slice(pos)));
-      const share = Math.round((100 * folds.reduce((n, [a, b]) => n + b - a, 0)) / desc.length);
+      const share = foldLines(copy, lines, spans(desc, res.sections));
+      copy.classList.add("jfold-clone");
+      copy.removeAttribute("data-testid");
+      for (const e of [copy, ...copy.querySelectorAll("[id]")]) e.removeAttribute("id");
+      const more = box.parentElement?.querySelector('[data-testid="expandable-text-button"]');
       status.textContent = `Folded ${share}% · `;
       const toggle = document.createElement("button");
       toggle.textContent = "show original";
       toggle.onclick = () => {
         const orig = box.style.display === "none";
         box.style.display = orig ? "" : "none";
-        body.style.display = orig ? "none" : "";
+        copy.style.display = orig ? "none" : "";
+        more?.style.setProperty("display", orig ? "" : "none");
         toggle.textContent = orig ? "show folded" : "show original";
       };
       status.append(toggle);
-      v.append(body);
+      v.append(copy);
       box.style.display = "none";
-      box.parentElement?.querySelector('[data-testid="expandable-text-button"]')?.style.setProperty("display", "none");
+      more?.style.setProperty("display", "none");
     });
   }
 
