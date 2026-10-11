@@ -132,6 +132,8 @@
     return { lines, text };
   }
 
+  const SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+
   // Hides the folded lines in the copy and puts a chip where each folded run starts. Returns the share folded.
   function foldLines(root, lines, folds) {
     const runs = [];
@@ -215,11 +217,15 @@
     v.className = "jfold-view";
     const status = document.createElement("div");
     status.className = "jfold-status";
-    status.textContent = "Folding…";
+    let frame = 0;
+    const spin = () => { status.textContent = `${SPINNER[frame++ % SPINNER.length]} Folding…`; };
+    spin();
+    const spinning = setInterval(() => (v.isConnected ? spin() : clearInterval(spinning)), 80);
     v.append(seenNote(job), status);
     box.before(v);
 
     chrome.runtime.sendMessage({ type: "fold", id: job.id, text: desc }, (res) => {
+      clearInterval(spinning);
       if (!v.isConnected || box.dataset.jfold !== job.id) return;
       if (!res || res.error) { status.textContent = `Could not fold: ${res ? res.error : chrome.runtime.lastError?.message}`; return; }
       const share = foldLines(copy, lines, spans(desc, res.sections));
