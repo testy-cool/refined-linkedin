@@ -46,12 +46,15 @@ each version is in the [changelog](../CHANGELOG.md).
   minutes. A job relisted two days or more after it was first posted gets "first posted 4 months ago" on its card,
   in the colour of that first date, and LinkedIn's age beside it goes plain grey (`data-jfold-repost`).
 
-- **Kept jobs and the download.** Each job opened or listed is kept in `chrome.storage.local` as `job:<id>`:
-  description, title, employer, place, kind of work, and `at`, when it was first shown. A listed job's comes from the
-  job data `details.js` fetches, with line breaks put back after each paragraph and list item where LinkedIn's text
-  leaves them out. An opened job's text is the one sent to the model (`from: "page"`), and it wins over the list's,
-  so the folded passages can be found in it again. "Download my jobs" on the settings page saves one JSON file built
-  by `jobsfile.js` from `job:*`, `seen`, `details`, `posted`, `notes` and the newest `fold:<id>:*` answer per job.
+- **Kept jobs and the download.** Each job listed or opened is kept in `chrome.storage.local` as `job:<id>`, from the
+  job data `details.js` fetches: description, title, employer, place, work type, kind of work, and `at`, when it was
+  first kept. Line breaks are put back after each paragraph and list item where LinkedIn's text leaves them out; its
+  positions count an emoji as one character, so they are mapped to the string's first. The open job asks for its
+  data too, so a job opened from a link is kept the same way. The open job's text as the page shows it, the text
+  sent to the model, is kept apart as `page:<id>`. Each key has one writer, so two tabs never overwrite each other.
+  "Download my jobs" on the settings page saves one JSON file built by `jobsfile.js` from `job:*`, `page:*`, `seen`,
+  `details`, `posted` and `notes`, with the passages folded by the newest answer filed under the kept text's hash
+  (`Folds.hash`, the same key the background caches answers under).
 
 Where each LinkedIn hook comes from: `research/linkedin-descriptions/LINKEDIN-DOM.md` in jobathan, the project this
 extension came out of.
