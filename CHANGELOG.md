@@ -2,6 +2,15 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.10.1 (12 October 2026): easier to read
+
+- Jobs you've seen are now a darker grey, and fresh ages a darker green and yellow, so all of them are easy to
+  read. Every bit of text the extension colours now meets the usual contrast standard for reading.
+- A job LinkedIn marks "Viewed" now says "👁 viewed" on its card, instead of only turning grey.
+- On a reposted job, only "first posted 7 months ago" takes the colour. LinkedIn's newer age stays plain grey, so
+  it no longer looks old in red next to "1 day ago".
+- Enter and Space open and close a folded part.
+
 ## 0.10.0 (12 October 2026): your words find their other forms
 
 - A highlight word now also finds its usual forms: "agent" finds "agents" and "agentic", "evaluate" finds
