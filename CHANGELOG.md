@@ -2,6 +2,14 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.7.1 (12 October 2026): notes in the description, full description in place
+
+- Your notes on a job now sit at the top of its description, under "About the job", instead of under the Apply
+  and Save buttons.
+- "show full description" opens every folded part where it is, instead of showing the whole description a second
+  time underneath. "show folded" closes them again.
+- An opened part's "hide" button now sits where the hidden text begins, not partway through it.
+
 ## 0.7.0 (12 October 2026): asks before sending anything
 
 - Nothing is sent to an AI service until you tick "I agree to send the job descriptions I open to the AI service I
