@@ -16,8 +16,8 @@ remembers which jobs you already opened.
 - **Your words, highlighted.** Keep a list such as "remote", "German" or "SQL", and they show in blue in every
   description. If one is inside a folded part, its grey line says so: "· mentions remote".
 - **Notes that stay with the job.** Write a note on a job, or select a sentence in the description and attach a
-  note to it. Your notes sit under the Apply button, and the job list shows a note icon you can hover without
-  opening the job.
+  note to it. Your notes sit at the top of the job's description, and the job list shows a note icon you can
+  hover without opening the job.
 - **Seen jobs stay seen.** Jobs you opened turn grey in every list, with the time you saw them: "👁 3 days ago".
   If a company reposts the job under a new link, it still shows as seen.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
@@ -25,9 +25,9 @@ remembers which jobs you already opened.
 - **You choose the AI that folds.** Use your ChatGPT Plus or Pro plan, a Google Gemini account, or another AI
   service. You can read and change the instructions the AI follows, and try them out in the settings.
 
-**Notes under the Apply button**
+**Notes at the top of a job's description**
 
-![Notes under a job's Apply button](docs/images/notes.png)
+![A note on the job and a note on one sentence, above the folded description](docs/images/notes.png)
 
 **Seen jobs greyed out, ages in colour, and a job's notes on hover**
 
