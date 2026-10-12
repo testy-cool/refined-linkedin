@@ -2,6 +2,13 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.12.0 (13 October 2026): grey out jobs that aren't remote
+
+- LinkedIn's Remote filter still lists hybrid jobs. Tick **Grey out jobs that aren't remote** in the pop-up, and
+  every job that isn't remote turns grey like a seen one: hybrid, on-site, and jobs LinkedIn doesn't mark at all.
+- The first time a job list opens after the update, the extension asks LinkedIn once more about the jobs on it, to
+  learn which are remote.
+
 ## 0.11.1 (13 October 2026): your words as pills
 
 - The words a card mentions now show as rounded pills with even room around them, instead of highlighted text.
