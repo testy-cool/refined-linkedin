@@ -23,9 +23,9 @@ each version is in the [changelog](../CHANGELOG.md).
   note". Every word is highlighted in light blue in the open job's description, folded copy or original, any
   case, and a fold chip that hides one says so ("· mentions benefits"). In `keywords.js`,
   saved as `keywords`. Each card in a list says which words its description mentions ("mentions remote
-  Kubernetes"), from the description in the job data `details.js` fetches. The description stays in memory for the
-  page; the words found are kept per job with the word list they were looked for, so a reload asks nothing again,
-  and a changed word list asks again only for jobs whose description is no longer in memory.
+  Kubernetes"), from the description in the job data `details.js` fetches. The words found are kept per job with
+  the word list they were looked for, so a reload asks nothing again, and a changed word list reads the kept
+  descriptions (below) and asks LinkedIn only for jobs without one.
   A word matches whole words and its usual forms: plural and verb endings ("agent" finds "agents" and
   "agentic", "evaluate" finds "evaluation"), the parts of a phrase joined by a space, a hyphen or nothing, and
   accented letters as plain ones. Words of three letters or fewer take only a plural, so "AI" never finds "aid".
@@ -45,6 +45,13 @@ each version is in the [changelog](../CHANGELOG.md).
   job every 0.8 seconds, only for cards on the page, and keeps the answer in `details`. A 429 pauses it for ten
   minutes. A job relisted two days or more after it was first posted gets "first posted 4 months ago" on its card,
   in the colour of that first date, and LinkedIn's age beside it goes plain grey (`data-jfold-repost`).
+
+- **Kept jobs and the download.** Each job opened or listed is kept in `chrome.storage.local` as `job:<id>`:
+  description, title, employer, place, kind of work, and `at`, when it was first shown. A listed job's comes from the
+  job data `details.js` fetches, with line breaks put back after each paragraph and list item where LinkedIn's text
+  leaves them out. An opened job's text is the one sent to the model (`from: "page"`), and it wins over the list's,
+  so the folded passages can be found in it again. "Download my jobs" on the settings page saves one JSON file built
+  by `jobsfile.js` from `job:*`, `seen`, `details`, `posted`, `notes` and the newest `fold:<id>:*` answer per job.
 
 Where each LinkedIn hook comes from: `research/linkedin-descriptions/LINKEDIN-DOM.md` in jobathan, the project this
 extension came out of.
