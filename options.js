@@ -168,3 +168,18 @@ $("save").addEventListener("click", async () => {
     show(kind, false);
   });
 });
+
+// "Download my jobs": everything kept about the jobs, as one JSON file.
+const jobsFile = async () => JobsFile.build(await chrome.storage.local.get(null));
+jobsFile().then(({ jobs }) => {
+  const described = jobs.filter((j) => j.description).length;
+  $("jobsCount").textContent = `${jobs.length} job${jobs.length === 1 ? "" : "s"} so far, ${described} with ${described === 1 ? "its" : "their"} description.`;
+});
+$("download").addEventListener("click", async () => {
+  const file = await jobsFile();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2)], { type: "application/json" }));
+  a.download = `refined-linkedin-jobs-${file.exported.slice(0, 10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+});
