@@ -14,7 +14,7 @@ remembers which jobs you already opened.
   Click the line to read the part. A line at the top sums it up: "Folded 3 parts, 65% of the description". Lines
   about years of experience, degrees or language levels stay visible even inside a fold.
 - **Your words, highlighted.** Keep a list such as "remote", "German" or "SQL", and they show in blue in every
-  description. If one is inside a folded part, its grey line says so: "· mentions remote". Each card in a job list
+  description, along with their usual forms: "agent" also finds "agents" and "agentic". If one is inside a folded part, its grey line says so: "· mentions remote". Each card in a job list
   says which of them its description mentions, so you see it before you open the job.
 - **Notes that stay with the job.** Write a note on a job, or select a sentence in the description and attach a
   note to it. Your notes sit at the top of the job's description, and the job list shows a note icon you can
