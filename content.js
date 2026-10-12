@@ -223,6 +223,7 @@
       const chip = document.createElement(/^(UL|OL)$/.test(first.parentElement.tagName) ? "li" : "span");
       chip.className = "jfold-chip";
       chip.setAttribute("role", "button");
+      chip.setAttribute("aria-expanded", "false");
       chip.tabIndex = 0;
       r.start = excerpt(r.lines);
       chip.dataset.folded = r.lines.map((l) => l.text).join("\n"); // keywords.js names the words it hides
@@ -231,8 +232,15 @@
       chip.addEventListener("click", (e) => {
         e.stopPropagation();
         const opened = chip.classList.toggle("jfold-opened");
+        chip.setAttribute("aria-expanded", String(opened));
         for (const x of r.nodes) { x.classList.toggle("jfold-hide", !opened); x.classList.toggle("jfold-shown", opened); }
         label(opened);
+      });
+      // Enter and Space open and close it like a real button (WAI-ARIA disclosure pattern).
+      chip.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        chip.click();
       });
       first.before(chip);
       // A list item holding nothing visible but the chip loses its bullet until the chip opens.
