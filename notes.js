@@ -136,23 +136,11 @@
     return wrap;
   }
 
-  // The row with the job's Apply and Save buttons, so the notes are the first thing under the job's header. Walk up
-  // from a button while the parent is no taller than the row; the parent that is taller is the header itself.
-  function buttonRow(box) {
-    const btn = [...document.querySelectorAll('button[aria-label^="Save the"], .jobs-save-button, #jobs-apply-button-id')]
-      .find((b) => b.offsetParent && (b.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING));
-    if (!btn) return null;
-    let row = btn;
-    while (row.parentElement && row.parentElement.getBoundingClientRect().height <= row.getBoundingClientRect().height + 8) row = row.parentElement;
-    return row.parentElement && !row.parentElement.contains(document.querySelector(".jfold-view")) ? row : null;
-  }
-
-  // Under the header's buttons, or at the top of the description where the header is not found.
+  // In the About the job section, under the line saying when the job was last seen, above the fold's status.
   function placePanel(panel, view) {
-    const row = buttonRow(self.RL.descriptionBox() || view);
-    if (row) { if (panel.previousElementSibling !== row) row.after(panel); return; }
     const seenNote = view.querySelector(".jfold-seen-note");
-    if (panel.parentElement !== view) { if (seenNote) seenNote.after(panel); else view.prepend(panel); }
+    const want = seenNote ? seenNote.nextElementSibling : view.firstElementChild;
+    if (panel !== want) { if (seenNote) seenNote.after(panel); else view.prepend(panel); }
   }
 
   // A note being written survives the panel being redrawn, as when LinkedIn redraws the job: {id, key, node}, where
