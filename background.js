@@ -43,11 +43,7 @@ async function ready(s) {
   if (!(await chrome.permissions.contains({ origins: [`${new URL(s.base).origin}/*`] }))) throw new Error("NO_ACCESS");
 }
 
-function hash(text) {
-  let h = 5381;
-  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-  return (h >>> 0).toString(16);
-}
+const hash = Folds.hash;
 
 // The prompt in the settings, or the default one. Folds made with the default prompt keep their old cache keys.
 async function promptText() {

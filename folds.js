@@ -1,5 +1,6 @@
 // Shared by the LinkedIn page, the settings page and the background: where the model's answer lands in the
-// description's text, and the sample description the settings page tests on.
+// description's text, the hash its saved answers are filed under, and the sample description the settings page
+// tests on.
 self.Folds = (() => {
   // A line inside a fold that states a hard requirement stays visible. Luna folded "Minimum 3 years of
   // experience" on one of two identical ING postings, so this check runs after it.
@@ -61,6 +62,13 @@ self.Folds = (() => {
     }).filter(([a, b]) => b > a);
   }
 
+  // Saved answers are filed as "fold:<job id>:<hash of the text>", with ":<hash of the prompt>" for an edited prompt.
+  function hash(text) {
+    let h = 5381;
+    for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(16);
+  }
+
   // A short made-up description for testing a provider or a prompt in the settings.
   const SAMPLE = `About us
 Acme Bakeries Software has helped 2,000 bakeries since 2009 and is proud of its friendly culture.
@@ -77,5 +85,5 @@ What we offer
 - 25 days of leave, a gym card and team trips.
 - We are an equal opportunity employer.`;
 
-  return { spans, SAMPLE };
+  return { spans, hash, SAMPLE };
 })();

@@ -1,8 +1,8 @@
 // The settings page's "Download my jobs": everything the extension keeps about the jobs a person met, one entry per
 // job, newest first. Built from all of chrome.storage.local: "job:<id>" (LinkedIn's description, title, employer,
 // place), "page:<id>" (the open job's text as the page showed it), "seen" (when it was opened), "details" and
-// "posted" (when LinkedIn posted it, and the words found), "notes", and the model's latest answer under
-// "fold:<id>:…", turned into the passages it folded.
+// "posted" (when LinkedIn posted it, and the words found), "notes", and the model's answer for that exact text under
+// "fold:<id>:<hash>…", turned into the passages it folded.
 self.JobsFile = (() => {
   const iso = (t) => (t ? new Date(t).toISOString() : null);
 
@@ -12,7 +12,7 @@ self.JobsFile = (() => {
     for (const [k, v] of Object.entries(all)) {
       let m;
       if ((m = k.match(/^(job|page):(\d+)$/))) (m[1] === "job" ? kept : pages)[m[2]] = v;
-      else if ((m = k.match(/^fold:(\d+):/)) && v?.sections && (v.at || 0) >= (folds[m[1]]?.at || 0)) folds[m[1]] = v;
+      else if ((m = k.match(/^fold:(\d+):(\w+)/)) && v?.sections) (folds[m[1]] ||= []).push({ hash: m[2], ...v });
     }
     const noted = Object.keys(notes).filter((id) => notes[id]?.job?.text || notes[id]?.marks?.length);
     const ids = new Set([...Object.keys(seen), ...Object.keys(kept), ...Object.keys(pages), ...noted]);
@@ -37,13 +37,20 @@ self.JobsFile = (() => {
         note: n.job?.text || null,
         passage_notes: (n.marks || []).map((m) => ({ passage: m.quote, note: m.note })),
         description: text,
-        folded: text && folds[id] ? Folds.spans(text, folds[id].sections).map(([a, b]) => text.slice(a, b)) : [],
+        folded: text ? folded(text, folds[id]) : [],
       };
     });
     const t = (x) => (x ? Date.parse(x) : 0);
     const when = (j) => Math.max(t(j.last_opened || j.opened), t(j.first_shown));
     jobs.sort((a, b) => when(b) - when(a));
     return { exported: new Date().toISOString(), jobs };
+  }
+
+  // The passages the model folded in this very text: the newest answer filed under its hash, whatever the prompt.
+  function folded(text, answers = []) {
+    const h = Folds.hash(text);
+    const best = answers.filter((a) => a.hash === h).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+    return best ? Folds.spans(text, best.sections).map(([a, b]) => text.slice(a, b)) : [];
   }
 
   return { build };
