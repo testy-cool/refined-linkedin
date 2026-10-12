@@ -10,7 +10,9 @@
   const PAUSE_MS = 10 * 60 * 1000; // after LinkedIn turns a request away
   const STALE_MS = 5000; // a card not seen on the page for this long is dropped from the queue
 
-  let details = {}; // job id -> {l: when it was last listed, o: when it was first listed, m: words found, see keep}
+  // job id -> {l: when it was last listed, o: when it was first listed, wt: its workplace types, m: words found,
+  // see keep}. LinkedIn's workplace types are 1 on-site, 2 remote and 3 hybrid; a job may have none.
+  let details = {};
   const texts = {}; // job id -> description, for this page load
   let loaded = false;
   let dirty = false;
@@ -63,11 +65,13 @@
 
   const get = (id) => details[id] || null;
   const text = (id) => (id in texts ? texts[id] : null);
-  const done = (id) => details[id] && (!wanted[id]?.text || id in texts);
+  // A job kept by a version before 0.12.0 has no workplace types, so it is asked about once more.
+  const known = (id) => !!details[id]?.wt;
+  const done = (id) => known(id) && (!wanted[id]?.text || id in texts);
 
   // needText: the description is wanted too, not only the dates.
   function want(id, needText = false) {
-    if (!id || (details[id] && (!needText || id in texts))) return;
+    if (!id || (known(id) && (!needText || id in texts))) return;
     if (!(id in wanted)) queue.push(id);
     wanted[id] = { at: Date.now(), text: needText || !!wanted[id]?.text };
     pump();
@@ -124,7 +128,8 @@
     const j = await r.json();
     const d = j.data || j;
     if (!d.listedAt) return GAP_MS;
-    details[id] = { ...details[id], l: d.listedAt, o: Math.min(d.originalListedAt || d.listedAt, d.listedAt) };
+    details[id] = { ...details[id], l: d.listedAt, o: Math.min(d.originalListedAt || d.listedAt, d.listedAt),
+      wt: (d.workplaceTypes || []).map((u) => Number(String(u).split(":").pop())).filter(Boolean) };
     texts[id] = plain(d.description);
     delete wanted[id];
     dirty = true;
