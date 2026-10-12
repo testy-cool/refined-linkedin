@@ -390,8 +390,10 @@
       .map((e) => e.textContent.trim());
   }
 
-  // A seen card turns grey, posting age included, followed by when it was viewed: "3 weeks ago 👁 1 min ago". A card LinkedIn labels "Viewed" counts as seen too, and the label goes, since grey already says
-  // it. Where LinkedIn dropped the age for "Viewed", the remembered one stands in its place.
+  // A seen card turns grey, posting age included, followed by when it was viewed: "3 weeks ago 👁 1 min ago". A card
+  // LinkedIn labels "Viewed" counts as seen too; its label gives way to the same badge, which says "👁 viewed" when
+  // the extension never saw the job opened. Where LinkedIn dropped the age for "Viewed", the remembered one stands in
+  // its place.
   function mark(el, rec, id) {
     const viewed = [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Viewed");
     el.classList.toggle("jfold-seen", !!(rec || viewed));
@@ -407,7 +409,7 @@
     const parts = [];
     if (known) parts.push(["jfold-age", postedLabel(known)]);
     if (first) parts.push(["jfold-first", `first posted ${postedLabel(first)}`]);
-    if (rec) parts.push(["jfold-eye", `👁 ${shortAgo(rec.last || rec.first)}`]);
+    if (rec || viewed) parts.push(["jfold-eye", rec ? `👁 ${shortAgo(rec.last || rec.first)}` : "👁 viewed"]);
     const noteCount = self.RLNotes?.count(id) || 0;
     if (noteCount) parts.push(["rl-card-notes", String(noteCount)]);
     // A promoted card on the classic list shows "Promoted" where the age would be; the slot goes in front of it. A
