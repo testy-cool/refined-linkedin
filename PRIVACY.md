@@ -1,6 +1,6 @@
 # Refined LinkedIn privacy policy
 
-Last updated: 12 October 2026.
+Last updated: 13 October 2026.
 
 Refined LinkedIn is a Chrome extension that folds LinkedIn job descriptions down to the responsibilities and
 expectations, and marks jobs you already looked at. It has no server of its own. This page says what it keeps,
@@ -32,14 +32,15 @@ what it sends, and to whom.
 Everything below stays in Chrome's storage for the extension on your computer. Refined LinkedIn never sends it
 anywhere.
 
-- Your settings: which AI service you chose, its address and model, and your API key if you entered one.
+- Your settings: which AI service you chose, its address and model, your API key if you entered one, and whether to
+  grey out jobs that aren't remote.
 - If you signed in with ChatGPT: the sign-in tokens OpenAI issued, and the email address of your ChatGPT account,
   to show who is signed in.
 - Your notes on jobs and on passages of their descriptions.
 - Your highlight words.
 - The jobs you looked at: each job's LinkedIn id, title, employer, and when you saw it, to grey it out in lists.
-- For each job that appeared in a list: its LinkedIn id, when it was first posted, when it was last listed, and
-  which of your highlight words its description mentions.
+- For each job that appeared in a list: its LinkedIn id, when it was first posted, when it was last listed, whether
+  it is remote, hybrid or on-site, and which of your highlight words its description mentions.
 - The description, title, employer, place and kind of work of each job you opened or that appeared in a list, so you
   can download them all as one file from the settings.
 - The AI's answers for jobs you opened, so they fold again without being sent.
