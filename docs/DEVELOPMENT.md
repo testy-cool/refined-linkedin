@@ -40,7 +40,8 @@ each version is in the [changelog](../CHANGELOG.md).
   job data does not say remote gets `jfold-off`, the seen grey without the 👁. The types come from LinkedIn's
   `workplaceTypes` (1 on-site, 2 remote, 3 hybrid, or none), kept as `wt` in `details`; a job kept before 0.12.0 has
   no `wt` and is asked about once more. It follows a switch, not LinkedIn's own filter, because the new search page
-  keeps that filter as `f_SAL=f_SA_id_225001:272001`, and still lists hybrid jobs with it.
+  keeps that filter as `f_SAL=f_SA_id_225001:272001`, and still lists hybrid jobs with it. The "More jobs" cards under
+  a job carry no id, so they never go grey.
 
 - **Posting age.** "2 weeks ago" next to a job is coloured from green (a day old) through yellow (two
   weeks) and orange (a month) to red (two months or more), on job pages, search cards and the top card.
