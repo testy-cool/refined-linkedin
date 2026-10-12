@@ -19,6 +19,7 @@ I built Refined LinkedIn to fix that:
 - Each job's age is coloured, from green for a day old to red for two months.
 - An AI folds the company story, the perks and the small print into grey lines, so you read what the job is and what they want from you. You never click "see more". Lines about years of experience, degrees and languages always stay visible, and a click on a grey line opens it.
 - Words you care about, like "remote" or "Python", show up in blue.
+- If you only want remote jobs, the hybrid and on-site ones LinkedIn lists anyway can turn grey too.
 - You can leave a note on a job, or on a single sentence.
 - Every job you open or scroll past is kept on your computer, with its description, and you can download them all as one file.
 

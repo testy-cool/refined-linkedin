@@ -21,6 +21,8 @@ remembers which jobs you already opened.
   hover without opening the job.
 - **Seen jobs stay seen.** Jobs you opened turn grey in every list, with the time you saw them: "👁 3 days ago".
   If a company reposts the job under a new link, it still shows as seen.
+- **Remote jobs only, if you like.** LinkedIn's Remote filter still lists hybrid jobs. Tick **Grey out jobs that
+  aren't remote** in the pop-up, and every job that isn't remote turns grey like a seen one.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
   (two months).
 - **Old jobs posted again say so.** LinkedIn shows a reposted job as new. Its card now also says when it was first
