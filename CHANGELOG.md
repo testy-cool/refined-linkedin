@@ -2,6 +2,14 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.10.0 (12 October 2026): your words find their other forms
+
+- A highlight word now also finds its usual forms: "agent" finds "agents" and "agentic", "evaluate" finds
+  "evaluation", and "full stack" finds "full-stack". Letters with accents count as plain ones, so "romana" finds
+  "română".
+- This works in descriptions, on folded parts and on the cards in job lists. Short words such as "AI" only add a
+  plural, so they don't light up "aid" or "air".
+
 ## 0.9.0 (12 October 2026): cards name your words
 
 - Each card in a job list now says which of your highlight words its description mentions, such as "mentions

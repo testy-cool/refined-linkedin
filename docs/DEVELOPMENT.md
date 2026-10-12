@@ -21,11 +21,16 @@ each version is in the [changelog](../CHANGELOG.md).
 - **Highlight words.** The toolbar pop-up keeps each person's words to spot, such as "remote" or "German";
   commas add several, × removes one, and selecting text in a description offers "Highlight word" next to "Add
   note". Every word is highlighted in light blue in the open job's description, folded copy or original, any
-  case and whole words only, and a fold chip that hides one says so ("· mentions benefits"). In `keywords.js`,
+  case, and a fold chip that hides one says so ("· mentions benefits"). In `keywords.js`,
   saved as `keywords`. Each card in a list says which words its description mentions ("mentions remote
   Kubernetes"), from the description in the job data `details.js` fetches. The description stays in memory for the
   page; the words found are kept per job with the word list they were looked for, so a reload asks nothing again,
   and a changed word list asks again only for jobs whose description is no longer in memory.
+  A word matches whole words and its usual forms: plural and verb endings ("agent" finds "agents" and
+  "agentic", "evaluate" finds "evaluation"), the parts of a phrase joined by a space, a hyphen or nothing, and
+  accented letters as plain ones. Words of three letters or fewer take only a plural, so "AI" never finds "aid".
+  Typos are left out, since "remote" would find "remove". Changing these rules means changing `FORMS` in
+  `keywords.js`, so cards count their words again.
 - **Seen.** A job counts as seen once it has been open a second and was clicked or typed in, or opened
   as its own page. LinkedIn opens the first search result by itself; that alone does not count. Jobs are
   remembered by id and by title plus employer, so a repost under a new id is recognised too. Seen jobs are
