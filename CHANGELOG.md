@@ -2,6 +2,15 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.11.0 (12 October 2026): download your jobs
+
+- Refined LinkedIn now keeps every job you open or scroll past in a list on your computer, with its description,
+  title, employer and place.
+- **Download my jobs** in the settings saves them all as one file, with when you opened each job, the words it
+  mentions, your notes and the parts the AI folded. An AI chat or a script can read it.
+- Changing your words no longer asks LinkedIn again for jobs whose description is kept.
+- Jobs from before this version come without their description.
+
 ## 0.10.1 (12 October 2026): easier to read
 
 - Jobs you've seen are now a darker grey, and fresh ages a darker green and yellow, so all of them are easy to
