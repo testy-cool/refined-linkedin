@@ -1,4 +1,5 @@
-// The toolbar pop-up: the words to highlight in job descriptions, and the way to the settings.
+// The toolbar pop-up: the words to highlight in job descriptions, the switch for remote jobs only, and the way to
+// the settings.
 const $ = (id) => document.getElementById(id);
 
 async function draw() {
@@ -26,6 +27,8 @@ $("add").addEventListener("submit", async (e) => {
   $("word").value = "";
 });
 $("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+chrome.storage.local.get("remoteOnly").then((r) => { $("remoteOnly").checked = !!r.remoteOnly; });
+$("remoteOnly").addEventListener("change", (e) => chrome.storage.local.set({ remoteOnly: e.target.checked }));
 chrome.storage.onChanged.addListener((ch) => { if (ch.keywords) draw(); });
 draw();
 $("word").focus();

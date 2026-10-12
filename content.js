@@ -29,7 +29,14 @@
     tick();
   });
   chrome.storage.local.get("posted").then((r) => { posted = { ...r.posted, ...posted }; });
-  chrome.storage.onChanged.addListener((ch) => { if (ch.seen) { seen = ch.seen.newValue || seen; paintLists(); } });
+  // With "Grey out jobs that aren't remote" ticked in the pop-up, a job whose data does not say remote goes grey.
+  let remoteOnly = false;
+  chrome.storage.local.get("remoteOnly").then((r) => { remoteOnly = !!r.remoteOnly; paintLists(); });
+  chrome.storage.onChanged.addListener((ch) => {
+    if (ch.seen) seen = ch.seen.newValue || seen;
+    if (ch.remoteOnly) remoteOnly = !!ch.remoteOnly.newValue;
+    if (ch.seen || ch.remoteOnly) paintLists();
+  });
   self.RLDetails?.onChange(() => paintLists());
   setInterval(() => { if (postedDirty) { postedDirty = false; chrome.storage.local.set({ posted }); } }, 3000);
 
@@ -415,6 +422,8 @@
     // beside it goes plain grey, so its colour neither calls the repost fresh nor contradicts its own words.
     if (id) self.RLDetails?.want(id);
     const d = id ? self.RLDetails?.get(id) : null;
+    // Greyed out like a seen job, but without the 👁, until LinkedIn's data for it has arrived and says remote.
+    el.classList.toggle("jfold-off", remoteOnly && !!d?.wt && !d.wt.includes(REMOTE));
     const first = d && d.l - d.o >= REPOST_MS ? d.o : null;
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
     const parts = [];
@@ -566,6 +575,7 @@
     return 1.05 / (0.2126 * lin(f(0)) + 0.7152 * lin(f(8)) + 0.0722 * lin(f(4)) + 0.05);
   }
   const REPOST_MS = 2 * 864e5; // relisted this long after the first posting counts as a repost
+  const REMOTE = 2; // LinkedIn's workplace type for a remote job
 
   function ageDays(text) {
     const m = (text || "").trim().match(AGE);
