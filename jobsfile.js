@@ -15,7 +15,8 @@ self.JobsFile = (() => {
       else if ((m = k.match(/^fold:(\d+):(\w+)/)) && v?.sections) (folds[m[1]] ||= []).push({ hash: m[2], ...v });
     }
     const noted = Object.keys(notes).filter((id) => notes[id]?.job?.text || notes[id]?.marks?.length);
-    const ids = new Set([...Object.keys(seen), ...Object.keys(kept), ...Object.keys(pages), ...noted]);
+    const ids = new Set([...Object.keys(seen), ...Object.keys(kept), ...Object.keys(pages), ...noted,
+      ...Object.keys(details), ...Object.keys(posted)]);
     const jobs = [...ids].map((id) => {
       const s = seen[id] || {}, k = kept[id] || {}, p = pages[id] || {}, d = details[id] || {}, n = notes[id] || {};
       const text = p.text || k.text || null;
@@ -41,7 +42,7 @@ self.JobsFile = (() => {
       };
     });
     const t = (x) => (x ? Date.parse(x) : 0);
-    const when = (j) => Math.max(t(j.last_opened || j.opened), t(j.first_shown));
+    const when = (j) => Math.max(t(j.last_opened || j.opened), t(j.first_shown), t(j.posted));
     jobs.sort((a, b) => when(b) - when(a));
     return { exported: new Date().toISOString(), jobs };
   }
