@@ -101,7 +101,8 @@
         const kept = (await chrome.storage.local.get(`job:${id}`))[`job:${id}`];
         if (kept?.text) {
           texts[id] = kept.text;
-          delete wanted[id];
+          // A job still to be asked about stays wanted, so a refusal is not asked again until the next page load.
+          if (known(id)) delete wanted[id];
           wait = 0;
           changed();
         }
