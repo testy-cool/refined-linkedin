@@ -6,6 +6,8 @@ Newest first. Each version says what changed for someone using the extension.
 
 - The words a card mentions now show as rounded pills with even room around them, instead of highlighted text.
   On a job you've seen they're outlined in grey.
+- On the new job search page, a card that shows "Applied" instead of its age no longer squeezes its title into a
+  narrow column.
 
 ## 0.11.0 (12 October 2026): download your jobs
 
