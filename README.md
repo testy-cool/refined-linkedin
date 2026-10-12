@@ -39,7 +39,25 @@ remembers which jobs you already opened.
 
 ## Install
 
-Refined LinkedIn is not in the Chrome Web Store yet, so Chrome loads it from a folder on your computer.
+1. Open [Refined LinkedIn in the Chrome Web Store](https://chromewebstore.google.com/detail/refined-linkedin/gindiffhjdbhhgjdlcgeoakfcjcclabh) and click **Add to Chrome**.
+2. Pin the extension: click the puzzle piece next to the address bar, then the pin next to Refined LinkedIn.
+3. The settings open by themselves. Tick **I agree to send the job descriptions I open to the AI service I
+   choose**, then choose the AI that folds the descriptions:
+   - **ChatGPT, with your Plus or Pro plan**: click **Sign in with ChatGPT**, then sign in on the OpenAI page that
+     opens and allow Refined LinkedIn to use your plan. Then pick a model from the list. No key needed.
+   - **Google Gemini**: paste a key from [Google AI Studio](https://aistudio.google.com/apikey).
+   - **Other OpenAI-compatible API**: its address, key and model.
+
+   Then click **Save and test**.
+4. Open any job on LinkedIn. After a few seconds the description shows a grey line where each part was folded,
+   like the animation above.
+
+Chrome updates the extension by itself.
+
+### Install from a folder instead
+
+A new version reaches the store after Google reviews it. To get it the day it comes out, load it from a folder.
+A copy loaded from a folder keeps its own notes and history, apart from the store copy's.
 
 1. Download the `.zip` file from the [latest release](https://github.com/testy-cool/refined-linkedin/releases/latest).
    Its name starts with `refined-linkedin-`.
@@ -48,20 +66,10 @@ Refined LinkedIn is not in the Chrome Web Store yet, so Chrome loads it from a f
 3. In Chrome's address bar, type `chrome://extensions` and press Enter.
 4. Turn on **Developer mode**, the switch at the top right. It lets Chrome load an extension from a folder.
 5. Click **Load unpacked** and pick the folder you unzipped, the one that contains `manifest.json`.
-6. Pin the extension: click the puzzle piece next to the address bar, then the pin next to Refined LinkedIn.
-7. The settings open by themselves. Tick **I agree to send the job descriptions I open to the AI service I
-   choose**, then choose the AI that folds the descriptions:
-   - **ChatGPT, with your Plus or Pro plan**: click **Sign in with ChatGPT**, then sign in on the OpenAI page that
-     opens and allow Refined LinkedIn to use your plan. Then pick a model from the list. No key needed.
-   - **Google Gemini**: paste a key from [Google AI Studio](https://aistudio.google.com/apikey).
-   - **Other OpenAI-compatible API**: its address, key and model.
+6. Follow steps 2 to 4 above.
 
-   Then click **Save and test**.
-8. Open any job on LinkedIn. After a few seconds the description shows a grey line where each part was folded,
-   like the animation above.
-
-**Updating:** download and unzip the new version, then click **Load unpacked** again and pick the new folder.
-Chrome replaces the old version and keeps your notes, words and history. You can then delete the old folder.
+**Updating from a folder:** download and unzip the new version, then click **Load unpacked** again and pick the
+new folder. Chrome replaces the old version and keeps your notes, words and history. You can then delete the old folder.
 
 ## What leaves your browser
 
