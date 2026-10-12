@@ -240,7 +240,7 @@
       chip.addEventListener("keydown", (e) => {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
-        chip.click();
+        if (!e.repeat) chip.click();
       });
       first.before(chip);
       // A list item holding nothing visible but the chip loses its bullet until the chip opens.
