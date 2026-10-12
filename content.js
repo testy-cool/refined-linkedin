@@ -515,7 +515,22 @@
     return HUES[HUES.length - 1][1];
   }
 
-  const ageColor = (days) => `hsl(${Math.round(ageHue(days))} 90% 32%)`;
+  // The hue at 32% lightness, darkened until it reads at 4.5:1 or more on white (WCAG 1.4.3), so a fresh green age
+  // is as easy to read as an old red one.
+  const ageColor = (days) => {
+    const h = Math.round(ageHue(days));
+    let l = 32;
+    while (l > 20 && onWhite(h, l) < 4.6) l--;
+    return `hsl(${h} 90% ${l}%)`;
+  };
+
+  // The contrast of hsl(h 90% l%) against white.
+  function onWhite(h, l) {
+    const L = l / 100, a = 0.9 * Math.min(L, 1 - L);
+    const f = (n) => { const k = (n + h / 30) % 12; return L - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+    const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    return 1.05 / (0.2126 * lin(f(0)) + 0.7152 * lin(f(8)) + 0.0722 * lin(f(4)) + 0.05);
+  }
   const REPOST_MS = 2 * 864e5; // relisted this long after the first posting counts as a repost
 
   function ageDays(text) {
