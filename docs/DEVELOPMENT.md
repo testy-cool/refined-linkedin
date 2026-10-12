@@ -44,7 +44,7 @@ each version is in the [changelog](../CHANGELOG.md).
   pages make, with the `JSESSIONID` cookie as `csrf-token`) for each card's `listedAt` and `originalListedAt`, one
   job every 0.8 seconds, only for cards on the page, and keeps the answer in `details`. A 429 pauses it for ten
   minutes. A job relisted two days or more after it was first posted gets "first posted 4 months ago" on its card,
-  and its age takes the colour of that first date.
+  in the colour of that first date, and LinkedIn's age beside it goes plain grey (`data-jfold-repost`).
 
 Where each LinkedIn hook comes from: `research/linkedin-descriptions/LINKEDIN-DOM.md` in jobathan, the project this
 extension came out of.

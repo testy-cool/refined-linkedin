@@ -1,6 +1,8 @@
 /* Text sizes stay at 12px or more. */
 /* A posting age is coloured green to red by how old it is; on a seen card it goes grey with the rest. */
 [data-jfold-age] { color: var(--jfold-age-color) !important; }
+/* A reposted job's new age stays plain grey; its "first posted" date carries the colour. */
+[data-jfold-age][data-jfold-repost] { color: #666 !important; }
 /* A seen card goes grey and gains a 👁 badge with when it was viewed. */
 .jfold-seen { background-color: #f3f3f1 !important; }
 .jfold-seen, .jfold-seen * { color: #666 !important; }

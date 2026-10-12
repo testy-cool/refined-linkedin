@@ -24,7 +24,7 @@ remembers which jobs you already opened.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
   (two months).
 - **Old jobs posted again say so.** LinkedIn shows a reposted job as new. Its card now also says when it was first
-  posted, "first posted 4 months ago", and its age turns the colour of that first date.
+  posted, "first posted 4 months ago", in the colour of that date, and LinkedIn's newer age turns plain grey.
 - **You choose the AI that folds.** Use your ChatGPT Plus or Pro plan, a Google Gemini account, or another AI
   service. You can read and change the instructions the AI follows, and try them out in the settings.
 

@@ -401,11 +401,12 @@
     const age = ages[ages.length - 1];
     if (age) notePosted(id, age.dataset.jfoldAge);
     const known = !age && id && posted[id] && (rec || viewed) ? posted[id] : null;
-    // A job relisted days after it was first posted says when that was, and its age takes the first date's colour.
+    // A job relisted days after it was first posted says when that was, in that date's colour. LinkedIn's own age
+    // beside it goes plain grey, so its colour neither calls the repost fresh nor contradicts its own words.
     if (id) self.RLDetails?.want(id);
     const d = id ? self.RLDetails?.get(id) : null;
     const first = d && d.l - d.o >= REPOST_MS ? d.o : null;
-    if (first && age) age.style.setProperty("--jfold-age-color", ageColor((Date.now() - first) / 864e5));
+    if (age) age.toggleAttribute("data-jfold-repost", !!first);
     const parts = [];
     if (known) parts.push(["jfold-age", postedLabel(known)]);
     if (first) parts.push(["jfold-first", `first posted ${postedLabel(first)}`]);
