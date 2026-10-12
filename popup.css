@@ -13,5 +13,8 @@ button:hover { background: #004182; }
 #words li button { padding: 0 6px; font-size: 16px; line-height: 1.2; font-weight: 400; color: #33465c; background: none; border-radius: 10px; }
 #words li button:hover { background: #a9cdf5; }
 .hint { margin: 10px 0 0; color: #666; font-size: 13px; }
+.check { display: flex; align-items: center; gap: 8px; margin: 16px 0 0; font-weight: 600; cursor: pointer; }
+.check input { flex: none; width: 16px; height: 16px; margin: 0; padding: 0; accent-color: #0a66c2; }
+.check-hint { margin-top: 4px; }
 .link { display: block; margin: 14px 0 0; padding: 0; color: #0a66c2; background: none; font-weight: 400; text-decoration: underline; }
 .link:hover { background: none; color: #004182; }

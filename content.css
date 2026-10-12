@@ -3,12 +3,14 @@
 [data-jfold-age] { color: var(--jfold-age-color) !important; }
 /* A reposted job's new age stays plain grey; its "first posted" date carries the colour. */
 [data-jfold-age][data-jfold-repost] { color: #666 !important; }
-/* A seen card goes grey and gains a 👁 badge with when it was viewed. */
-.jfold-seen { background-color: #f3f3f1 !important; }
-.jfold-seen, .jfold-seen * { color: #666 !important; }
-.jfold-seen img, .jfold-seen svg { opacity: 0.35; filter: grayscale(1); }
+/* A seen card goes grey and gains a 👁 badge with when it was viewed. A job that is not remote goes the same grey
+   when the person asked for remote jobs only. */
+.jfold-seen, .jfold-off { background-color: #f3f3f1 !important; }
+.jfold-seen, .jfold-seen *, .jfold-off, .jfold-off * { color: #666 !important; }
+.jfold-seen img, .jfold-seen svg, .jfold-off img, .jfold-off svg { opacity: 0.35; filter: grayscale(1); }
 .jfold-seen .jfold-slot .jfold-eye { color: #666 !important; font-weight: 400; white-space: nowrap; }
-.jfold-seen [data-jfold-age], .jfold-seen .jfold-slot .jfold-age { color: #666 !important; font-weight: 600; white-space: nowrap; }
+.jfold-seen [data-jfold-age], .jfold-seen .jfold-slot .jfold-age, .jfold-off [data-jfold-age] { color: #666 !important; font-weight: 600;
+  white-space: nowrap; }
 .jfold-seen .jfold-slot .jfold-age + .jfold-eye { margin-left: 8px; }
 .jfold-slot-after { margin-left: 8px; }
 .jfold-slot-line { display: block; margin: 4px 0 0; }
@@ -62,7 +64,7 @@
 .rl-tip-job { margin-bottom: 8px; font-size: 14px; font-weight: 600; white-space: pre-wrap; }
 .rl-tip-mark + .rl-tip-mark { margin-top: 8px; }
 .rl-card-notes { display: inline-flex; gap: 3px; align-items: center; font-weight: 600; color: #0a66c2; cursor: default; }
-.jfold-seen .jfold-slot .rl-card-notes { color: #0a66c2 !important; }
+.jfold-seen .jfold-slot .rl-card-notes, .jfold-off .jfold-slot .rl-card-notes { color: #0a66c2 !important; }
 .rl-card-notes svg.rl-icon { display: inline-block; flex: none; width: 14px; height: 14px; opacity: 1; filter: none; }
 .jfold-slot > span + .rl-card-notes { margin-left: 8px; }
 
@@ -78,7 +80,8 @@
   .rl-card-word { padding: 6px 8px; text-box: trim-both cap alphabetic; }
 }
 /* A seen card's pills are outlined: a grey fill vanishes on the grey of a hovered or open seen card. */
-.jfold-seen .rl-card-words .rl-card-word { background: none; box-shadow: inset 0 0 0 1px #b9b9b4; }
+.jfold-seen .rl-card-words .rl-card-word, .jfold-off .rl-card-words .rl-card-word { background: none;
+  box-shadow: inset 0 0 0 1px #b9b9b4; }
 .rl-pop .rl-add-word { margin-left: 6px; color: #0a66c2; background: #fff; box-shadow: inset 0 0 0 1px #0a66c2; }
 .rl-pop .rl-add-word:hover { background: #eef5fc; }
 
