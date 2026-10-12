@@ -8,8 +8,12 @@
 .jfold-seen .jfold-slot .jfold-eye { color: #8c8c8c !important; font-weight: 400; white-space: nowrap; }
 .jfold-seen [data-jfold-age], .jfold-seen .jfold-slot .jfold-age { color: #9a9a9a !important; font-weight: 600; white-space: nowrap; }
 .jfold-seen .jfold-slot .jfold-age + .jfold-eye { margin-left: 8px; }
-.jfold-seen .jfold-slot-after { margin-left: 8px; }
-.jfold-seen .jfold-slot-line { display: block; margin: 4px 0 0; }
+.jfold-slot-after { margin-left: 8px; }
+.jfold-slot-line { display: block; margin: 4px 0 0; }
+.jfold-slot-before::after { content: " · "; white-space: pre; color: #666; font-weight: 400; }
+/* "first posted 4 months ago" on a relisted job, in the colour of that first date. */
+.jfold-slot .jfold-first { color: var(--jfold-age-color) !important; font-weight: 600; white-space: nowrap; }
+.jfold-slot > span + .jfold-first, .jfold-slot > .jfold-first + span { margin-left: 8px; }
 /* The classic list draws its separator dot on the item after "Viewed"; with "Viewed" hidden it would lead the line. */
 .jfold-seen li.jfold-hide + li::before { display: none !important; }
 .jfold-seen-note { font-size: 13px; line-height: 1.5; font-weight: 600; color: #8a5a00; white-space: normal; }

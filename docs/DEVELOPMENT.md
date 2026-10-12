@@ -31,6 +31,12 @@ each version is in the [changelog](../CHANGELOG.md).
 
 - **Posting age.** "2 weeks ago" next to a job is coloured from green (a day old) through yellow (two
   weeks) and orange (a month) to red (two months or more), on job pages, search cards and the top card.
+- **First posted.** A card's age is the job's latest listing, so a job relisted today reads "5 hours ago" however
+  old it is. `details.js` asks LinkedIn's own job API (`/voyager/api/jobs/jobPostings/<id>`, the request LinkedIn's
+  pages make, with the `JSESSIONID` cookie as `csrf-token`) for each card's `listedAt` and `originalListedAt`, one
+  job every 0.8 seconds, only for cards on the page, and keeps the answer in `details`. A 429 pauses it for ten
+  minutes. A job relisted two days or more after it was first posted gets "first posted 4 months ago" on its card,
+  and its age takes the colour of that first date.
 
 Where each LinkedIn hook comes from: `research/linkedin-descriptions/LINKEDIN-DOM.md` in jobathan, the project this
 extension came out of.

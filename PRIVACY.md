@@ -19,6 +19,9 @@ what it sends, and to whom.
 - Each answer is saved on your computer, so a job is sent once. It is sent again only if you click "fold again".
 - When you sign in with ChatGPT, the extension talks to OpenAI (`auth.openai.com`) to sign you in, and keeps you
   signed in.
+- **Requests to LinkedIn for the jobs in a list.** To show when each job was first posted, the extension asks
+  LinkedIn for each listed job's data, from your browser and with your LinkedIn session, as LinkedIn's own pages
+  do when you open a job. These requests go to LinkedIn only, and only the two dates are kept.
 - Nothing else is sent anywhere. The extension has no analytics, no tracking and no ads, and it does not send the
   other pages you visit, your notes or your highlight words to anyone.
 
@@ -33,6 +36,7 @@ anywhere.
 - Your notes on jobs and on passages of their descriptions.
 - Your highlight words.
 - The jobs you looked at: each job's LinkedIn id, title, employer, and when you saw it, to grey it out in lists.
+- For each job that appeared in a list: its LinkedIn id, when it was first posted and when it was last listed.
 - The AI's answers for jobs you opened, so they fold again without being sent.
 - Your own instructions for the AI, if you changed them.
 
