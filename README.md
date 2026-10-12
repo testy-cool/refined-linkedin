@@ -14,7 +14,8 @@ remembers which jobs you already opened.
   Click the line to read the part. A line at the top sums it up: "Folded 3 parts, 65% of the description". Lines
   about years of experience, degrees or language levels stay visible even inside a fold.
 - **Your words, highlighted.** Keep a list such as "remote", "German" or "SQL", and they show in blue in every
-  description. If one is inside a folded part, its grey line says so: "· mentions remote".
+  description. If one is inside a folded part, its grey line says so: "· mentions remote". Each card in a job list
+  says which of them its description mentions, so you see it before you open the job.
 - **Notes that stay with the job.** Write a note on a job, or select a sentence in the description and attach a
   note to it. Your notes sit at the top of the job's description, and the job list shows a note icon you can
   hover without opening the job.
@@ -78,8 +79,9 @@ new folder. Chrome replaces the old version and keeps your notes, words and hist
 - Nothing is sent until you tick the box at the top of the settings. Untick it to stop.
 - The text of a job description you open goes to the AI you chose, once. The extension keeps the answer, so it
   sends that job again only if you click **fold again**.
-- To show when each job in a list was first posted, the extension asks LinkedIn for that job's dates, as LinkedIn's
-  own pages do when you open a job. That request goes to LinkedIn only.
+- To show when each job in a list was first posted, and which of your words its description mentions, the
+  extension asks LinkedIn for that job's data, as LinkedIn's own pages do when you open a job. That request goes to
+  LinkedIn only.
 - Nothing else is sent anywhere. Your notes, your words, the jobs you saw and your settings stay in Chrome on your
   computer. There is no Refined LinkedIn server.
 - Without an AI chosen, everything except folding still works.
