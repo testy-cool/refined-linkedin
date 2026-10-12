@@ -39,12 +39,16 @@
   const keepPage = (id, text) => save(`page:${id}`, { text });
 
   // The description's text with a line break after each paragraph and list item. LinkedIn's API sometimes leaves
-  // the breaks out of the text and marks them only in its attributes.
+  // the breaks out of the text and marks them only in its attributes. Those count an emoji as one character, where a
+  // JavaScript string counts two, so each position is mapped first.
   function plain(desc) {
     const t = desc?.text || "";
+    const at16 = [0];
+    for (const ch of t) at16.push(at16[at16.length - 1] + ch.length);
     const ends = new Set();
     for (const a of desc?.attributes || []) {
-      if (/\.(Paragraph|ListItem|LineBreak)$/.test(Object.keys(a.type || {})[0] || "")) ends.add(a.start + a.length);
+      const e = at16[a.start + a.length];
+      if (e !== undefined && /\.(Paragraph|ListItem|LineBreak)$/.test(Object.keys(a.type || {})[0] || "")) ends.add(e);
     }
     let out = "", at = 0;
     for (const e of [...ends].sort((x, y) => x - y)) {
