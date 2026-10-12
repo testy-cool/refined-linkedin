@@ -22,6 +22,8 @@ remembers which jobs you already opened.
   If a company reposts the job under a new link, it still shows as seen.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
   (two months).
+- **Old jobs posted again say so.** LinkedIn shows a reposted job as new. Its card now also says when it was first
+  posted, "first posted 4 months ago", and its age turns the colour of that first date.
 - **You choose the AI that folds.** Use your ChatGPT Plus or Pro plan, a Google Gemini account, or another AI
   service. You can read and change the instructions the AI follows, and try them out in the settings.
 
@@ -76,6 +78,8 @@ new folder. Chrome replaces the old version and keeps your notes, words and hist
 - Nothing is sent until you tick the box at the top of the settings. Untick it to stop.
 - The text of a job description you open goes to the AI you chose, once. The extension keeps the answer, so it
   sends that job again only if you click **fold again**.
+- To show when each job in a list was first posted, the extension asks LinkedIn for that job's dates, as LinkedIn's
+  own pages do when you open a job. That request goes to LinkedIn only.
 - Nothing else is sent anywhere. Your notes, your words, the jobs you saw and your settings stay in Chrome on your
   computer. There is no Refined LinkedIn server.
 - Without an AI chosen, everything except folding still works.

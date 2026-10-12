@@ -46,6 +46,7 @@
       "js": [
         "build.js",
         "folds.js",
+        "details.js",
         "content.js",
         "notes.js",
         "keywords.js"

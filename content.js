@@ -30,6 +30,7 @@
   });
   chrome.storage.local.get("posted").then((r) => { posted = { ...r.posted, ...posted }; });
   chrome.storage.onChanged.addListener((ch) => { if (ch.seen) { seen = ch.seen.newValue || seen; paintLists(); } });
+  self.RLDetails?.onChange(() => paintLists());
   setInterval(() => { if (postedDirty) { postedDirty = false; chrome.storage.local.set({ posted }); } }, 3000);
 
   function notePosted(id, ageText) {
@@ -398,12 +399,24 @@
     const age = ages[ages.length - 1];
     if (age) notePosted(id, age.dataset.jfoldAge);
     const known = !age && id && posted[id] && (rec || viewed) ? posted[id] : null;
+    // A job relisted days after it was first posted says when that was, and its age takes the first date's colour.
+    if (id) self.RLDetails?.want(id);
+    const d = id ? self.RLDetails?.get(id) : null;
+    const first = d && d.l - d.o >= REPOST_MS ? d.o : null;
+    if (first && age) age.style.setProperty("--jfold-age-color", ageColor((Date.now() - first) / 864e5));
     const parts = [];
     if (known) parts.push(["jfold-age", postedLabel(known)]);
+    if (first) parts.push(["jfold-first", `first posted ${postedLabel(first)}`]);
     if (rec) parts.push(["jfold-eye", `👁 ${shortAgo(rec.last || rec.first)}`]);
     const noteCount = self.RLNotes?.count(id) || 0;
     if (noteCount) parts.push(["rl-card-notes", String(noteCount)]);
-    const sig = JSON.stringify(parts);
+    // A promoted card on the classic list shows "Promoted" where the age would be; the slot goes in front of it. A
+    // classic card scrolled far off is an empty <li> until LinkedIn draws it, so it gets no slot until then.
+    const promoted = !age && !viewed ? [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Promoted") : null;
+    const lockup = el.querySelector(".artdeco-entity-lockup__content");
+    const drawn = !el.matches("li") || !!lockup;
+    const place = age ? "after" : viewed ? "viewed" : promoted ? "promoted" : "line";
+    const sig = JSON.stringify([place, parts]);
     let slot = el.querySelector(".jfold-slot");
     if (slot?.dataset.sig === sig) return;
     slot?.remove();
@@ -412,22 +425,27 @@
     viewed?.classList.add("jfold-hide");
     // The dot after "Viewed" stays only when the slot stands where "Viewed" was.
     sep?.classList.toggle("jfold-hide", !parts.length || !!age);
-    if (!parts.length) return;
-    slot = document.createElement(age ? "span" : viewed ? viewed.tagName : "span");
-    if (!age && viewed) slot.className = viewedClass;
-    slot.classList.add("jfold-slot", age ? "jfold-slot-after" : viewed ? "jfold-slot-instead" : "jfold-slot-line");
+    if (!parts.length || !drawn) return;
+    const like = viewed || promoted;
+    slot = document.createElement(age ? "span" : like ? like.tagName : "span");
+    if (!age && like) slot.className = viewed ? viewedClass : promoted.className;
+    slot.classList.add("jfold-slot", age ? "jfold-slot-after" : viewed ? "jfold-slot-instead" : promoted ? "jfold-slot-before" : "jfold-slot-line");
     slot.dataset.sig = sig;
     for (const [cls, text] of parts) {
       const span = document.createElement("span");
       span.className = cls;
       span.textContent = text;
+      if (cls === "jfold-first") span.style.setProperty("--jfold-age-color", ageColor((Date.now() - first) / 864e5));
       if (cls === "rl-card-notes") {
         span.prepend(noteIcon());
         self.RLNotes.hover(span, id);
       }
       slot.append(span);
     }
-    if (age) age.after(slot); else if (viewed) viewed.after(slot); else el.append(slot);
+    if (age) age.after(slot);
+    else if (viewed) viewed.after(slot);
+    else if (promoted) promoted.before(slot);
+    else (lockup || el).append(slot);
   }
 
   // A speech bubble with lines, drawn in the text colour.
@@ -497,6 +515,9 @@
     return HUES[HUES.length - 1][1];
   }
 
+  const ageColor = (days) => `hsl(${Math.round(ageHue(days))} 90% 32%)`;
+  const REPOST_MS = 2 * 864e5; // relisted this long after the first posting counts as a repost
+
   function ageDays(text) {
     const m = (text || "").trim().match(AGE);
     return m ? (/^\d+$/.test(m[1]) ? Number(m[1]) : 1) * DAYS[m[2].toLowerCase()] : null;
@@ -525,8 +546,7 @@
       const el = tw.currentNode.parentElement;
       if (!m || !el || el.dataset.jfoldAge === t || el.closest(".jfold-view, [data-jfold], .jfold-slot")) continue;
       const n = /^\d+$/.test(m[1]) ? Number(m[1]) : 1;
-      const hue = Math.round(ageHue(n * DAYS[m[2].toLowerCase()]));
-      el.style.setProperty("--jfold-age-color", `hsl(${hue} 90% 32%)`); // content.css applies it, grey on seen cards
+      el.style.setProperty("--jfold-age-color", ageColor(n * DAYS[m[2].toLowerCase()])); // content.css applies it, grey on seen cards
       el.style.setProperty("font-weight", "600");
       el.dataset.jfoldAge = t;
     }
