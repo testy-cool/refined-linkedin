@@ -2,6 +2,11 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.11.1 (13 October 2026): your words as pills
+
+- The words a card mentions now show as rounded pills with even room around them, instead of highlighted text.
+  On a job you've seen they're outlined in grey.
+
 ## 0.11.0 (12 October 2026): download your jobs
 
 - Refined LinkedIn now keeps every job you open or scroll past in a list on your computer, with its description,
