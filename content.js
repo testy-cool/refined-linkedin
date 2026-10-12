@@ -286,6 +286,8 @@
     if (box.dataset.jfold && box.dataset.jfold !== job.id && desc === box.dataset.jfoldText) return; // still the last job's text
     box.dataset.jfold = job.id;
     box.dataset.jfoldText = desc;
+    // The text the model reads is the one kept for the download, so the folds it names can be found in it again.
+    self.RLDetails?.save(job.id, { title: job.title, company: job.company, text: desc, from: "page" });
 
     const v = document.createElement("div");
     v.className = "jfold-view";
