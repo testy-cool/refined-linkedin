@@ -586,6 +586,9 @@
     if (!location.pathname.startsWith("/jobs")) return;
     const job = openJob();
     if (job && job.id !== current?.id) onOpen(job);
+    // The open job's own data, place and description included, is kept like a listed one's, also when it was
+    // opened from a link with no card on the page.
+    if (job) self.RLDetails?.want(job.id, true);
     const box = descriptionBox();
     if (box && job) foldDescription(box, job);
     paintAges();
