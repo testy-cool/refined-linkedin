@@ -11,7 +11,7 @@
   let postedDirty = false;
   let current = null; // {id, prior, timer}
   let again = null; // the job whose description is being folded again, asking the model anew
-  self.RL = { openJob, descriptionBox }; // for notes.js
+  self.RL = { openJob, descriptionBox, textColumn }; // for notes.js and keywords.js
 
   const norm = (s) => (s || "").toLowerCase().replace(/\(verified job\)|with verification/g, " ")
     .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -458,7 +458,26 @@
     if (age) age.after(slot);
     else if (viewed) viewed.after(slot);
     else if (promoted) promoted.before(slot);
-    else (lockup || el).append(slot);
+    else {
+      // On its own line, the slot goes above the words the card mentions, where a card's age line would be.
+      const col = lockup || textColumn(el);
+      const words = col.querySelector(":scope > .rl-card-words");
+      if (words) words.before(slot);
+      else col.append(slot);
+    }
+  }
+
+  // The new search page's card is a row: logo, text, buttons. A line added to the card itself, such as the slot on a
+  // card that shows "Applied" where its age would be, becomes another column and squeezes the text to a few letters
+  // a line. The text column is the smallest element holding the card's first and last lines of text, leaving out the
+  // buttons' hidden labels and the lines this extension added.
+  function textColumn(card) {
+    const lines = [...card.querySelectorAll("span, p, strong")]
+      .filter((e) => !e.children.length && e.textContent.trim() && !e.closest("button, .rl-ui, .jfold-slot"));
+    if (lines.length < 2) return card;
+    let col = lines[0];
+    while (col && !col.contains(lines[lines.length - 1])) col = col.parentElement;
+    return col && card.contains(col) ? col : card;
   }
 
   // A speech bubble with lines, drawn in the text colour.

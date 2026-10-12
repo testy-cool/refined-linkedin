@@ -93,7 +93,7 @@
           self.RLDetails.keep(id, { s: sig, w: found });
         } else self.RLDetails.want(id, true);
       }
-      const where = card.matches("li") ? card.querySelector(".artdeco-entity-lockup__content") : textColumn(card);
+      const where = card.matches("li") ? card.querySelector(".artdeco-entity-lockup__content") : self.RL.textColumn(card);
       let line = card.querySelector(".rl-card-words");
       const key = found.join("\n");
       if (line && line.dataset.key === key && line.parentElement === where) continue;
@@ -111,17 +111,6 @@
       });
       where.append(line);
     }
-  }
-
-  // The new search page's card is a row: logo, text, buttons. The text column is the smallest element holding the
-  // card's first and last lines of text, leaving out the buttons' hidden labels.
-  function textColumn(card) {
-    const lines = [...card.querySelectorAll("span, p, strong")]
-      .filter((e) => !e.children.length && e.textContent.trim() && !e.closest("button, .rl-ui"));
-    if (lines.length < 2) return card;
-    let col = lines[0];
-    while (col && !col.contains(lines[lines.length - 1])) col = col.parentElement;
-    return col && card.contains(col) ? col : card;
   }
 
   function tick(job) {
