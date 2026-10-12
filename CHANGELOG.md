@@ -2,6 +2,13 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.8.0 (12 October 2026): reposted jobs say when they were first posted
+
+- LinkedIn shows a reposted job as new. Its card in the job list now also says when it was first posted, such as
+  "first posted 4 months ago", and its age turns the colour of that first date.
+- To know those dates, the extension asks LinkedIn for each job in the list you are looking at, as LinkedIn's own
+  pages do when you open a job. Nothing goes anywhere but LinkedIn.
+
 ## 0.7.1 (12 October 2026): notes in the description, full description in place
 
 - Your notes on a job now sit at the top of its description, under "About the job", instead of under the Apply
