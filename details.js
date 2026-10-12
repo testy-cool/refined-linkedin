@@ -23,13 +23,14 @@
   chrome.storage.local.get("details").then((r) => { details = { ...r.details, ...details }; loaded = true; changed(); pump(); });
   setInterval(() => { if (dirty) { dirty = false; chrome.storage.local.set({ details }); } }, 3000);
 
-  // A kept record merged with what is new, written only when something changed. "at" is when it was first kept.
+  // A kept record, written whole from one answer, so a tab writing the same job at the same moment cannot leave it
+  // half one answer and half the other. Only "at", when it was first kept, carries over. Written only when something
+  // changed.
   let saving = Promise.resolve();
   function save(key, fields) {
     saving = saving.then(async () => {
       const old = (await chrome.storage.local.get(key))[key] || {};
-      const rec = { ...old };
-      for (const [k, v] of Object.entries(fields)) if (v) rec[k] = v;
+      const rec = Object.fromEntries(Object.entries(fields).filter(([, v]) => v));
       rec.at = old.at || Date.now();
       if (JSON.stringify(rec) !== JSON.stringify(old)) await chrome.storage.local.set({ [key]: rec });
     }).catch(() => { /* storage gone, such as after an update: nothing to keep it in */ });
