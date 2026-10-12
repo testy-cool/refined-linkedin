@@ -430,15 +430,18 @@
     const drawn = !el.matches("li") || !!lockup;
     const place = age ? "after" : viewed ? "viewed" : promoted ? "promoted" : "line";
     const sig = JSON.stringify([place, parts]);
+    // A slot on a line of its own goes in the card's text column, which a half-drawn card does not show yet. It moves
+    // there once the card is drawn.
+    const col = place !== "line" ? null : el.matches("li") ? lockup : textColumn(el);
     let slot = el.querySelector(".jfold-slot");
-    if (slot?.dataset.sig === sig) return;
+    if (slot?.dataset.sig === sig && (place !== "line" || slot.parentElement === col)) return;
     slot?.remove();
     const viewedClass = viewed ? viewed.className.replace(/\bjfold-hide\b/, "").trim() : "";
     const sep = viewed?.nextElementSibling?.textContent.trim() === "·" ? viewed.nextElementSibling : null;
     viewed?.classList.add("jfold-hide");
     // The dot after "Viewed" stays only when the slot stands where "Viewed" was.
     sep?.classList.toggle("jfold-hide", !parts.length || !!age);
-    if (!parts.length || !drawn) return;
+    if (!parts.length || !drawn || (place === "line" && !col)) return;
     const like = viewed || promoted;
     slot = document.createElement(age ? "span" : like ? like.tagName : "span");
     if (!age && like) slot.className = viewed ? viewedClass : promoted.className;
@@ -460,7 +463,6 @@
     else if (promoted) promoted.before(slot);
     else {
       // On its own line, the slot goes above the words the card mentions, where a card's age line would be.
-      const col = lockup || textColumn(el);
       const words = col.querySelector(":scope > .rl-card-words");
       if (words) words.before(slot);
       else col.append(slot);
@@ -470,14 +472,14 @@
   // The new search page's card is a row: logo, text, buttons. A line added to the card itself, such as the slot on a
   // card that shows "Applied" where its age would be, becomes another column and squeezes the text to a few letters
   // a line. The text column is the smallest element holding the card's first and last lines of text, leaving out the
-  // buttons' hidden labels and the lines this extension added.
+  // buttons' hidden labels and the lines this extension added. A card drawn no further than its title has none yet.
   function textColumn(card) {
     const lines = [...card.querySelectorAll("span, p, strong")]
       .filter((e) => !e.children.length && e.textContent.trim() && !e.closest("button, .rl-ui, .jfold-slot"));
-    if (lines.length < 2) return card;
+    if (lines.length < 2) return null;
     let col = lines[0];
     while (col && !col.contains(lines[lines.length - 1])) col = col.parentElement;
-    return col && card.contains(col) ? col : card;
+    return col && col !== card && card.contains(col) ? col : null;
   }
 
   // A speech bubble with lines, drawn in the text colour.
