@@ -20,6 +20,7 @@ I built Refined LinkedIn to fix that:
 - An AI folds the company story, the perks and the small print into grey lines, so you read what the job is and what they want from you. You never click "see more". Lines about years of experience, degrees and languages always stay visible, and a click on a grey line opens it.
 - Words you care about, like "remote" or "Python", show up in blue.
 - You can leave a note on a job, or on a single sentence.
+- Every job you open or scroll past is kept on your computer, with its description, and you can download them all as one file.
 
 To set up the AI, sign in with your ChatGPT account (Plus or Pro), or paste an API key for Gemini or any OpenAI-compatible service. I use GPT-6 Luna on medium effort. The folding isn't perfect, but it does the job well enough.
 
@@ -51,7 +52,7 @@ Make LinkedIn job listings quicker to read: fold each job description down to it
 | Permission | Why |
 |---|---|
 | `storage` | Saves the user's settings, notes, highlight words, the jobs they saw, and the AI's answers, on their computer. |
-| `unlimitedStorage` | The list of seen jobs and the saved answers grow with every job opened; without it, Chrome's limit on local storage would eventually drop them. |
+| `unlimitedStorage` | The list of seen jobs, the descriptions of the jobs the user met and the saved answers grow with every job; without it, Chrome's limit on local storage would eventually drop them. |
 | Host `https://www.linkedin.com/*` | The extension works on LinkedIn job pages: it folds the open job's description, greys out seen jobs, colours posting ages and shows notes. |
 | Host `https://generativelanguage.googleapis.com/*` | Sends the open job's description to Google Gemini, when the user chose Gemini and agreed to sending descriptions. |
 | Optional host `https://*/*` | Asked for one address at a time, only when the user saves the address of their own OpenAI-compatible AI service, or signs in with ChatGPT (auth.openai.com, api.openai.com). The extension never asks for all sites. |
@@ -68,7 +69,8 @@ Make LinkedIn job listings quicker to read: fold each job description down to it
 - **Web history:** the LinkedIn jobs the user opened (id, title, employer, time), kept on the computer to grey them
   out.
 - **Website content:** the text of job descriptions the user opens, sent to the AI service the user chose, after they
-  agree.
+  agree; and the descriptions of jobs the user opened or saw in a list, kept on the computer so the user can
+  download them.
 
 Tick all three certifications: no selling or transfer for unrelated purposes, no use unrelated to the single purpose,
 no use for creditworthiness or lending.

@@ -22,8 +22,8 @@ what it sends, and to whom.
 - **Requests to LinkedIn for the jobs in a list.** To show when each job was first posted, and which of your
   highlight words its description mentions, the extension asks LinkedIn for each listed job's data, from your
   browser and with your LinkedIn session, as LinkedIn's own pages do when you open a job. These requests go to
-  LinkedIn only. The extension keeps two dates and the words found; the description itself is kept only until
-  you leave the page.
+  LinkedIn only. The extension keeps two dates, the words found, and the job's description, title, employer and
+  place, on your computer.
 - Nothing else is sent anywhere. The extension has no analytics, no tracking and no ads, and it does not send the
   other pages you visit, your notes or your highlight words to anyone.
 
@@ -40,6 +40,8 @@ anywhere.
 - The jobs you looked at: each job's LinkedIn id, title, employer, and when you saw it, to grey it out in lists.
 - For each job that appeared in a list: its LinkedIn id, when it was first posted, when it was last listed, and
   which of your highlight words its description mentions.
+- The description, title, employer, place and kind of work of each job you opened or that appeared in a list, so you
+  can download them all as one file from the settings.
 - The AI's answers for jobs you opened, so they fold again without being sent.
 - Your own instructions for the AI, if you changed them.
 

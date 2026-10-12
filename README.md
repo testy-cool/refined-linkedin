@@ -25,6 +25,9 @@ remembers which jobs you already opened.
   (two months).
 - **Old jobs posted again say so.** LinkedIn shows a reposted job as new. Its card now also says when it was first
   posted, "first posted 4 months ago", in the colour of that date, and LinkedIn's newer age turns plain grey.
+- **Your jobs, kept.** Every job you open or scroll past in a list is kept on your computer, with its description,
+  title, employer and place. **Download my jobs** in the settings saves them all as one file, with when you opened
+  each job, the words it mentions and your notes, for an AI chat or your own scripts.
 - **You choose the AI that folds.** Use your ChatGPT Plus or Pro plan, a Google Gemini account, or another AI
   service. You can read and change the instructions the AI follows, and try them out in the settings.
 
@@ -82,8 +85,8 @@ new folder. Chrome replaces the old version and keeps your notes, words and hist
 - To show when each job in a list was first posted, and which of your words its description mentions, the
   extension asks LinkedIn for that job's data, as LinkedIn's own pages do when you open a job. That request goes to
   LinkedIn only.
-- Nothing else is sent anywhere. Your notes, your words, the jobs you saw and your settings stay in Chrome on your
-  computer. There is no Refined LinkedIn server.
+- Nothing else is sent anywhere. Your notes, your words, the jobs you saw with their descriptions, and your settings
+  stay in Chrome on your computer. There is no Refined LinkedIn server.
 - Without an AI chosen, everything except folding still works.
 - The full [privacy policy](PRIVACY.md) lists everything the extension keeps and sends.
 
