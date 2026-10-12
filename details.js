@@ -1,8 +1,9 @@
 // LinkedIn's own data for each job in the lists. A card shows the date of the job's latest repost, so a job first
 // posted four months ago can read "20 hours ago"; the data keeps both dates. It also holds the description, which
 // keywords.js reads for the person's words. The data is asked for one job at a time, only for cards on the page.
-// The dates and the words found are kept, so a job is asked about once; the description stays in memory only, and
-// a job is asked about again when the words change and its description is no longer in memory.
+// The dates and the words found are kept in "details", so a job is asked about once. Each job's description, title,
+// employer, place and kind of work are kept on their own, as "job:<id>", for the settings page's download; the
+// description of a job the person opens is the page's own text, which wins over the list's.
 (() => {
   const GAP_MS = 800;
   const PAUSE_MS = 10 * 60 * 1000; // after LinkedIn turns a request away
@@ -20,6 +21,39 @@
 
   chrome.storage.local.get("details").then((r) => { details = { ...r.details, ...details }; loaded = true; changed(); pump(); });
   setInterval(() => { if (dirty) { dirty = false; chrome.storage.local.set({ details }); } }, 3000);
+
+  // One job's kept record, merged with what is new. Writes go one after another, so the list's answer and the open
+  // job's text never overwrite each other.
+  let saving = Promise.resolve();
+  function save(id, fields) {
+    const key = `job:${id}`;
+    saving = saving.then(async () => {
+      const old = (await chrome.storage.local.get(key))[key] || {};
+      const rec = { ...old };
+      for (const [k, v] of Object.entries(fields)) if (v) rec[k] = v;
+      if (fields.from === "list" && old.from === "page") Object.assign(rec, { text: old.text, from: "page" });
+      rec.at = old.at || Date.now(); // when the job was first shown, in a list or open
+      if (JSON.stringify(rec) !== JSON.stringify(old)) await chrome.storage.local.set({ [key]: rec });
+    }).catch(() => { /* storage gone, such as after an update: nothing to keep it in */ });
+  }
+
+  // The description's text with a line break after each paragraph and list item. LinkedIn's API sometimes leaves
+  // the breaks out of the text and marks them only in its attributes.
+  function plain(desc) {
+    const t = desc?.text || "";
+    const ends = new Set();
+    for (const a of desc?.attributes || []) {
+      if (/\.(Paragraph|ListItem|LineBreak)$/.test(Object.keys(a.type || {})[0] || "")) ends.add(a.start + a.length);
+    }
+    let out = "", at = 0;
+    for (const e of [...ends].sort((x, y) => x - y)) {
+      if (e <= at || e >= t.length) continue;
+      out += t.slice(at, e);
+      if (!out.endsWith("\n") && t[e] !== "\n") out += "\n";
+      at = e;
+    }
+    return out + t.slice(at);
+  }
 
   const get = (id) => details[id] || null;
   const text = (id) => (id in texts ? texts[id] : null);
@@ -52,35 +86,59 @@
     busy = true;
     let wait = GAP_MS;
     try {
-      // The headers LinkedIn's own pages send with these requests; csrf-token is the JSESSIONID cookie.
-      const csrf = (document.cookie.match(/JSESSIONID="?([^";]+)"?/) || [])[1];
-      const r = await fetch(`/voyager/api/jobs/jobPostings/${id}?decorationId=com.linkedin.voyager.deco.jobs.web.shared.WebFullJobPosting-65`,
-        { headers: { "csrf-token": csrf, accept: "application/json", "x-restli-protocol-version": "2.0.0" }, credentials: "include" });
-      if (r.status === 429 || r.status === 999) {
-        pausedUntil = Date.now() + PAUSE_MS;
-        wait = PAUSE_MS;
-        queue.unshift(id);
-      } else if (r.ok) {
-        const j = await r.json();
-        const d = j.data || j;
-        if (d.listedAt) {
-          details[id] = { ...details[id], l: d.listedAt, o: Math.min(d.originalListedAt || d.listedAt, d.listedAt) };
-          texts[id] = d.description?.text || "";
+      // A description kept from an earlier page answers without asking LinkedIn again.
+      if (details[id] && !(id in texts)) {
+        const kept = (await chrome.storage.local.get(`job:${id}`))[`job:${id}`];
+        if (kept?.text) {
+          texts[id] = kept.text;
           delete wanted[id];
-          dirty = true;
+          wait = 0;
           changed();
         }
       }
-      // Any other answer, such as a job taken down, stays in wanted, so it is not asked again until the next page
-      // load.
-    } catch { /* offline or blocked: the same */ }
+      if (!done(id)) wait = await ask(id);
+    } catch { /* offline or blocked: it stays in wanted, so it is not asked again until the next page load */ }
     busy = false;
     setTimeout(pump, wait);
+  }
+
+  // Asks LinkedIn for one job's data, and says how long to wait before the next request.
+  async function ask(id) {
+    // The headers LinkedIn's own pages send with these requests; csrf-token is the JSESSIONID cookie.
+    const csrf = (document.cookie.match(/JSESSIONID="?([^";]+)"?/) || [])[1];
+    const r = await fetch(`/voyager/api/jobs/jobPostings/${id}?decorationId=com.linkedin.voyager.deco.jobs.web.shared.WebFullJobPosting-65`,
+      { headers: { "csrf-token": csrf, accept: "application/json", "x-restli-protocol-version": "2.0.0" }, credentials: "include" });
+    if (r.status === 429 || r.status === 999) {
+      pausedUntil = Date.now() + PAUSE_MS;
+      queue.unshift(id);
+      return PAUSE_MS;
+    }
+    // Any other answer, such as a job taken down, stays in wanted, so it is not asked again until the next page load.
+    if (!r.ok) return GAP_MS;
+    const j = await r.json();
+    const d = j.data || j;
+    if (!d.listedAt) return GAP_MS;
+    details[id] = { ...details[id], l: d.listedAt, o: Math.min(d.originalListedAt || d.listedAt, d.listedAt) };
+    texts[id] = plain(d.description);
+    delete wanted[id];
+    dirty = true;
+    changed();
+    const company = Object.values(d.companyDetails || {})[0];
+    save(id, {
+      title: d.title,
+      company: company?.companyResolutionResult?.name || company?.companyName,
+      place: d.formattedLocation,
+      workplace: Object.values(d.workplaceTypesResolutionResults || {}).map((w) => w.localizedName).join(", "),
+      type: d.formattedEmploymentStatus,
+      text: texts[id],
+      from: "list",
+    });
+    return GAP_MS;
   }
 
   // Several scripts repaint when an answer arrives.
   const listeners = [];
   changed = () => listeners.forEach((f) => f());
 
-  self.RLDetails = { get, text, want, keep, onChange: (f) => listeners.push(f) };
+  self.RLDetails = { get, text, want, keep, save, onChange: (f) => listeners.push(f) };
 })();
