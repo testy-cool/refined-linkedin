@@ -342,14 +342,14 @@
         return;
       }
       status.textContent = `Folded ${parts} part${parts === 1 ? "" : "s"}, ${share}% of the description · `;
+      // Opens every fold in place, or closes them all again. LinkedIn's original stays hidden, so nothing shows twice.
       const toggle = document.createElement("button");
       toggle.textContent = "show full description";
+      let full = false;
       toggle.onclick = () => {
-        const orig = box.style.display === "none";
-        box.style.display = orig ? "" : "none";
-        copy.style.display = orig ? "none" : "";
-        for (const b of more) b.style.setProperty("display", orig ? "" : "none");
-        toggle.textContent = orig ? "show folded" : "show full description";
+        full = !full;
+        for (const c of copy.querySelectorAll(".jfold-chip")) if (c.classList.contains("jfold-opened") !== full) c.click();
+        toggle.textContent = full ? "show folded" : "show full description";
       };
       status.append(toggle, " · ", refold("fold again"));
       v.append(copy);
