@@ -3,10 +3,10 @@
 [data-jfold-age] { color: var(--jfold-age-color) !important; }
 /* A seen card goes grey and gains a 👁 badge with when it was viewed. */
 .jfold-seen { background-color: #f3f3f1 !important; }
-.jfold-seen, .jfold-seen * { color: #9a9a9a !important; }
+.jfold-seen, .jfold-seen * { color: #666 !important; }
 .jfold-seen img, .jfold-seen svg { opacity: 0.35; filter: grayscale(1); }
-.jfold-seen .jfold-slot .jfold-eye { color: #8c8c8c !important; font-weight: 400; white-space: nowrap; }
-.jfold-seen [data-jfold-age], .jfold-seen .jfold-slot .jfold-age { color: #9a9a9a !important; font-weight: 600; white-space: nowrap; }
+.jfold-seen .jfold-slot .jfold-eye { color: #666 !important; font-weight: 400; white-space: nowrap; }
+.jfold-seen [data-jfold-age], .jfold-seen .jfold-slot .jfold-age { color: #666 !important; font-weight: 600; white-space: nowrap; }
 .jfold-seen .jfold-slot .jfold-age + .jfold-eye { margin-left: 8px; }
 .jfold-slot-after { margin-left: 8px; }
 .jfold-slot-line { display: block; margin: 4px 0 0; }
