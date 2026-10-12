@@ -2,6 +2,12 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.9.0 (12 October 2026): cards name your words
+
+- Each card in a job list now says which of your highlight words its description mentions, such as "mentions
+  remote Kubernetes", so you see it before you open the job.
+- Changing your words updates the cards without asking LinkedIn again for jobs already on the page.
+
 ## 0.8.0 (12 October 2026): reposted jobs say when they were first posted
 
 - LinkedIn shows a reposted job as new. Its card in the job list now also says when it was first posted, such as
