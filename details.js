@@ -2,8 +2,9 @@
 // posted four months ago can read "20 hours ago"; the data keeps both dates. It also holds the description, which
 // keywords.js reads for the person's words. The data is asked for one job at a time, only for cards on the page.
 // The dates and the words found are kept in "details", so a job is asked about once. Each job's description, title,
-// employer, place and kind of work are kept on their own, as "job:<id>", for the settings page's download; the
-// description of a job the person opens is the page's own text, which wins over the list's.
+// employer, place and kind of work are kept on their own, as "job:<id>", for the settings page's download. The open
+// job's text as the page shows it, the text the model folds, is kept apart as "page:<id>". Each key has one writer,
+// so two tabs never overwrite each other's data.
 (() => {
   const GAP_MS = 800;
   const PAUSE_MS = 10 * 60 * 1000; // after LinkedIn turns a request away
@@ -22,20 +23,20 @@
   chrome.storage.local.get("details").then((r) => { details = { ...r.details, ...details }; loaded = true; changed(); pump(); });
   setInterval(() => { if (dirty) { dirty = false; chrome.storage.local.set({ details }); } }, 3000);
 
-  // One job's kept record, merged with what is new. Writes go one after another, so the list's answer and the open
-  // job's text never overwrite each other.
+  // A kept record merged with what is new, written only when something changed. "at" is when it was first kept.
   let saving = Promise.resolve();
-  function save(id, fields) {
-    const key = `job:${id}`;
+  function save(key, fields) {
     saving = saving.then(async () => {
       const old = (await chrome.storage.local.get(key))[key] || {};
       const rec = { ...old };
       for (const [k, v] of Object.entries(fields)) if (v) rec[k] = v;
-      if (fields.from === "list" && old.from === "page") Object.assign(rec, { text: old.text, from: "page" });
-      rec.at = old.at || Date.now(); // when the job was first shown, in a list or open
+      rec.at = old.at || Date.now();
       if (JSON.stringify(rec) !== JSON.stringify(old)) await chrome.storage.local.set({ [key]: rec });
     }).catch(() => { /* storage gone, such as after an update: nothing to keep it in */ });
   }
+
+  // The open job's text, as content.js reads it from the page.
+  const keepPage = (id, text) => save(`page:${id}`, { text });
 
   // The description's text with a line break after each paragraph and list item. LinkedIn's API sometimes leaves
   // the breaks out of the text and marks them only in its attributes.
@@ -124,14 +125,13 @@
     dirty = true;
     changed();
     const company = Object.values(d.companyDetails || {})[0];
-    save(id, {
+    save(`job:${id}`, {
       title: d.title,
       company: company?.companyResolutionResult?.name || company?.companyName,
       place: d.formattedLocation,
       workplace: Object.values(d.workplaceTypesResolutionResults || {}).map((w) => w.localizedName).join(", "),
       type: d.formattedEmploymentStatus,
       text: texts[id],
-      from: "list",
     });
     return GAP_MS;
   }
@@ -140,5 +140,5 @@
   const listeners = [];
   changed = () => listeners.forEach((f) => f());
 
-  self.RLDetails = { get, text, want, keep, save, onChange: (f) => listeners.push(f) };
+  self.RLDetails = { get, text, want, keep, keepPage, onChange: (f) => listeners.push(f) };
 })();
