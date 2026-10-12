@@ -215,7 +215,10 @@
 
     for (const r of runs) {
       if (!r.nodes.length) continue;
-      const first = r.nodes[0];
+      // The button goes before the run's first words. visit() collects nodes inner elements first, so that is found
+      // by document order, skipping the blank space LinkedIn leaves before a heading the run does not include.
+      const worded = r.nodes.filter((n) => n.textContent.trim());
+      const first = (worded.length ? worded : r.nodes).reduce((a, b) => (b.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING ? b : a));
       const chip = document.createElement(/^(UL|OL)$/.test(first.parentElement.tagName) ? "li" : "span");
       chip.className = "jfold-chip";
       chip.setAttribute("role", "button");
