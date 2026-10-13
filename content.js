@@ -422,8 +422,8 @@
     // beside it goes plain grey, so its colour neither calls the repost fresh nor contradicts its own words.
     if (id) self.RLDetails?.want(id);
     const d = id ? self.RLDetails?.get(id) : null;
-    // Greyed out like a seen job, but without the 👁, until LinkedIn's data for it has arrived and says remote.
-    el.classList.toggle("jfold-off", remoteOnly && !!d?.wt && !d.wt.includes(REMOTE));
+    // Once LinkedIn's data for it has arrived, a job that isn't remote greys out like a seen one, without the 👁.
+    el.classList.toggle("jfold-off", remoteOnly && !!d?.wt && !d.wt.includes(REMOTE) && !saysRemote(el));
     const first = d && d.l - d.o >= REPOST_MS ? d.o : null;
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
     const parts = [];
@@ -576,6 +576,13 @@
   }
   const REPOST_MS = 2 * 864e5; // relisted this long after the first posting counts as a repost
   const REMOTE = 2; // LinkedIn's workplace type for a remote job
+
+  // Whether LinkedIn's card calls the job remote, as in "London (Remote)". The data of some such jobs names no
+  // workplace type at all, so the card's own word counts too.
+  function saysRemote(card) {
+    return [...card.querySelectorAll("span, p, li")].some((e) => !e.children.length && /\(Remote\)\s*$/.test(e.textContent)
+      && !e.closest(".rl-ui, .jfold-slot, .rl-card-words"));
+  }
 
   function ageDays(text) {
     const m = (text || "").trim().match(AGE);
