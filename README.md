@@ -46,7 +46,7 @@ remembers which jobs you already opened. It is free and open source.
 
 **Your words and the remote switch, in the pop-up behind the toolbar icon**
 
-![The toolbar pop-up with five highlight words and "Grey out jobs that aren't remote" ticked](docs/images/popup.png)
+<img src="docs/images/popup.png" alt="The toolbar pop-up with five highlight words and &quot;Grey out jobs that aren't remote&quot; ticked" width="528">
 
 ## Install
 
