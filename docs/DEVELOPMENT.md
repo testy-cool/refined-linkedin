@@ -37,7 +37,8 @@ each version is in the [changelog](../CHANGELOG.md).
   greyed out in the classic search, the collections, the new search-results page and the "More jobs"
   cards; an open job seen before says "Seen before, <date>".
 - **Remote only.** The pop-up's "Grey out jobs that aren't remote" is saved as `remoteOnly`. With it on, a card whose
-  job data does not say remote gets `jfold-off`, the seen grey without the 👁. The types come from LinkedIn's
+  job data does not say remote gets `jfold-off`, the seen grey without the 👁, unless the card itself says "(Remote)":
+  some jobs LinkedIn labels "London (Remote)" have no type in their data. The types come from LinkedIn's
   `workplaceTypes` (1 on-site, 2 remote, 3 hybrid, or none), kept as `wt` in `details`; a job kept before 0.12.0 has
   no `wt` and is asked about once more. It follows a switch, not LinkedIn's own filter, because the new search page
   keeps that filter as `f_SAL=f_SA_id_225001:272001`, and still lists hybrid jobs with it. The "More jobs" cards under
