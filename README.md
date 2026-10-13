@@ -6,7 +6,7 @@ A LinkedIn job post buries the job under the company pitch, the perks and the le
 Chrome extension that folds those parts away, so you see what you would do and what they expect from you. It also
 remembers which jobs you already opened.
 
-Install it free from the [Chrome Web Store](https://chromewebstore.google.com/detail/refined-linkedin/gindiffhjdbhhgjdlcgeoakfcjcclabh).
+<a href="https://chromewebstore.google.com/detail/refined-linkedin/gindiffhjdbhhgjdlcgeoakfcjcclabh"><img src="docs/images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="248"></a>
 
 ![A LinkedIn job description folding: the company pitch collapses into one grey line, which opens and closes with a click](docs/images/fold.gif)
 
