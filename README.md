@@ -4,7 +4,7 @@
 
 A LinkedIn job post buries the job under the company pitch, the perks and the legal text. Refined LinkedIn is a
 Chrome extension that folds those parts away, so you see what you would do and what they expect from you. It also
-remembers which jobs you already opened.
+remembers which jobs you already opened. It is free and open source.
 
 <a href="https://chromewebstore.google.com/detail/refined-linkedin/gindiffhjdbhhgjdlcgeoakfcjcclabh"><img src="docs/images/chrome-web-store-badge.png" alt="Available in the Chrome Web Store" width="248"></a>
 
@@ -16,8 +16,9 @@ remembers which jobs you already opened.
   Click the line to read the part. A line at the top sums it up: "Folded 3 parts, 65% of the description". Lines
   about years of experience, degrees or language levels stay visible even inside a fold.
 - **Your words, highlighted.** Keep a list such as "remote", "German" or "SQL", and they show in blue in every
-  description, along with their usual forms: "agent" also finds "agents" and "agentic". If one is inside a folded part, its grey line says so: "· mentions remote". Each card in a job list
-  says which of them its description mentions, so you see it before you open the job.
+  description, along with their usual forms: "agent" also finds "agents" and "agentic". If one is inside a folded
+  part, its grey line says so: "· mentions remote". Each card in a job list shows the ones its description mentions,
+  so you see them before you open the job.
 - **Notes that stay with the job.** Write a note on a job, or select a sentence in the description and attach a
   note to it. Your notes sit at the top of the job's description, and the job list shows a note icon you can
   hover without opening the job.
@@ -39,13 +40,13 @@ remembers which jobs you already opened.
 
 ![A note on the job and a note on one sentence, above the folded description](docs/images/notes.png)
 
-**Seen jobs greyed out, ages in colour, and a job's notes on hover**
+**A job list: your words on each card, seen and hybrid jobs in grey, ages in colour, and reposts' first dates**
 
-![The job list with seen jobs greyed and a note shown on hover](docs/images/list.png)
+![Five job cards. Two remote ones are white with blue word pills: one posted 12 hours ago, in green, the other first posted 4 months ago, in red. A seen one is grey with "👁 3 d ago". Two hybrid ones are grey.](docs/images/list.png)
 
-**Your words, in the pop-up behind the toolbar icon**
+**Your words and the remote switch, in the pop-up behind the toolbar icon**
 
-![The toolbar pop-up listing highlight words](docs/images/popup.png)
+![The toolbar pop-up with five highlight words and "Grey out jobs that aren't remote" ticked](docs/images/popup.png)
 
 ## Install
 
