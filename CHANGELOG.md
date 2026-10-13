@@ -2,6 +2,11 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.12.1 (13 October 2026): a card that says Remote stays white
+
+- With **Grey out jobs that aren't remote** ticked, a job whose card says "(Remote)" no longer turns grey when
+  LinkedIn's data for it leaves out that it's remote.
+
 ## 0.12.0 (13 October 2026): grey out jobs that aren't remote
 
 - LinkedIn's Remote filter still lists hybrid jobs. Tick **Grey out jobs that aren't remote** in the pop-up, and
