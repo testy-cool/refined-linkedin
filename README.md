@@ -60,6 +60,8 @@ remembers which jobs you already opened. It is free and open source.
    - **Other OpenAI-compatible API**: its address, key and model.
 
    Then click **Save and test**.
+
+   ![The settings with the agreement ticked, ChatGPT chosen and the Sign in with ChatGPT button](docs/images/settings.png)
 4. Open any job on LinkedIn. After a few seconds the description shows a grey line where each part was folded,
    like the animation above.
 
