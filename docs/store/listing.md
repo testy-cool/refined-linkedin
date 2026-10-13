@@ -37,6 +37,9 @@ Not made or endorsed by LinkedIn, and I'd like to keep it that way.
 **Images,** in `docs/store/`: the icon is `icons/icon128.png`; screenshots 1 to 5 (1280×800), in the order of their
 numbers; small promo tile `promo-small-440x280.png`; marquee promo tile `promo-marquee-1400x560.png`.
 
+**Global promo video:** a YouTube link. The video is `docs/store/promo-video.mp4`, 49 seconds, 1280×720, with no
+sound: the folding, a note on a sentence, the words on the cards, the remote switch and an end card.
+
 **Homepage and support:** https://github.com/testy-cool/refined-linkedin and
 https://github.com/testy-cool/refined-linkedin/issues
 
