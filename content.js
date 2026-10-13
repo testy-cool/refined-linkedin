@@ -576,14 +576,16 @@
   }
   const REPOST_MS = 2 * 864e5; // relisted this long after the first posting counts as a repost
   const REMOTE = 2; // LinkedIn's workplace type for a remote job
+  const WORKPLACE = /\((Remote|Hybrid|On-site)\)/; // as on a card's location line, "London (Hybrid)"
 
   // Whether LinkedIn's card calls the job remote, as in "London (Remote)". The data of some such jobs names no
-  // workplace type at all, so the card's own word counts too. The last line ending in a workplace type is the label, so
-  // a title such as "Support (Remote)" gives way to "London (On-site)" under it. A line may hold an icon, not text.
+  // workplace type at all, so the card's own word counts too. The last line naming a workplace type is the label, so a
+  // title such as "Support (Remote)" gives way to "London (On-site)" under it. A line is the innermost element that
+  // names one, so an icon inside it, even one with a text title, does not hide it.
   function saysRemote(card) {
-    const lines = [...card.querySelectorAll("span, p, li, div")].filter((e) => /\((Remote|Hybrid|On-site)\)\s*$/.test(e.textContent)
-      && ![...e.children].some((c) => c.textContent.trim()) && !e.closest(".rl-ui, .jfold-slot, .rl-card-words"));
-    return /\(Remote\)\s*$/.test(lines[lines.length - 1]?.textContent || "");
+    const lines = [...card.querySelectorAll("span, p, li, div")].filter((e) => WORKPLACE.test(e.textContent)
+      && ![...e.children].some((c) => WORKPLACE.test(c.textContent)) && !e.closest(".rl-ui, .jfold-slot, .rl-card-words"));
+    return /\(Remote\)/.test(lines[lines.length - 1]?.textContent || "");
   }
 
   function ageDays(text) {
