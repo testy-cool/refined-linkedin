@@ -35,7 +35,7 @@ Not made or endorsed by LinkedIn, and I'd like to keep it that way.
 **Category:** Workflow & Planning. **Language:** English.
 
 **Images,** in `docs/store/`: the icon is `icons/icon128.png`; screenshots 1 to 5 (1280×800), in the order of their
-numbers; small promo tile `promo-small-440x280.png`.
+numbers; small promo tile `promo-small-440x280.png`; marquee promo tile `promo-marquee-1400x560.png`.
 
 **Homepage and support:** https://github.com/testy-cool/refined-linkedin and
 https://github.com/testy-cool/refined-linkedin/issues
