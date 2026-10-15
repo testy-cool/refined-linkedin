@@ -28,10 +28,11 @@
   const hasCompany = (name) => !!name && (s.greyCompanies || []).some((c) => norm(c) === norm(name));
 
   // The first listed word the title holds as a whole word, any case: "Intern" finds "Product Intern" but not
-  // "International".
+  // "International". Its punctuation counts, so "C++" never finds "C#".
+  const plain = (t) => (t || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
   function titleWord(title) {
-    const t = norm(title);
-    return (s.greyTitleWords || []).find((w) => norm(w) && new RegExp(`(?<![\\p{L}\\p{N}])${esc(norm(w))}(?![\\p{L}\\p{N}])`, "u").test(t));
+    const t = plain(title);
+    return (s.greyTitleWords || []).find((w) => plain(w) && new RegExp(`(?<![\\p{L}\\p{N}])${esc(plain(w))}(?![\\p{L}\\p{N}])`, "u").test(t));
   }
 
   // Why a card goes grey, as short labels; none means it stays white. card holds what content.js read off it:
@@ -54,10 +55,15 @@
   // The words to show for a card's reasons, or "" when the card already shows them.
   const label = (list) => [...new Set(list.filter(Boolean))].join(" · ");
 
-  async function setCompany(name, on) {
-    const { greyCompanies = [] } = await chrome.storage.local.get("greyCompanies");
-    const rest = greyCompanies.filter((c) => norm(c) !== norm(name));
-    await chrome.storage.local.set({ greyCompanies: on ? [...rest, name.trim()] : rest });
+  // Changes to the list run one after another, so two quick clicks never write over each other.
+  let writing = Promise.resolve();
+  function setCompany(name, on) {
+    writing = writing.then(async () => {
+      const { greyCompanies = [] } = await chrome.storage.local.get("greyCompanies");
+      const rest = greyCompanies.filter((c) => norm(c) !== norm(name));
+      await chrome.storage.local.set({ greyCompanies: on ? [...rest, name.trim()] : rest });
+    }).catch(() => { /* storage gone, such as after an update */ });
+    return writing;
   }
 
   // "Grey out jobs from Wolt" under the open job, or the way back once it is greyed out.
