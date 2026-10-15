@@ -4,20 +4,25 @@
 // The dates and the words found are kept in "details", so a job is asked about once. Each job's description, title,
 // employer, place and kind of work are kept on their own, as "job:<id>", for the settings page's download. The open
 // job's text as the page shows it, the text the model folds, is kept apart as "page:<id>". Each key has one writer,
-// so two tabs never overwrite each other's data.
+// so two tabs never overwrite each other's data. With "Jobs with over 100 applicants" ticked in the pop-up, each
+// card's job also gets its applicant count, from LinkedIn's public page for the job: the job data says 0 for every job.
 (() => {
   const GAP_MS = 800;
   const PAUSE_MS = 10 * 60 * 1000; // after LinkedIn turns a request away
   const STALE_MS = 5000; // a card not seen on the page for this long is dropped from the queue
+  const COUNT_MS = 864e5; // an applicant count this old is asked for again
 
   // job id -> {l: when it was last listed, o: when it was first listed, wt: its workplace types, m: words found,
-  // see keep}. LinkedIn's workplace types are 1 on-site, 2 remote and 3 hybrid; a job may have none.
+  // see keep, a: applicants, {n: how many at least, s: LinkedIn's words, t: when asked}}. LinkedIn's workplace types
+  // are 1 on-site, 2 remote and 3 hybrid; a job may have none.
   let details = {};
   const texts = {}; // job id -> description, for this page load
   let loaded = false;
   let dirty = false;
   const queue = [];
-  const wanted = {}; // job id -> {at: when a card last asked for it, text: whether the description is needed}
+  // job id -> {at: when a card last asked for it, text: whether the description is needed, a: whether the applicant
+  // count is}
+  const wanted = {};
   let busy = false;
   let pausedUntil = 0;
   let changed;
@@ -67,13 +72,14 @@
   const text = (id) => (id in texts ? texts[id] : null);
   // A job kept by a version before 0.12.0 has no workplace types, so it is asked about once more.
   const known = (id) => !!details[id]?.wt;
-  const done = (id) => known(id) && (!wanted[id]?.text || id in texts);
+  const counted = (id) => Date.now() - (details[id]?.a?.t || 0) < COUNT_MS;
+  const done = (id) => known(id) && (!wanted[id]?.text || id in texts) && (!wanted[id]?.a || counted(id));
 
-  // needText: the description is wanted too, not only the dates.
-  function want(id, needText = false) {
-    if (!id || (known(id) && (!needText || id in texts))) return;
+  // needText: the description is wanted too, not only the dates. needCount: the applicant count is.
+  function want(id, needText = false, needCount = false) {
+    if (!id || (known(id) && (!needText || id in texts) && (!needCount || counted(id)))) return;
     if (!(id in wanted)) queue.push(id);
-    wanted[id] = { at: Date.now(), text: needText || !!wanted[id]?.text };
+    wanted[id] = { at: Date.now(), text: needText || !!wanted[id]?.text, a: needCount || !!wanted[id]?.a };
     pump();
   }
 
@@ -102,12 +108,17 @@
         if (kept?.text) {
           texts[id] = kept.text;
           // A job still to be asked about stays wanted, so a refusal is not asked again until the next page load.
-          if (known(id)) delete wanted[id];
+          if (done(id)) delete wanted[id];
           wait = 0;
           changed();
         }
       }
-      if (!done(id)) wait = await ask(id);
+      if (!known(id) || (wanted[id]?.text && !(id in texts))) {
+        wait = await ask(id);
+        // Its applicants are asked for next, once its data has come.
+        if (known(id) && wait === GAP_MS && wanted[id] && !done(id)) queue.unshift(id);
+      } else if (!done(id)) wait = await count(id);
+      if (done(id)) delete wanted[id];
     } catch { /* offline or blocked: it stays in wanted, so it is not asked again until the next page load */ }
     busy = false;
     setTimeout(pump, wait);
@@ -132,7 +143,6 @@
     details[id] = { ...details[id], l: d.listedAt, o: Math.min(d.originalListedAt || d.listedAt, d.listedAt),
       wt: (d.workplaceTypes || []).map((u) => Number(String(u).split(":").pop())).filter(Boolean) };
     texts[id] = plain(d.description);
-    delete wanted[id];
     dirty = true;
     changed();
     const company = Object.values(d.companyDetails || {})[0];
@@ -144,6 +154,27 @@
       type: d.formattedEmploymentStatus,
       text: texts[id],
     });
+    return GAP_MS;
+  }
+
+  // Asks LinkedIn's public page for the job how many people applied: "Over 200 applicants", "33 applicants" or "Be
+  // among the first 25 applicants". A job with none of these, such as a closed one, is kept with no count.
+  async function count(id) {
+    const r = await fetch(`/jobs-guest/jobs/api/jobPosting/${id}`, { credentials: "include" });
+    if (r.status === 429 || r.status === 999) {
+      pausedUntil = Date.now() + PAUSE_MS;
+      queue.unshift(id);
+      return PAUSE_MS;
+    }
+    if (!r.ok) return GAP_MS;
+    const html = await r.text();
+    const s = (html.match(/num-applicants__caption[^>]*>([^<]*)</) || [])[1]?.replace(/\s+/g, " ").trim() || "";
+    const m = s.match(/(\d[\d,]*)/);
+    const n = !m ? null : /first/i.test(s) ? 0 : Number(m[1].replace(/,/g, "")) + (/over/i.test(s) ? 1 : 0);
+    if (!details[id]) return GAP_MS;
+    details[id].a = { n, s, t: Date.now() };
+    dirty = true;
+    changed();
     return GAP_MS;
   }
 
