@@ -47,6 +47,7 @@
         "build.js",
         "folds.js",
         "details.js",
+        "filters.js",
         "content.js",
         "notes.js",
         "keywords.js"

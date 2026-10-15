@@ -67,6 +67,12 @@
 .jfold-seen .jfold-slot .rl-card-notes, .jfold-off .jfold-slot .rl-card-notes { color: #0a66c2 !important; }
 .rl-card-notes svg.rl-icon { display: inline-block; flex: none; width: 14px; height: 14px; opacity: 1; filter: none; }
 .jfold-slot > span + .rl-card-notes { margin-left: 8px; }
+/* Why a greyed-out job is grey, where the card does not say it: "over 200 applicants", "title has "intern"". */
+.jfold-slot .rl-why { color: #666 !important; font-weight: 600; }
+.jfold-slot > span + .rl-why, .jfold-slot > .rl-why + span { margin-left: 8px; }
+/* With "Hide them instead" ticked, a greyed-out job leaves the list. */
+.rl-gone { display: none !important; }
+.rl-foot .rl-company-link { margin-left: auto; }
 
 /* Highlight words (issue #9): light blue, apart from the yellow of noted passages. */
 ::highlight(rl-keyword) { background-color: #cde4ff; }

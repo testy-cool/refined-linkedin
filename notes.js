@@ -194,6 +194,9 @@
       foot.append(linkButton("+ Note on this job", () => write("job", "", (t) => { if (t) entry(job).job = { text: t, at: Date.now() }; }, "What you think of this job")));
     }
     foot.append(el("span", "rl-hint", n.marks.length ? "Select more text in the description to note it." : "or select text in the description"));
+    // The way to grey out every job from this company, see filters.js.
+    const company = self.RLFilters?.companyLink(job.company);
+    if (company) foot.append(company);
     panel.append(foot);
     if (writing && (hadFocus || document.activeElement === document.body)) writing.node.querySelector("textarea").focus();
   }

@@ -1,20 +1,25 @@
 /* Text sizes stay at 12px or more. */
-body { width: 320px; margin: 0; padding: 14px 16px 16px; color: #1d1d1d; font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
+body { width: 320px; margin: 0; padding: 12px 16px 14px; color: #1d1d1d; font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
 h1 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 16px; }
+h2 { margin: 18px 0 0; font-size: 15px; }
+form.add { margin-top: 12px; }
 label { display: block; margin: 0 0 6px; font-weight: 600; }
 .row { display: flex; gap: 8px; }
-input { flex: 1; min-width: 0; padding: 6px 8px; font: inherit; border: 1px solid #b9b9b6; border-radius: 4px; }
+input { flex: 1; min-width: 0; padding: 4px 8px; font: inherit; border: 1px solid #b9b9b6; border-radius: 4px; }
 input:focus { outline: 2px solid #0a66c2; outline-offset: 0; border-color: #0a66c2; }
-button { padding: 6px 14px; font: inherit; font-weight: 600; color: #fff; background: #0a66c2; border: 0; border-radius: 16px; cursor: pointer; }
+button { padding: 4px 14px; font: inherit; font-weight: 600; color: #fff; background: #0a66c2; border: 0; border-radius: 16px; cursor: pointer; }
 button:hover { background: #004182; }
-#words { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
-#words:empty { display: none; }
-#words li { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 10px; background: #cde4ff; border-radius: 14px; }
-#words li button { padding: 0 6px; font-size: 16px; line-height: 1.2; font-weight: 400; color: #33465c; background: none; border-radius: 10px; }
-#words li button:hover { background: #a9cdf5; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.pills:empty { display: none; }
+.pills li { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 10px; background: #cde4ff; border-radius: 14px; }
+.pills li button { padding: 0 6px; font-size: 16px; line-height: 1.2; font-weight: 400; color: #33465c; background: none; border-radius: 10px; }
+.pills li button:hover { background: #a9cdf5; }
+/* What greys jobs out sits on grey, apart from the blue of the highlight words. */
+.pills[data-key^="grey"] li { background: #e8e7e3; }
+.pills[data-key^="grey"] li button:hover { background: #d6d5d0; }
 .hint { margin: 10px 0 0; color: #666; font-size: 13px; }
-.check { display: flex; align-items: center; gap: 8px; margin: 16px 0 0; font-weight: 600; cursor: pointer; }
+.check { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; font-weight: 400; cursor: pointer; }
+.hide-check { margin-top: 14px; font-weight: 600; }
 .check input { flex: none; width: 16px; height: 16px; margin: 0; padding: 0; accent-color: #0a66c2; }
-.check-hint { margin-top: 4px; }
-.link { display: block; margin: 14px 0 0; padding: 0; color: #0a66c2; background: none; font-weight: 400; text-decoration: underline; }
+.link { display: block; margin: 12px 0 0; padding: 0; color: #0a66c2; background: none; font-weight: 400; text-decoration: underline; }
 .link:hover { background: none; color: #004182; }
