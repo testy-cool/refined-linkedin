@@ -412,7 +412,8 @@
   // the extension never saw the job opened. Where LinkedIn dropped the age for "Viewed", the remembered one stands in
   // its place.
   function mark(el, rec, id, openId) {
-    const labels = [...el.querySelectorAll("p, li, span")].filter((e) => !e.children.length && !e.closest(".jfold-slot"));
+    // LinkedIn's own labels, leaving out the lines this extension adds, such as a highlight word "Applied".
+    const labels = [...el.querySelectorAll("p, li, span")].filter((e) => !e.children.length && !e.closest(".jfold-slot, .rl-ui"));
     const labelled = (re) => labels.find((e) => re.test(e.textContent.trim()));
     const viewed = labelled(/^Viewed$/);
     el.classList.toggle("jfold-seen", !!(rec || viewed));
@@ -433,10 +434,10 @@
       promoted: !!labelled(/^Promoted$/), applied: !!labelled(/^Applied( .* ago)?$/) }) || [];
     el.classList.toggle("jfold-off", why.length > 0);
     // With "Hide them instead" ticked, those jobs leave the list, as do jobs dismissed with LinkedIn's ×. The open
-    // job stays.
+    // job stays, and so does a seen job, grey.
     // LinkedIn says "Success, the job <title> was dismissed. We won’t show you this job again."
     const dismissed = !!labelled(/We won.t show you this job again/);
-    const gone = !!self.RLFilters?.hide && (why.length > 0 || dismissed) && (!id || id !== openId);
+    const gone = !!self.RLFilters?.hide && (why.length > 0 || dismissed) && (!id || id !== openId) && !rec && !viewed;
     for (const e of listItem(el)) e.classList.toggle("rl-gone", gone);
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
     const parts = [];
