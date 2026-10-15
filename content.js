@@ -72,7 +72,10 @@
       return [text(card.querySelector(".job-card-list__title--link strong")) || card.querySelector(".job-card-list__title--link")?.getAttribute("aria-label"),
         text(card.querySelector(".artdeco-entity-lockup__subtitle"))];
     }
-    const l = leaves(card); // title, then employer, then place
+    // Title, then employer, then place. The new search page writes the title twice, once for screen readers ("Product
+    // Owner (Verified job)") and once on screen ("Product Owner"), so a second line with the same title is skipped.
+    const l = leaves(card);
+    if (l.length > 2 && norm(l[1]) === norm(l[0])) l.splice(1, 1);
     return [l[0], l[1]];
   }
 
