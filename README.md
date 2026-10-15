@@ -24,8 +24,12 @@ remembers which jobs you already opened. It is free and open source.
   hover without opening the job.
 - **Seen jobs stay seen.** Jobs you opened turn grey in every list, with the time you saw them: "👁 3 days ago".
   If a company reposts the job under a new link, it still shows as seen.
-- **Remote jobs only, if you like.** LinkedIn's Remote filter still lists hybrid jobs. Tick **Grey out jobs that
-  aren't remote** in the pop-up, and every job that isn't remote turns grey like a seen one.
+- **Grey out the jobs you don't want.** Under **Grey out** in the pop-up, tick what you'd rather not see: jobs
+  that aren't remote (LinkedIn's Remote filter still lists hybrid ones), reposted jobs, jobs with over 100
+  applicants, promoted jobs and jobs you applied to. Add companies, or words such as "Intern" or "Senior" that a
+  job's title must not have. Those jobs turn grey like a seen one, and say why where the card doesn't: "over 200
+  applicants". Under an open job, **Grey out jobs from** its company adds it in one click. Tick **Hide them
+  instead of greying them** and they leave the list, along with jobs you dismissed with LinkedIn's ×.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
   (two months).
 - **Old jobs posted again say so.** LinkedIn shows a reposted job as new. Its card now also says when it was first
@@ -90,8 +94,9 @@ new folder. Chrome replaces the old version and keeps your notes, words and hist
 - The text of a job description you open goes to the AI you chose, once. The extension keeps the answer, so it
   sends that job again only if you click **fold again**.
 - To show when each job in a list was first posted, whether it is remote, and which of your words its description
-  mentions, the extension asks LinkedIn for that job's data, as LinkedIn's own pages do when you open a job. That
-  request goes to LinkedIn only.
+  mentions, the extension asks LinkedIn for that job's data, as LinkedIn's own pages do when you open a job. With
+  "Jobs with over 100 applicants" ticked, it also asks LinkedIn's public page for the job how many people applied.
+  These requests go to LinkedIn only.
 - Nothing else is sent anywhere. Your notes, your words, the jobs you saw with their descriptions, and your settings
   stay in Chrome on your computer. There is no Refined LinkedIn server.
 - Without an AI chosen, everything except folding still works.

@@ -2,6 +2,18 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.13.0 (16 October 2026): grey out or hide the jobs you don't want
+
+- The pop-up has a **Grey out** section. Besides jobs that aren't remote, you can grey out reposted jobs, jobs with
+  over 100 applicants, promoted jobs and jobs you applied to.
+- Add companies, or words a job's title must not have, such as "Intern" or "Senior". Under an open job, **Grey out
+  jobs from** its company adds it in one click.
+- A greyed-out card says why when the card doesn't already: "over 200 applicants", "company you greyed out".
+- Tick **Hide them instead of greying them** and those jobs leave the list, along with jobs you dismissed with
+  LinkedIn's ×. Jobs you've seen stay grey, and the job you have open stays.
+- On LinkedIn's new job search page, a job no longer shows as seen because you opened another job with the same
+  title at a different company, and a job reposted under a new link by the same company shows as seen.
+
 ## 0.12.1 (13 October 2026): a card that says Remote stays white
 
 - With **Grey out jobs that aren't remote** ticked, a job whose card says "(Remote)" no longer turns grey when
