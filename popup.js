@@ -12,10 +12,10 @@ async function draw(key) {
     x.textContent = "×";
     x.title = `Remove ${w}`;
     x.setAttribute("aria-label", x.title);
-    x.addEventListener("click", async () => {
+    x.addEventListener("click", () => change(async () => {
       const { [key]: now = [] } = await chrome.storage.local.get(key);
       await chrome.storage.local.set({ [key]: now.filter((k) => k !== w) });
-    });
+    }));
     li.append(w, x);
     return li;
   }));
@@ -23,13 +23,19 @@ async function draw(key) {
   if (empty) empty.hidden = list.length > 0;
 }
 
+// Changes to a list run one after another, so a quick add and remove never write over each other.
+let writing = Promise.resolve();
+const change = (f) => (writing = writing.then(f));
+
 // Adds entries, skipping ones already there in any case. Highlight words go through keywords.js, which does the same.
-async function add(key, entries) {
-  if (key === "keywords") return RLKeywords.add(entries);
-  const { [key]: list = [] } = await chrome.storage.local.get(key);
-  const have = new Set(list.map((w) => w.toLowerCase()));
-  const fresh = entries.map((w) => w.replace(/\s+/g, " ").trim()).filter((w) => w && !have.has(w.toLowerCase()) && have.add(w.toLowerCase()));
-  if (fresh.length) await chrome.storage.local.set({ [key]: [...list, ...fresh] });
+function add(key, entries) {
+  if (key === "keywords") return change(() => RLKeywords.add(entries));
+  return change(async () => {
+    const { [key]: list = [] } = await chrome.storage.local.get(key);
+    const have = new Set(list.map((w) => w.toLowerCase()));
+    const fresh = entries.map((w) => w.replace(/\s+/g, " ").trim()).filter((w) => w && !have.has(w.toLowerCase()) && have.add(w.toLowerCase()));
+    if (fresh.length) await chrome.storage.local.set({ [key]: [...list, ...fresh] });
+  });
 }
 
 for (const form of document.querySelectorAll("form.add")) {
