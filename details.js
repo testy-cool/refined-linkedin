@@ -113,10 +113,12 @@
           changed();
         }
       }
+      // An applicant count is asked for only while the pop-up's switch for it is on.
+      if (wanted[id]?.a && !self.RLFilters?.counts) wanted[id].a = false;
       if (!known(id) || (wanted[id]?.text && !(id in texts))) {
         wait = await ask(id);
-        // Its applicants are asked for next, once its data has come.
-        if (known(id) && wait === GAP_MS && wanted[id] && !done(id)) queue.unshift(id);
+        // Its applicants are asked for next, once its data has come. A refused request is not asked again.
+        if (known(id) && id in texts && wanted[id] && !done(id)) queue.unshift(id);
       } else if (!done(id)) wait = await count(id);
       if (done(id)) delete wanted[id];
     } catch { /* offline or blocked: it stays in wanted, so it is not asked again until the next page load */ }
