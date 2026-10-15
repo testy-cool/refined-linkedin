@@ -13,6 +13,7 @@ async function draw(key) {
     x.title = `Remove ${w}`;
     x.setAttribute("aria-label", x.title);
     x.addEventListener("click", () => change(async () => {
+      if (key !== "keywords") return askBackground(key, { remove: [w] });
       const { [key]: now = [] } = await chrome.storage.local.get(key);
       await chrome.storage.local.set({ [key]: now.filter((k) => k !== w) });
     }));
@@ -23,19 +24,24 @@ async function draw(key) {
   if (empty) empty.hidden = list.length > 0;
 }
 
-// Changes to a list run one after another, so a quick add and remove never write over each other.
+// Changes to a list run one after another, so a quick add and remove never write over each other. One that fails
+// does not stop the next.
 let writing = Promise.resolve();
-const change = (f) => (writing = writing.then(f));
+function change(f) {
+  const run = writing.then(f);
+  writing = run.catch(() => {});
+  return run;
+}
 
-// Adds entries, skipping ones already there in any case. Highlight words go through keywords.js, which does the same.
+// The "Grey out" lists are changed by background.js, which a LinkedIn tab's "Grey out jobs from" link uses too.
+async function askBackground(key, change) {
+  const r = await chrome.runtime.sendMessage({ type: "list", key, ...change });
+  if (r?.error) throw new Error(r.error);
+}
+
+// Adds entries, skipping ones already there. Highlight words go through keywords.js, which does the same.
 function add(key, entries) {
-  if (key === "keywords") return change(() => RLKeywords.add(entries));
-  return change(async () => {
-    const { [key]: list = [] } = await chrome.storage.local.get(key);
-    const have = new Set(list.map((w) => w.toLowerCase()));
-    const fresh = entries.map((w) => w.replace(/\s+/g, " ").trim()).filter((w) => w && !have.has(w.toLowerCase()) && have.add(w.toLowerCase()));
-    if (fresh.length) await chrome.storage.local.set({ [key]: [...list, ...fresh] });
-  });
+  return change(() => (key === "keywords" ? RLKeywords.add(entries) : askBackground(key, { add: entries })));
 }
 
 for (const form of document.querySelectorAll("form.add")) {
