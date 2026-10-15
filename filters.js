@@ -55,15 +55,12 @@
   // The words to show for a card's reasons, or "" when the card already shows them.
   const label = (list) => [...new Set(list.filter(Boolean))].join(" · ");
 
-  // Changes to the list run one after another, so two quick clicks never write over each other.
-  let writing = Promise.resolve();
+  // The list is changed by background.js, one change after another, so a click here and a change in the pop-up
+  // never write over each other.
   function setCompany(name, on) {
-    writing = writing.then(async () => {
-      const { greyCompanies = [] } = await chrome.storage.local.get("greyCompanies");
-      const rest = greyCompanies.filter((c) => norm(c) !== norm(name));
-      await chrome.storage.local.set({ greyCompanies: on ? [...rest, name.trim()] : rest });
-    }).catch(() => { /* storage gone, such as after an update */ });
-    return writing;
+    try {
+      chrome.runtime.sendMessage({ type: "list", key: "greyCompanies", [on ? "add" : "remove"]: [name] }).catch(() => {});
+    } catch { /* the extension was updated; this page reloads */ }
   }
 
   // "Grey out jobs from Wolt" under the open job, or the way back once it is greyed out.

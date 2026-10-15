@@ -6,8 +6,33 @@ try { importScripts("config.local.js"); } catch { /* only Vlad's build seeds a p
 
 const inflight = new Map();
 
+// The pop-up's "Grey out" lists change here only, one change after another, so the pop-up and a LinkedIn tab that
+// change a list at the same moment never write over each other. A change that fails does not stop the next one.
+const LISTS = new Set(["greyCompanies", "greyTitleWords"]);
+let listWrites = Promise.resolve();
+// Companies are the same whatever their case, accents and punctuation, as in filters.js; title words whatever their
+// case.
+const same = (key) => (key === "greyCompanies"
+  ? (t) => (t || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()
+  : (t) => (t || "").toLowerCase().replace(/\s+/g, " ").trim());
+async function changeList({ key, add = [], remove = [] }) {
+  if (!LISTS.has(key)) throw new Error(`not a list: ${key}`);
+  const k = same(key);
+  const gone = new Set(remove.map(k));
+  const list = ((await chrome.storage.local.get(key))[key] || []).filter((w) => !gone.has(k(w)));
+  const have = new Set(list.map(k));
+  for (const w of add.map((x) => x.replace(/\s+/g, " ").trim())) if (w && !have.has(k(w))) { have.add(k(w)); list.push(w); }
+  await chrome.storage.local.set({ [key]: list });
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   if (msg.type === "hello") { checkBuild(msg.build); return; }
+  if (msg.type === "list") {
+    const run = listWrites.then(() => changeList(msg));
+    listWrites = run.catch(() => {});
+    run.then(() => send({ ok: true }), (e) => send({ error: String(e.message || e) }));
+    return true;
+  }
   if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
   if (msg.type === "test") { test(msg.text).then(send, (e) => send({ error: String(e.message || e) })); return true; }
