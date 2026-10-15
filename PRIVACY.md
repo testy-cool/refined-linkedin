@@ -1,6 +1,6 @@
 # Refined LinkedIn privacy policy
 
-Last updated: 13 October 2026.
+Last updated: 16 October 2026.
 
 Refined LinkedIn is a Chrome extension that folds LinkedIn job descriptions down to the responsibilities and
 expectations, and marks jobs you already looked at. It has no server of its own. This page says what it keeps,
@@ -24,6 +24,9 @@ what it sends, and to whom.
   browser and with your LinkedIn session, as LinkedIn's own pages do when you open a job. These requests go to
   LinkedIn only. The extension keeps two dates, the words found, and the job's description, title, employer and
   place, on your computer.
+- **Requests to LinkedIn for applicant counts.** Only while "Jobs with over 100 applicants" is ticked, the extension
+  also asks LinkedIn's public page for each listed job how many people applied. These requests go to LinkedIn only,
+  and the extension keeps the count.
 - Nothing else is sent anywhere. The extension has no analytics, no tracking and no ads, and it does not send the
   other pages you visit, your notes or your highlight words to anyone.
 
@@ -32,15 +35,16 @@ what it sends, and to whom.
 Everything below stays in Chrome's storage for the extension on your computer. Refined LinkedIn never sends it
 anywhere.
 
-- Your settings: which AI service you chose, its address and model, your API key if you entered one, and whether to
-  grey out jobs that aren't remote.
+- Your settings: which AI service you chose, its address and model, your API key if you entered one, and what to
+  grey out or hide in job lists, including the companies and title words you listed.
 - If you signed in with ChatGPT: the sign-in tokens OpenAI issued, and the email address of your ChatGPT account,
   to show who is signed in.
 - Your notes on jobs and on passages of their descriptions.
 - Your highlight words.
 - The jobs you looked at: each job's LinkedIn id, title, employer, and when you saw it, to grey it out in lists.
 - For each job that appeared in a list: its LinkedIn id, when it was first posted, when it was last listed, whether
-  it is remote, hybrid or on-site, and which of your highlight words its description mentions.
+  it is remote, hybrid or on-site, which of your highlight words its description mentions, and how many people
+  applied, if you asked for that.
 - The description, title, employer, place and kind of work of each job you opened or that appeared in a list, so you
   can download them all as one file from the settings.
 - The AI's answers for jobs you opened, so they fold again without being sent.

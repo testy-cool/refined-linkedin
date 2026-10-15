@@ -36,7 +36,17 @@ each version is in the [changelog](../CHANGELOG.md).
   remembered by id and by title plus employer, so a repost under a new id is recognised too. Seen jobs are
   greyed out in the classic search, the collections, the new search-results page and the "More jobs"
   cards; an open job seen before says "Seen before, <date>".
-- **Remote only.** The pop-up's "Grey out jobs that aren't remote" is saved as `remoteOnly`. With it on, a card whose
+- **Grey out.** The pop-up's "Grey out" switches are saved as `remoteOnly`, `greyReposts`, `greyCrowded`,
+  `greyPromoted` and `greyApplied`, its lists as `greyCompanies` and `greyTitleWords`, and "Hide them instead" as
+  `hideGrey`. `filters.js` turns them into each card's reasons; a card with any gets `jfold-off`, and with
+  `hideGrey` also `rl-gone`, which hides it and, on the new search page, its wrappers and the line under it. The
+  open job is never hidden. Promoted and applied come from the card's own "Promoted" and "Applied" labels, reposts
+  from the dates below, and a dismissed card from LinkedIn's "We won't show you this job again". The applicant
+  count comes from LinkedIn's public job page (`/jobs-guest/jobs/api/jobPosting/<id>`, its
+  `num-applicants__caption`), because the job data's `applies` is 0 for every job; it is asked for only while
+  `greyCrowded` is on, kept as `a` in `details` and asked again after a day. Title words match whole words in any
+  case; companies match the card's employer, ignoring case, accents and punctuation.
+- **Remote only.** "Jobs that aren't remote", saved as `remoteOnly`. With it on, a card whose
   job data does not say remote gets `jfold-off`, the seen grey without the 👁, unless the card itself says "(Remote)":
   some jobs LinkedIn labels "London (Remote)" have no type in their data. The types come from LinkedIn's
   `workplaceTypes` (1 on-site, 2 remote, 3 hybrid, or none), kept as `wt` in `details`; a job kept before 0.12.0 has
