@@ -7,19 +7,42 @@
 </head>
 <body>
   <h1><img src="icons/icon32.png" alt="" width="20" height="20">Refined LinkedIn</h1>
-  <form id="add">
+  <form class="add" data-key="keywords">
     <label for="word">Highlight these words in job descriptions</label>
     <div class="row">
       <input id="word" placeholder="remote, German, Python" spellcheck="false" autocomplete="off">
       <button type="submit">Add</button>
     </div>
   </form>
-  <ul id="words"></ul>
-  <p id="empty" class="hint">No words yet. Separate several with commas, or select a word in a description and
-    choose "Highlight word".</p>
-  <label class="check"><input type="checkbox" id="remoteOnly"> Grey out jobs that aren't remote</label>
-  <p class="hint check-hint">Hybrid, on-site and unmarked jobs turn grey in search results and job collections, as
-    LinkedIn's Remote filter still lists some.</p>
+  <ul class="pills" data-key="keywords"></ul>
+  <p class="hint" data-empty="keywords">No words yet. Separate several with commas, or select a word in a description
+    and choose "Highlight word".</p>
+
+  <h2>Grey out</h2>
+  <label class="check"><input type="checkbox" data-key="remoteOnly"> Jobs that aren't remote</label>
+  <label class="check"><input type="checkbox" data-key="greyReposts"> Reposted jobs</label>
+  <label class="check"><input type="checkbox" data-key="greyCrowded"> Jobs with over 100 applicants</label>
+  <label class="check"><input type="checkbox" data-key="greyPromoted"> Promoted jobs</label>
+  <label class="check"><input type="checkbox" data-key="greyApplied"> Jobs you applied to</label>
+  <form class="add" data-key="greyCompanies">
+    <label for="company">Jobs from these companies</label>
+    <div class="row">
+      <input id="company" placeholder="Company name" spellcheck="false" autocomplete="off">
+      <button type="submit">Add</button>
+    </div>
+  </form>
+  <ul class="pills" data-key="greyCompanies"></ul>
+  <form class="add" data-key="greyTitleWords">
+    <label for="titleWord">Jobs with these words in the title</label>
+    <div class="row">
+      <input id="titleWord" placeholder="Intern, Principal" spellcheck="false" autocomplete="off">
+      <button type="submit">Add</button>
+    </div>
+  </form>
+  <ul class="pills" data-key="greyTitleWords"></ul>
+  <label class="check hide-check" title="Jobs you've seen stay grey, and the job you have open stays."><input type="checkbox"
+      data-key="hideGrey"> Hide them instead of greying them</label>
+
   <button type="button" id="settings" class="link">Settings: model and prompt</button>
   <script src="keywords.js"></script>
   <script src="popup.js"></script>

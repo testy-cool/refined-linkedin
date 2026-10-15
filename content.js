@@ -29,15 +29,12 @@
     tick();
   });
   chrome.storage.local.get("posted").then((r) => { posted = { ...r.posted, ...posted }; });
-  // With "Grey out jobs that aren't remote" ticked in the pop-up, a job whose data does not say remote goes grey.
-  let remoteOnly = false;
-  chrome.storage.local.get("remoteOnly").then((r) => { remoteOnly = !!r.remoteOnly; paintLists(); });
   chrome.storage.onChanged.addListener((ch) => {
-    if (ch.seen) seen = ch.seen.newValue || seen;
-    if (ch.remoteOnly) remoteOnly = !!ch.remoteOnly.newValue;
-    if (ch.seen || ch.remoteOnly) paintLists();
+    if (ch.seen) { seen = ch.seen.newValue || seen; paintLists(); }
   });
   self.RLDetails?.onChange(() => paintLists());
+  // The switches and lists under "Grey out" in the pop-up, see filters.js.
+  self.RLFilters?.onChange(() => paintLists());
   setInterval(() => { if (postedDirty) { postedDirty = false; chrome.storage.local.set({ posted }); } }, 3000);
 
   function notePosted(id, ageText) {
@@ -414,8 +411,10 @@
   // LinkedIn labels "Viewed" counts as seen too; its label gives way to the same badge, which says "👁 viewed" when
   // the extension never saw the job opened. Where LinkedIn dropped the age for "Viewed", the remembered one stands in
   // its place.
-  function mark(el, rec, id) {
-    const viewed = [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Viewed");
+  function mark(el, rec, id, openId) {
+    const labels = [...el.querySelectorAll("p, li, span")].filter((e) => !e.children.length && !e.closest(".jfold-slot"));
+    const labelled = (re) => labels.find((e) => re.test(e.textContent.trim()));
+    const viewed = labelled(/^Viewed$/);
     el.classList.toggle("jfold-seen", !!(rec || viewed));
     const ages = [...el.querySelectorAll("[data-jfold-age]")].filter((a) => !a.closest(".jfold-slot"));
     const age = ages[ages.length - 1];
@@ -423,11 +422,22 @@
     const known = !age && id && posted[id] && (rec || viewed) ? posted[id] : null;
     // A job relisted days after it was first posted says when that was, in that date's colour. LinkedIn's own age
     // beside it goes plain grey, so its colour neither calls the repost fresh nor contradicts its own words.
-    if (id) self.RLDetails?.want(id);
+    if (id) self.RLDetails?.want(id, false, !!self.RLFilters?.counts);
     const d = id ? self.RLDetails?.get(id) : null;
-    // Once LinkedIn's data for it has arrived, a job that isn't remote greys out like a seen one, without the 👁.
-    el.classList.toggle("jfold-off", remoteOnly && !!d?.wt && !d.wt.includes(REMOTE) && !saysRemote(el));
     const first = d && d.l - d.o >= REPOST_MS ? d.o : null;
+    // A job the pop-up's "Grey out" switches and lists catch greys out like a seen one, without the 👁, and says why
+    // where the card does not already. A job that isn't remote counts once LinkedIn's data for it has arrived.
+    const [title, company] = cardNames(el);
+    const why = self.RLFilters?.reasons({ title, company, d, repost: !!first,
+      remote: d?.wt ? d.wt.includes(REMOTE) || saysRemote(el) : undefined,
+      promoted: !!labelled(/^Promoted$/), applied: !!labelled(/^Applied( .* ago)?$/) }) || [];
+    el.classList.toggle("jfold-off", why.length > 0);
+    // With "Hide them instead" ticked, those jobs leave the list, as do jobs dismissed with LinkedIn's ×. The open
+    // job stays.
+    // LinkedIn says "Success, the job <title> was dismissed. We won’t show you this job again."
+    const dismissed = !!labelled(/We won.t show you this job again/);
+    const gone = !!self.RLFilters?.hide && (why.length > 0 || dismissed) && (!id || id !== openId);
+    for (const e of listItem(el)) e.classList.toggle("rl-gone", gone);
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
     const parts = [];
     if (known) parts.push(["jfold-age", postedLabel(known)]);
@@ -435,6 +445,8 @@
     if (rec || viewed) parts.push(["jfold-eye", rec ? `👁 ${shortAgo(rec.last || rec.first)}` : "👁 viewed"]);
     const noteCount = self.RLNotes?.count(id) || 0;
     if (noteCount) parts.push(["rl-card-notes", String(noteCount)]);
+    const said = self.RLFilters?.label(why);
+    if (said) parts.push(["rl-why", said]);
     // A promoted card on the classic list shows "Promoted" where the age would be; the slot goes in front of it. A
     // classic card scrolled far off is an empty <li> until LinkedIn draws it, so it gets no slot until then.
     const promoted = !age && !viewed ? [...el.querySelectorAll("p, li, span")].find((e) => !e.children.length && e.textContent.trim() === "Promoted") : null;
@@ -479,6 +491,15 @@
       if (words) words.before(slot);
       else col.append(slot);
     }
+  }
+
+  // What leaves the list with a hidden card. On the new search page that is the wrappers around the card, up to the
+  // list, and the line LinkedIn draws under it.
+  function listItem(el) {
+    if (el.matches("li") || !el.matches('[componentkey^="job-card-component-ref-"]')) return [el];
+    let e = el;
+    while (e.parentElement && e.parentElement.children.length === 1) e = e.parentElement;
+    return e.nextElementSibling?.matches("hr") ? [e, e.nextElementSibling] : [e];
   }
 
   // The new search page's card is a row: logo, text, buttons. A line added to the card itself, such as the slot on a
@@ -527,15 +548,16 @@
   }
 
   function paintLists() {
+    const openId = openJob()?.id;
     // classic search and collections
     for (const li of document.querySelectorAll("li[data-occludable-job-id]")) {
       const id = li.getAttribute("data-occludable-job-id");
-      mark(li, lookup(id, keyOf(...cardNames(li))), id);
+      mark(li, lookup(id, keyOf(...cardNames(li))), id, openId);
     }
     // new search-results page
     for (const card of document.querySelectorAll('[role="button"][componentkey^="job-card-component-ref-"]')) {
       const id = card.getAttribute("componentkey").split("-").pop();
-      mark(card, lookup(id, keyOf(...cardNames(card))), id);
+      mark(card, lookup(id, keyOf(...cardNames(card))), id, openId);
     }
     // "More jobs" under a job: no id, only title and employer
     for (const a of document.querySelectorAll('[componentkey^="JobDetailsSimilarJobsSlot_"] a[href]')) {

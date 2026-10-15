@@ -1,0 +1,82 @@
+// Which jobs in a list go grey, from the switches and lists under "Grey out" in the toolbar pop-up (issue #53): jobs
+// that aren't remote, reposts, jobs with over 100 applicants, promoted jobs, jobs applied to, jobs from a listed
+// company and jobs with a listed word in their title. With "Hide them instead" on, those jobs leave the list, and so
+// do jobs dismissed with LinkedIn's own ×. content.js asks for each card's reasons as it paints the lists.
+(() => {
+  const KEYS = ["remoteOnly", "greyReposts", "greyCrowded", "greyPromoted", "greyApplied", "hideGrey", "greyCompanies",
+    "greyTitleWords"];
+  const CROWDED = 100; // a job with more applicants than this counts as crowded
+  let s = {};
+  const listeners = [];
+  const links = new Set(); // the company links on the page, see companyLink
+  const changed = () => {
+    for (const b of links) if (b.isConnected) b.draw(); else links.delete(b);
+    listeners.forEach((f) => f());
+  };
+
+  chrome.storage.local.get(KEYS).then((r) => { s = r; changed(); });
+  chrome.storage.onChanged.addListener((ch) => {
+    if (!KEYS.some((k) => k in ch)) return;
+    for (const k of KEYS) if (k in ch) s[k] = ch[k].newValue;
+    changed();
+  });
+
+  // Letters only, in lower case and without accents, so "Wolt " and "wolt" are one company.
+  const norm = (t) => (t || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const hasCompany = (name) => !!name && (s.greyCompanies || []).some((c) => norm(c) === norm(name));
+
+  // The first listed word the title holds as a whole word, any case: "Intern" finds "Product Intern" but not
+  // "International".
+  function titleWord(title) {
+    const t = norm(title);
+    return (s.greyTitleWords || []).find((w) => norm(w) && new RegExp(`(?<![\\p{L}\\p{N}])${esc(norm(w))}(?![\\p{L}\\p{N}])`, "u").test(t));
+  }
+
+  // Why a card goes grey, as short labels; none means it stays white. card holds what content.js read off it:
+  // {title, company, promoted, applied, remote: false when its job is known not to be remote, repost, d: the job's
+  // data from details.js}. A label of null greys the card without adding words, where the card already says why.
+  function reasons(card) {
+    const out = [];
+    if (s.remoteOnly && card.remote === false) out.push(null);
+    if (s.greyReposts && card.repost) out.push(null);
+    const a = card.d?.a;
+    if (s.greyCrowded && a?.n > CROWDED) out.push(a.s.toLowerCase());
+    if (s.greyPromoted && card.promoted) out.push(null);
+    if (s.greyApplied && card.applied) out.push(null);
+    if (hasCompany(card.company)) out.push("company you greyed out");
+    const w = titleWord(card.title);
+    if (w) out.push(`title has "${w}"`);
+    return out;
+  }
+
+  // The words to show for a card's reasons, or "" when the card already shows them.
+  const label = (list) => [...new Set(list.filter(Boolean))].join(" · ");
+
+  async function setCompany(name, on) {
+    const { greyCompanies = [] } = await chrome.storage.local.get("greyCompanies");
+    const rest = greyCompanies.filter((c) => norm(c) !== norm(name));
+    await chrome.storage.local.set({ greyCompanies: on ? [...rest, name.trim()] : rest });
+  }
+
+  // "Grey out jobs from Wolt" under the open job, or the way back once it is greyed out.
+  function companyLink(company) {
+    if (!company) return null;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "rl-link rl-company-link";
+    b.draw = () => { b.textContent = hasCompany(company) ? `Stop greying out jobs from ${company}` : `Grey out jobs from ${company}`; };
+    b.draw();
+    links.add(b);
+    b.addEventListener("click", (e) => { e.stopPropagation(); setCompany(company, !hasCompany(company)); });
+    return b;
+  }
+
+  self.RLFilters = {
+    reasons, label, companyLink,
+    get hide() { return !!s.hideGrey; },
+    get counts() { return !!s.greyCrowded; },
+    onChange: (f) => listeners.push(f),
+  };
+})();
