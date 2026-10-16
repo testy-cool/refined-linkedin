@@ -49,11 +49,13 @@ function cvState(message) {
   undo.className = "link";
   undo.textContent = "Undo";
   undo.addEventListener("click", async () => {
-    clearTimeout(aboutTimer);
-    $("aboutMe").value = cvUndo;
-    await chrome.storage.local.set({ aboutMe: cvUndo });
+    const run = ++cvRun; // a file still being read no longer fills the box
+    const text = cvUndo;
     cvUndo = null;
-    cvState("Put the earlier text back.");
+    clearTimeout(aboutTimer);
+    $("aboutMe").value = text;
+    await chrome.storage.local.set({ aboutMe: text });
+    if (run === cvRun) cvState("Put the earlier text back.");
   });
   $("cvState").append(" ", undo);
 }
@@ -70,10 +72,11 @@ async function loadCV(file) {
   if (run !== cvRun) return;
   clearTimeout(aboutTimer); // a save still waiting from typing would write over the file's text
   const before = $("aboutMe").value;
-  cvUndo = before.trim() && before !== cv.text ? before : null;
+  if (before !== cv.text) cvUndo = before.trim() ? before : null; // the same text again keeps the Undo it had
   $("aboutMe").value = cv.text;
   $("aboutMe").scrollTop = 0;
   await chrome.storage.local.set({ aboutMe: cv.text });
+  if (run !== cvRun) return;
   const pages = cv.pages ? `${cv.pages} ${cv.pages === 1 ? "page" : "pages"} of ` : "";
   cvState(`Loaded ${pages}text from ${file.name}. Check it, then add what the CV leaves out.`);
 }
