@@ -2,6 +2,14 @@
 
 Newest first. Each version says what changed for someone using the extension.
 
+## 0.14.0 (16 October 2026): dismiss the grey jobs in one click
+
+- Above a job list, **Dismiss the 7 grey jobs** clicks LinkedIn's own × on every grey card: jobs you've seen and
+  jobs your Grey out settings catch. LinkedIn then stops recommending them. The job you have open, saved jobs and
+  jobs already dismissed are left alone, and **Stop** halts it.
+- With **Hide them instead of greying them** ticked, jobs you dismiss on LinkedIn's new job search page now leave
+  the list too, as they already did on the classic one.
+
 ## 0.13.0 (16 October 2026): grey out or hide the jobs you don't want
 
 - The pop-up has a **Grey out** section. Besides jobs that aren't remote, you can grey out reposted jobs, jobs with

@@ -30,6 +30,8 @@ remembers which jobs you already opened. It is free and open source.
   job's title must not have. Those jobs turn grey like a seen one, and say why where the card doesn't: "over 200
   applicants". Under an open job, **Grey out jobs from** its company adds it in one click. Tick **Hide them
   instead of greying them** and they leave the list, along with jobs you dismissed with LinkedIn's ×.
+- **Dismiss the grey jobs in one click.** Above a job list, **Dismiss the 7 grey jobs** clicks LinkedIn's own ×
+  on every grey card, so LinkedIn stops recommending them. The open job and saved jobs are left alone.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
   (two months).
 - **Old jobs posted again say so.** LinkedIn shows a reposted job as new. Its card now also says when it was first
