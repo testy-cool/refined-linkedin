@@ -10,8 +10,8 @@
     <h1><img src="icons/icon48.png" alt="" width="32" height="32">Refined LinkedIn</h1>
     <div class="consent">
       <p>To fold a job description, Refined LinkedIn sends its text to the AI service you choose below, once per job.
-        Nothing else leaves your browser: your notes, highlight words and the jobs you saw stay in Chrome on this
-        computer.</p>
+        To compare a job with your CV, it sends the description with what you write under About you. Nothing else
+        leaves your browser: your notes, highlight words and the jobs you saw stay in Chrome on this computer.</p>
       <label class="check"><input type="checkbox" id="consent"> I agree to send the job descriptions I open to the AI
         service I choose.</label>
     </div>
@@ -54,7 +54,15 @@
       <option value="high">High: slowest</option>
     </select>
 
-    <h2>Prompt</h2>
+    <h2>About you</h2>
+    <p class="hint">Paste your CV, and add anything else about you: what you have done that the CV leaves out, what
+      you want, and what you don't want. Under an open job, Compare with my CV underlines its bullet points: green
+      where this shows you have it, yellow where it doesn't, red where you said you don't want it.</p>
+    <textarea id="aboutMe" rows="14" spellcheck="false" placeholder="Your CV, then notes such as: I don't want a job with a lot of travel."></textarea>
+    <label class="check"><input type="checkbox" id="matchAuto"> Compare every job I open, without waiting for a click</label>
+    <p class="hint" id="aboutSaved"></p>
+
+    <h2>Folding prompt</h2>
     <p class="hint">What the model is asked for each job. <code>{TEXT}</code> is where the job description goes. The
       answer always comes back in the same format, a list of passages to fold, so only the instructions change.</p>
     <textarea id="promptBox" rows="14" spellcheck="false"></textarea>

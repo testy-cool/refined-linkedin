@@ -21,6 +21,22 @@ for (const [kind, p] of Object.entries(PROVIDERS)) $("kind").append(new Option(p
 chrome.storage.local.get("consent").then(({ consent }) => { $("consent").checked = !!consent; });
 $("consent").addEventListener("change", () => chrome.storage.local.set({ consent: $("consent").checked }));
 
+// About you (issue #57): the CV and notes a job is compared with, and whether each job is compared as it opens.
+// Saved as you type.
+chrome.storage.local.get(["aboutMe", "matchAuto"]).then(({ aboutMe, matchAuto }) => {
+  $("aboutMe").value = aboutMe || "";
+  $("matchAuto").checked = !!matchAuto;
+});
+let aboutTimer = 0;
+$("aboutMe").addEventListener("input", () => {
+  clearTimeout(aboutTimer);
+  aboutTimer = setTimeout(async () => {
+    await chrome.storage.local.set({ aboutMe: $("aboutMe").value });
+    $("aboutSaved").textContent = "Saved.";
+  }, 500);
+});
+$("matchAuto").addEventListener("change", () => chrome.storage.local.set({ matchAuto: $("matchAuto").checked }));
+
 let saved = null; // what the background is using now, without its key
 
 function show(kind, fill) {
