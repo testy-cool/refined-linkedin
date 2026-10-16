@@ -51,7 +51,8 @@
         "dismiss.js",
         "content.js",
         "notes.js",
-        "keywords.js"
+        "keywords.js",
+        "match.js"
       ],
       "css": [
         "content.css"

@@ -1,7 +1,7 @@
 // Asks the model chosen in the settings which passages of a job description to fold, and caches the answer per job,
 // text and prompt. The content script sends {type: "fold", id, text, again} and gets {sections} or {error}; "again"
-// asks the model anew instead of using the saved answer.
-importScripts("prompt.js", "providers.js", "build.js", "chatgpt.js", "folds.js");
+// asks the model anew instead of using the saved answer. It also compares a job with the person's CV, see match().
+importScripts("prompt.js", "match-prompt.js", "providers.js", "build.js", "chatgpt.js", "folds.js");
 try { importScripts("config.local.js"); } catch { /* only Vlad's build seeds a provider */ }
 
 const inflight = new Map();
@@ -36,6 +36,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
   if (msg.type === "test") { test(msg.text).then(send, (e) => send({ error: String(e.message || e) })); return true; }
+  if (msg.type === "match") {
+    match(msg).then(send, (e) => send({ error: String(e.message || e) }));
+    return true;
+  }
   if (msg.type !== "fold") return;
   fold(msg.id, msg.text, msg.again).then(send, (e) => send({ error: String(e.message || e) }));
   return true;
@@ -85,7 +89,7 @@ async function fold(id, text, again = false) {
   }
   if (!inflight.has(key)) {
     const p = settings()
-      .then(async (s) => { await ready(s); return ask(s, fill(prompt, text)); })
+      .then(async (s) => { await ready(s); return { sections: (await ask(s, fill(prompt, text))).sections, at: Date.now(), model: s.model }; })
       .then(async (r) => { await chrome.storage.local.set({ [key]: r }); return r; })
       .finally(() => inflight.delete(key));
     inflight.set(key, p);
@@ -97,16 +101,14 @@ async function fold(id, text, again = false) {
 // replacement pattern.
 const fill = (prompt, text) => prompt.replace("{TEXT}", () => text);
 
-async function ask(s, prompt) {
-  if (s.kind === "chatgpt") {
-    const answer = await ChatGPT.respond({ model: s.model, effort: s.effort || "medium", prompt, schema: self.SCHEMA });
-    return { sections: JSON.parse(answer).sections, at: Date.now(), model: s.model };
-  }
+// One answer from the chosen model in the given JSON format, parsed.
+async function ask(s, prompt, schema = self.SCHEMA, name = "folds") {
+  if (s.kind === "chatgpt") return JSON.parse(await ChatGPT.respond({ model: s.model, effort: s.effort || "medium", prompt, schema }));
   const body = {
     model: s.model,
     reasoning_effort: s.effort || "medium",
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_schema", json_schema: { name: "folds", schema: self.SCHEMA, strict: true } },
+    response_format: { type: "json_schema", json_schema: { name, schema, strict: true } },
   };
   let last;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -123,7 +125,7 @@ async function ask(s, prompt) {
         throw new Error(`${PROVIDERS[s.kind]?.label || "The API"} answered ${r.status}: ${said}`);
       }
       const j = await r.json();
-      return { sections: JSON.parse(j.choices[0].message.content).sections, at: Date.now(), model: s.model };
+      return JSON.parse(j.choices[0].message.content);
     } catch (e) {
       last = e;
     }
@@ -131,6 +133,43 @@ async function ask(s, prompt) {
   throw last;
 }
 
+// A job compared with the person's CV and notes (issue #57): {id, text, bullets, again, peek} gets {highlights,
+// dropped} or {error}, where peek only looks for a saved answer. Each highlight is {bullet, phrase, material_quote,
+// reasoning, label}. The answer is saved per job, description, bullet points and material.
+async function match({ id, text, bullets, again = false, peek = false }) {
+  const { aboutMe } = await chrome.storage.local.get("aboutMe");
+  if (!aboutMe?.trim()) throw new Error("NO_MATERIAL");
+  const key = `match:${id}:${hash([self.MATCH_PROMPT, text, ...bullets, aboutMe].join("\n"))}`;
+  if (!again) {
+    const got = await chrome.storage.local.get(key);
+    if (got[key] || peek) return got[key] || null;
+  }
+  if (!inflight.has(key)) {
+    const prompt = self.MATCH_PROMPT.replace("{TEXT}", () => text)
+      .replace("{BULLETS}", () => bullets.map((b, i) => `${i + 1}. ${b}`).join("\n"))
+      .replace("{MATERIAL}", () => aboutMe.trim());
+    const p = settings()
+      .then(async (s) => { await ready(s); return { ...checked(await ask(s, prompt, self.MATCH_SCHEMA, "highlights"), bullets, aboutMe), at: Date.now(), model: s.model }; })
+      .then(async (r) => { await chrome.storage.local.set({ [key]: r }); return r; })
+      .finally(() => inflight.delete(key));
+    inflight.set(key, p);
+  }
+  return inflight.get(key);
+}
+
+// Only what can be found stays: a phrase must be in its bullet point, and a MATCH or UNWANTED must quote the
+// material. Case, spaces, curly quotes and a quote's last full stop do not count.
+function checked(answer, bullets, material) {
+  const squash = (t) => (t || "").toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, "").replace(/[.,;:]+$/, "");
+  const all = squash(material);
+  const highlights = (answer.highlights || []).filter((h) => {
+    const b = bullets[h.bullet - 1];
+    const phrase = squash(h.phrase);
+    return b && phrase && squash(b).includes(phrase) && ["MATCH", "GAP", "UNWANTED"].includes(h.label)
+      && (h.label === "GAP" || (squash(h.material_quote) && all.includes(squash(h.material_quote))));
+  });
+  return { highlights, dropped: (answer.highlights || []).length - highlights.length };
+}
 
 // The settings page's "Save and test": one real fold of its test description with the saved prompt.
 async function test(text) {

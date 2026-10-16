@@ -11,12 +11,17 @@ what it sends, and to whom.
 - **The text of a job description you open on LinkedIn.** It goes to the AI service you chose in the settings, so
   the AI can say which parts to fold. Nothing is sent until you tick "I agree to send the job descriptions I open
   to the AI service I choose" in the settings. Untick it to stop.
+- **What you wrote under About you, with a job's description, when you compare the job with your CV.** It goes
+  to the same AI service, so the AI can say which bullet points your CV shows and which it doesn't. Nothing is sent
+  unless you wrote something there, and only when you click "Compare with my CV", or for every job you open if you
+  ticked that.
 - The AI service is the one you pick:
   - **ChatGPT**, through OpenAI's "Sign in with ChatGPT", using your own Plus or Pro plan. OpenAI's privacy policy
     applies: https://openai.com/policies/privacy-policy
   - **Google Gemini**, with your own API key. Google's terms apply: https://ai.google.dev/gemini-api/terms
   - **Another AI service** that you set up by typing its address. That service's own policy applies.
-- Each answer is saved on your computer, so a job is sent once. It is sent again only if you click "fold again".
+- Each answer is saved on your computer, so a job is sent once. It is sent again only if you click "fold again"
+  or "compare again", or change what you wrote under About you.
 - When you sign in with ChatGPT, the extension talks to OpenAI (`auth.openai.com`) to sign you in, and keeps you
   signed in.
 - **Requests to LinkedIn for the jobs in a list.** To show when each job was first posted, and which of your
@@ -41,22 +46,23 @@ anywhere.
   to show who is signed in.
 - Your notes on jobs and on passages of their descriptions.
 - Your highlight words.
+- What you wrote under About you: your CV and notes about yourself.
 - The jobs you looked at: each job's LinkedIn id, title, employer, and when you saw it, to grey it out in lists.
 - For each job that appeared in a list: its LinkedIn id, when it was first posted, when it was last listed, whether
   it is remote, hybrid or on-site, which of your highlight words its description mentions, and how many people
   applied, if you asked for that.
 - The description, title, employer, place and kind of work of each job you opened or that appeared in a list, so you
   can download them all as one file from the settings.
-- The AI's answers for jobs you opened, so they fold again without being sent.
+- The AI's answers for jobs you opened, so they fold again, and show what matches your CV, without being sent.
 - Your own instructions for the AI, if you changed them.
 
 ## What it never does
 
 - It does not sell or share your data.
 - It does not use your data for advertising, for credit decisions, or for anything other than folding job
-  descriptions and marking the jobs you saw.
+  descriptions, comparing them with your CV and marking the jobs you saw.
 - Nobody else, including the people who make it, can read your data. It only exists on your computer and,
-  for job descriptions, at the AI service you chose.
+  for job descriptions and what you wrote under About you, at the AI service you chose.
 
 ## Removing your data
 

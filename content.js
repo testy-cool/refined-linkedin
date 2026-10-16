@@ -350,6 +350,8 @@
       }
       const share = foldLines(copy, lines, Folds.spans(desc, res.sections));
       const parts = copy.querySelectorAll(".jfold-chip").length;
+      // The comparison with the person's CV marks only the bullet points left visible, see match.js.
+      const compare = () => self.RLMatch?.ready(job, desc, bullets(lines), v);
       copy.classList.add("jfold-clone");
       copy.removeAttribute("data-testid");
       for (const e of [copy, ...copy.querySelectorAll("[id]")]) e.removeAttribute("id");
@@ -357,6 +359,7 @@
       if (!parts) {
         status.textContent = "Nothing to fold in this description · ";
         status.append(refold("fold again"));
+        compare();
         return;
       }
       status.textContent = `Folded ${parts} part${parts === 1 ? "" : "s"}, ${share}% of the description · `;
@@ -373,7 +376,19 @@
       v.append(copy);
       box.style.display = "none";
       for (const b of more) b.style.setProperty("display", "none");
+      compare();
     });
+  }
+
+  // The bullet points still visible: lines in a list item or starting with a bullet sign or a number, without that
+  // sign. A description written without any gets its visible sentences of six words or more instead.
+  const BULLET = /^([•·▪◦‣●○■□➢➤►▸✓✔*–—-]|\d{1,2}[.)])\s+/;
+  function bullets(lines) {
+    const el = (n) => (n.nodeType === 3 ? n.parentElement : n);
+    const shown = lines.filter((l) => l.s >= 0 && l.nodes.some((n) => n.nodeType === 3 && n.data.trim() && !el(n)?.closest(".jfold-hide")));
+    const text = (l) => l.text.replace(/\s+/g, " ").trim().replace(BULLET, "");
+    const listed = shown.filter((l) => l.nodes.some((n) => el(n)?.closest("li")) || BULLET.test(l.text.trim())).map(text);
+    return listed.length ? listed : shown.map(text).filter((t) => t.split(" ").length >= 6);
   }
 
   function seenNote(job) {
@@ -667,6 +682,7 @@
     paintLists();
     self.RLNotes?.tick(job);
     self.RLKeywords?.tick(job);
+    self.RLMatch?.tick(job);
   }
 
   let queued = false;

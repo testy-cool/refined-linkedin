@@ -96,3 +96,14 @@
 .rl-dismiss-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; padding: 8px 12px; font-size: 14px;
   line-height: 1.5; color: #1d1d1d; }
 .rl-dismiss-bar .rl-link { font-size: 14px; }
+
+/* The open job compared with the person's CV (issue #57): bullet points underlined green where the CV shows it,
+   amber where it doesn't, red where the person said they don't want it. */
+::highlight(rl-cv-match) { text-decoration-line: underline; text-decoration-color: #1d8a3b; text-decoration-thickness: 2px; }
+::highlight(rl-cv-gap) { text-decoration-line: underline; text-decoration-color: #d39a00; text-decoration-thickness: 2px; }
+::highlight(rl-cv-unwanted) { text-decoration-line: underline; text-decoration-color: #cc1f1a; text-decoration-thickness: 2px; }
+.rl-cv-match-text { color: #1d7a35; font-weight: 600; }
+.rl-cv-gap-text { color: #8a6100; font-weight: 600; }
+.rl-cv-unwanted-text { color: #b3201b; font-weight: 600; }
+.rl-match.jfold-status { margin-top: -4px; }
+.rl-cv-quote { margin-top: 6px; }
