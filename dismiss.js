@@ -69,9 +69,13 @@
     const ids = cards.filter(due).map((c) => c.id);
     run = { done: 0, total: ids.length, stop: false, end: 0 };
     draw();
+    // Going to another search ends the run. Opening a job changes only currentJobId in the address.
+    const search = () => { const u = new URL(location.href); u.searchParams.delete("currentJobId"); return u.pathname + u.search; };
+    const from = search();
     // The card as content.js last painted it: LinkedIn may have drawn it anew, and it may have been opened, saved or
     // turned white since the click.
     const now = (id) => {
+      if (search() !== from) run.stop = true;
       const c = cards.find((k) => k.id === id);
       return !run.stop && c && due(c) && self.RL?.openJob()?.id !== id ? c : null;
     };
