@@ -21,7 +21,8 @@ what it sends, and to whom.
   - **Google Gemini**, with your own API key. Google's terms apply: https://ai.google.dev/gemini-api/terms
   - **Another AI service** that you set up by typing its address. That service's own policy applies.
 - Each answer is saved on your computer, so a job is sent once. It is sent again only if you click "fold again"
-  or "compare again", or change what you wrote under About you.
+  or "compare again", change what you wrote under About you or your folding prompt, or install a version of the
+  extension that asks the AI something different.
 - When you sign in with ChatGPT, the extension talks to OpenAI (`auth.openai.com`) to sign you in, and keeps you
   signed in.
 - **Requests to LinkedIn for the jobs in a list.** To show when each job was first posted, and which of your
