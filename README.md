@@ -30,10 +30,10 @@ remembers which jobs you already opened. It is free and open source.
   job's title must not have. Those jobs turn grey like a seen one, and say why where the card doesn't: "over 200
   applicants". Under an open job, **Grey out jobs from** its company adds it in one click. Tick **Hide them
   instead of greying them** and they leave the list, along with jobs you dismissed with LinkedIn's ×.
-- **See what your CV covers.** Paste your CV and notes about yourself under **About you** in the settings. Under
-  an open job, **Compare with my CV** underlines the bullet points left after folding: green where your CV shows
-  you have it, yellow where it doesn't, red where your notes say you don't want it. Hover one for the reason and
-  the line of your CV it rests on.
+- **See what your CV covers.** Paste your CV, or load it from a PDF or Word file, and add notes about yourself
+  under **About you** in the settings. Under an open job, **Compare with my CV** underlines the bullet points left
+  after folding: green where your CV shows you have it, yellow where it doesn't, red where your notes say you
+  don't want it. Hover one for the reason and the line of your CV it rests on.
 - **Dismiss the grey jobs in one click.** Above a job list, **Dismiss the 7 grey jobs** clicks LinkedIn's own ×
   on every grey card, so LinkedIn stops recommending them. The open job and saved jobs are left alone.
 - **Fresh or stale at a glance.** Each job's age runs from green (a day old) through yellow and orange to red
@@ -119,4 +119,5 @@ new folder. Chrome replaces the old version and keeps your notes, words and hist
 
 - [What's new](CHANGELOG.md), version by version.
 - [How it works, and how to build it](docs/DEVELOPMENT.md).
-- Free and open source, under the [MIT licence](LICENSE).
+- Free and open source, under the [MIT licence](LICENSE). It reads PDF files with Mozilla's
+  [pdf.js](https://github.com/mozilla/pdf.js), under the Apache 2.0 licence in `vendor/pdfjs`.

@@ -46,7 +46,8 @@ anywhere.
   to show who is signed in.
 - Your notes on jobs and on passages of their descriptions.
 - Your highlight words.
-- What you wrote under About you: your CV and notes about yourself.
+- What you wrote under About you: your CV and notes about yourself. When you load your CV from a file, the file is
+  read on your computer and only its text is kept here; the file itself is never sent anywhere.
 - The jobs you looked at: each job's LinkedIn id, title, employer, and when you saw it, to grey it out in lists.
 - For each job that appeared in a list: its LinkedIn id, when it was first posted, when it was last listed, whether
   it is remote, hybrid or on-site, which of your highlight words its description mentions, and how many people
