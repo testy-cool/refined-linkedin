@@ -58,12 +58,31 @@ async function readPdf(file) {
 async function readDocx(file) {
   try {
     const zip = openZip(new Uint8Array(await file.arrayBuffer()));
-    const parts = (kind) => [...zip.keys()].filter((n) => new RegExp(`^word/${kind}\\d*\\.xml$`).test(n)).sort();
-    const texts = [];
-    for (const name of [...parts("header"), "word/document.xml", ...parts("footer")]) {
+    const budget = { left: 30 * 1024 * 1024 }; // bytes of XML all the parts together may inflate to
+    const part = async (name) => {
       if (!zip.has(name)) throw new Error(`no ${name}`);
-      const text = docxText(xmlText(await readEntry(zip.get(name))));
-      if (text.trim() && !texts.includes(text)) texts.push(text); // sections often repeat one header
+      const dom = new DOMParser().parseFromString(xmlText(await readEntry(zip.get(name), budget)), "application/xml");
+      if (dom.getElementsByTagName("parsererror").length) throw new Error(`bad XML in ${name}`);
+      return dom;
+    };
+    const body = await part("word/document.xml");
+    // The headers and footers the document's sections name, through its relationships file, each read once.
+    const targets = new Map();
+    if (zip.has("word/_rels/document.xml.rels")) {
+      for (const rel of (await part("word/_rels/document.xml.rels")).getElementsByTagName("*")) {
+        if (rel.localName !== "Relationship") continue;
+        const target = rel.getAttribute("Target") || "";
+        targets.set(rel.getAttribute("Id"), target.startsWith("/") ? target.slice(1) : new URL(target, "z:/word/").pathname.replace(/^\//, ""));
+      }
+    }
+    const named = (kind) => [...new Set([...body.getElementsByTagName("*")]
+      .filter((el) => DOCX_NS.has(el.namespaceURI) && el.localName === `${kind}Reference`)
+      .map((el) => targets.get([...el.attributes].find((at) => at.localName === "id")?.value))
+      .filter((name) => name && zip.has(name)))];
+    const texts = [];
+    for (const dom of [...await Promise.all(named("header").map(part)), body, ...await Promise.all(named("footer").map(part))]) {
+      const text = docxText(dom);
+      if (text.trim() && !texts.includes(text)) texts.push(text); // headers often repeat the same text
     }
     return texts.join("\n\n");
   } catch (e) {
@@ -79,7 +98,7 @@ const DOCX_NS = new Set([
 ]);
 const MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
-function docxText(xml) {
+function docxText(dom) {
   const isW = (el, name) => DOCX_NS.has(el.namespaceURI) && el.localName === name;
   // Word writes a modern drawing and an older copy of the same text box side by side. Read only the first branch
   // that holds Word text, so the text comes once, and a branch only another program understands is passed over.
@@ -120,9 +139,7 @@ function docxText(xml) {
     if (isAlt(c)) { const ch = choice(c); return ch ? blocks(ch) : []; }
     return blocks(c);
   });
-  const root = new DOMParser().parseFromString(xml, "application/xml").documentElement;
-  if (root.localName === "parsererror" || root.getElementsByTagName("parsererror").length) throw new Error("bad XML");
-  return blocks(root).join("\n");
+  return blocks(dom.documentElement).join("\n");
 }
 
 // XML in a .docx is UTF-8 almost always, and UTF-16 when it starts with that byte order mark.
@@ -175,13 +192,17 @@ function openZip(bytes) {
   return files;
 }
 
-// One file's bytes, inflated with Chrome's own DecompressionStream. A CV's text is far under 30 MB, so a part that
-// grows past that is refused before it can fill the memory.
-async function readEntry({ bytes, v, method, size, local }) {
+// One file's bytes, inflated with Chrome's own DecompressionStream. A CV's text is far under 30 MB, so parts that
+// grow past the budget together are refused before they can fill the memory.
+const tooBig = () => Object.assign(new Error("holds far more text than a CV. Save it as PDF and load that instead."), { forUser: true });
+async function readEntry({ bytes, v, method, size, local }, budget) {
   if (v.getUint32(local, true) !== 0x04034b50) throw new Error("bad local header");
   const start = local + 30 + v.getUint16(local + 26, true) + v.getUint16(local + 28, true);
   const data = bytes.subarray(start, start + size);
-  if (method === 0) return data;
+  if (method === 0) {
+    if ((budget.left -= data.length) < 0) throw tooBig();
+    return data;
+  }
   if (method !== 8) throw new Error("unknown zip method");
   const reader = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
   const chunks = [];
@@ -190,9 +211,9 @@ async function readEntry({ bytes, v, method, size, local }) {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.length;
-    if (total > 30 * 1024 * 1024) {
+    if ((budget.left -= value.length) < 0) {
       reader.cancel();
-      throw Object.assign(new Error("holds far more text than a CV. Save it as PDF and load that instead."), { forUser: true });
+      throw tooBig();
     }
     chunks.push(value);
   }
