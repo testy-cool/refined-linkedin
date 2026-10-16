@@ -37,6 +37,53 @@ $("aboutMe").addEventListener("input", () => {
 });
 $("matchAuto").addEventListener("change", () => chrome.storage.local.set({ matchAuto: $("matchAuto").checked }));
 
+// Load my CV from a file (issue #59): the file's text replaces the box and is saved, with an Undo that puts the
+// earlier text back.
+async function loadCV(file) {
+  $("cvState").textContent = `Reading ${file.name}…`;
+  let cv;
+  try {
+    cv = await readCV(file);
+  } catch (e) {
+    $("cvState").textContent = e.message;
+    return;
+  }
+  clearTimeout(aboutTimer); // a save still waiting from typing would write over the file's text
+  const before = $("aboutMe").value;
+  $("aboutMe").value = cv.text;
+  $("aboutMe").scrollTop = 0;
+  await chrome.storage.local.set({ aboutMe: cv.text });
+  const pages = cv.pages ? `${cv.pages} ${cv.pages === 1 ? "page" : "pages"} of ` : "";
+  $("cvState").replaceChildren(`Loaded ${pages}text from ${file.name}. Check it, then add what the CV leaves out. `);
+  if (before.trim()) {
+    const undo = document.createElement("button");
+    undo.type = "button";
+    undo.className = "link";
+    undo.textContent = "Undo";
+    undo.addEventListener("click", async () => {
+      $("aboutMe").value = before;
+      await chrome.storage.local.set({ aboutMe: before });
+      $("cvState").textContent = "Put the earlier text back.";
+    });
+    $("cvState").append(undo);
+  }
+}
+$("cvLoad").addEventListener("click", () => $("cvFile").click());
+$("cvFile").addEventListener("change", () => {
+  const file = $("cvFile").files[0];
+  $("cvFile").value = "";
+  if (file) loadCV(file);
+});
+$("aboutMe").addEventListener("dragover", (e) => {
+  if (e.dataTransfer.types.includes("Files")) e.preventDefault();
+});
+$("aboutMe").addEventListener("drop", (e) => {
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  e.preventDefault();
+  loadCV(file);
+});
+
 let saved = null; // what the background is using now, without its key
 
 function show(kind, fill) {

@@ -59,6 +59,13 @@
       you want, and what you don't want. Under an open job, Compare with my CV underlines its bullet points: green
       where this shows you have it, yellow where it doesn't, red where you said you don't want it.</p>
     <textarea id="aboutMe" rows="14" spellcheck="false" placeholder="Your CV, then notes such as: I don't want a job with a lot of travel."></textarea>
+    <div class="actions">
+      <button type="button" id="cvLoad">Load my CV from a file</button>
+      <input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,application/pdf,text/plain" hidden>
+    </div>
+    <p class="hint">PDF, Word (.docx) or text, or drop the file on the box. Its text replaces what is in the box. The
+      file stays on this computer.</p>
+    <p class="hint" id="cvState" role="status"></p>
     <label class="check"><input type="checkbox" id="matchAuto"> Compare every job I open, without waiting for a click</label>
     <p class="hint" id="aboutSaved"></p>
 
@@ -92,6 +99,7 @@
   <script src="folds.js"></script>
   <script src="chatgpt.js"></script>
   <script src="jobsfile.js"></script>
+  <script src="cvfile.js"></script>
   <script src="options.js"></script>
 </body>
 </html>
