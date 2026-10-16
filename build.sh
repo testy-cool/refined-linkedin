@@ -29,5 +29,5 @@ else
 fi
 # A stamp of every file the extension runs. A LinkedIn page reports the stamp it was loaded with, and the
 # background reloads the extension when the one on disk differs, so a rebuild applies itself.
-echo "self.BUILD = \"$(cat manifest.json background.js providers.js chatgpt.js folds.js details.js filters.js content.js notes.js keywords.js content.css prompt.js | sha1sum | cut -c1-12)\";" > build.js
+echo "self.BUILD = \"$(cat manifest.json background.js providers.js chatgpt.js folds.js details.js filters.js dismiss.js content.js notes.js keywords.js content.css prompt.js | sha1sum | cut -c1-12)\";" > build.js
 echo "built $(pwd), $(cat build.js)"
