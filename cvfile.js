@@ -28,7 +28,12 @@ function tidy(text) {
 async function readPdf(file) {
   const pdfjs = await import(chrome.runtime.getURL("vendor/pdfjs/pdf.min.mjs"));
   pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdfjs/pdf.worker.min.mjs");
-  const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
+  // The character maps let pdf.js read text in PDFs that use the standard Chinese, Japanese and Korean encodings.
+  const task = pdfjs.getDocument({
+    data: new Uint8Array(await file.arrayBuffer()),
+    cMapUrl: chrome.runtime.getURL("vendor/pdfjs/cmaps/"),
+    cMapPacked: true,
+  });
   try {
     let doc;
     try {
