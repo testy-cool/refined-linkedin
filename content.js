@@ -359,20 +359,20 @@
       if (!parts) {
         status.textContent = "Nothing to fold in this description · ";
         status.append(refold("fold again"));
-        compare();
-        return;
+      } else {
+        status.textContent = `Folded ${parts} part${parts === 1 ? "" : "s"}, ${share}% of the description · `;
+        // Opens every fold in place, or closes them all again. LinkedIn's original stays hidden, so nothing shows twice.
+        const toggle = document.createElement("button");
+        toggle.textContent = "show full description";
+        let full = false;
+        toggle.onclick = () => {
+          full = !full;
+          for (const c of copy.querySelectorAll(".jfold-chip")) if (c.classList.contains("jfold-opened") !== full) c.click();
+          toggle.textContent = full ? "show folded" : "show full description";
+        };
+        status.append(toggle, " · ", refold("fold again"));
       }
-      status.textContent = `Folded ${parts} part${parts === 1 ? "" : "s"}, ${share}% of the description · `;
-      // Opens every fold in place, or closes them all again. LinkedIn's original stays hidden, so nothing shows twice.
-      const toggle = document.createElement("button");
-      toggle.textContent = "show full description";
-      let full = false;
-      toggle.onclick = () => {
-        full = !full;
-        for (const c of copy.querySelectorAll(".jfold-chip")) if (c.classList.contains("jfold-opened") !== full) c.click();
-        toggle.textContent = full ? "show folded" : "show full description";
-      };
-      status.append(toggle, " · ", refold("fold again"));
+      // The copy shows even with nothing folded, so the comparison with the CV can mark its bullet points' own text.
       v.append(copy);
       box.style.display = "none";
       for (const b of more) b.style.setProperty("display", "none");
@@ -380,15 +380,16 @@
     });
   }
 
-  // The bullet points still visible: lines in a list item or starting with a bullet sign or a number, without that
-  // sign. A description written without any gets its visible sentences of six words or more instead.
+  // The bullet points still visible, as {text, nodes}: lines in a list item or starting with a bullet sign or a number,
+  // the text without that sign, the nodes the line's own text nodes in the copy. A description written without any
+  // gets its visible sentences of six words or more instead.
   const BULLET = /^([•·▪◦‣●○■□➢➤►▸✓✔*–—-]|\d{1,2}[.)])\s+/;
   function bullets(lines) {
     const el = (n) => (n.nodeType === 3 ? n.parentElement : n);
     const shown = lines.filter((l) => l.s >= 0 && l.nodes.some((n) => n.nodeType === 3 && n.data.trim() && !el(n)?.closest(".jfold-hide")));
-    const text = (l) => l.text.replace(/\s+/g, " ").trim().replace(BULLET, "");
-    const listed = shown.filter((l) => l.nodes.some((n) => el(n)?.closest("li")) || BULLET.test(l.text.trim())).map(text);
-    return listed.length ? listed : shown.map(text).filter((t) => t.split(" ").length >= 6);
+    const item = (l) => ({ text: l.text.replace(/\s+/g, " ").trim().replace(BULLET, ""), nodes: l.nodes.filter((n) => n.nodeType === 3) });
+    const listed = shown.filter((l) => l.nodes.some((n) => el(n)?.closest("li")) || BULLET.test(l.text.trim())).map(item);
+    return listed.length ? listed : shown.map(item).filter((b) => b.text.split(" ").length >= 6);
   }
 
   function seenNote(job) {
