@@ -19,7 +19,8 @@
   let last = null; // the arguments of the last ready()
   chrome.storage.onChanged.addListener((ch) => {
     if (!ch.aboutMe && !ch.matchAuto) return;
-    if (ch.aboutMe) hasMaterial = !!ch.aboutMe.newValue?.trim();
+    // Underlines made from the old CV go at once.
+    if (ch.aboutMe) { hasMaterial = !!ch.aboutMe.newValue?.trim(); shown = null; hide(); }
     if (ch.matchAuto) auto = !!ch.matchAuto.newValue;
     if (last?.[3].isConnected) ready(...last);
   });
@@ -177,6 +178,7 @@
       if (ranges.length) CSS.highlights.set(l.css, new Highlight(...ranges));
       else CSS.highlights.delete(l.css);
     }
+    hide();
     painted = { sig, marks };
   }
 
@@ -206,7 +208,8 @@
   }
 
   document.addEventListener("mousemove", (e) => {
-    if (!painted.marks.length || pending) return;
+    if (!painted.marks.length) { if (tip) hide(); return; }
+    if (pending) return;
     pending = true;
     requestAnimationFrame(() => {
       pending = false;
@@ -219,6 +222,7 @@
     });
   }, { passive: true });
   addEventListener("scroll", hide, true);
+  document.documentElement.addEventListener("mouseleave", hide);
 
   function tick(job) {
     if (shown && shown.id !== job?.id) { shown = null; hide(); }
