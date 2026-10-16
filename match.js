@@ -158,7 +158,7 @@
 
   // ---- the reason on hover --------------------------------------------------------------------------------------
 
-  let tip = null, tipFor = null, pending = false;
+  let tip = null, tipFor = null, pending = 0; // pending: the animation frame that will look under the pointer
 
   function hide() { tip?.remove(); tip = null; tipFor = null; }
 
@@ -184,9 +184,8 @@
   document.addEventListener("mousemove", (e) => {
     if (!painted.marks.length) { if (tip) hide(); return; }
     if (pending) return;
-    pending = true;
-    requestAnimationFrame(() => {
-      pending = false;
+    pending = requestAnimationFrame(() => {
+      pending = 0;
       for (const m of painted.marks) {
         for (const r of m.range.getClientRects()) {
           if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top - 2 && e.clientY <= r.bottom + 2) { showTip(m, r); return; }
@@ -196,7 +195,7 @@
     });
   }, { passive: true });
   addEventListener("scroll", hide, true);
-  document.documentElement.addEventListener("mouseleave", hide);
+  document.documentElement.addEventListener("mouseleave", () => { cancelAnimationFrame(pending); pending = 0; hide(); });
 
   function tick(job) {
     if (shown && shown.id !== job?.id) { shown = null; hide(); }
