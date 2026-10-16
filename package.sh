@@ -12,7 +12,7 @@ zip="$name.zip"
 [ "${1:-}" = --store ] && zip="$name-store.zip"
 rm -rf "dist/$name" "dist/$zip"
 mkdir -p "dist/$name"
-git ls-files -- manifest.json '*.js' '*.html' '*.css' 'icons/*' LICENSE | while read -r f; do
+git ls-files -- manifest.json '*.js' '*.html' '*.css' 'icons/*' 'vendor/*' LICENSE | while read -r f; do
   mkdir -p "dist/$name/$(dirname "$f")"
   cp "$f" "dist/$name/$f"
 done
