@@ -5,8 +5,8 @@ Newest first. Each version says what changed for someone using the extension.
 ## 0.15.0 (16 October 2026): see what your CV covers
 
 - Paste your CV, and notes such as what you don't want, under **About you** in the settings. Under an open job,
-  **Compare with my CV** underlines its bullet points: green where your CV shows you have it, yellow where it
-  doesn't, red where your notes say you don't want it.
+  **Compare with my CV** underlines the few words in each bullet point that name a skill or a condition: green
+  where your CV shows you have it, yellow where it doesn't, red where your notes say you don't want it.
 - Hover an underline for the reason and the line of your CV or notes it rests on.
 - Tick **Compare every job I open** to have it done as each job opens, without the click.
 - **Load my CV from a file** fills About you from a PDF, a Word file (.docx) or a text file, or drop the file on
