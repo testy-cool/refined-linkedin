@@ -112,27 +112,23 @@
 
   // ---- the marks ------------------------------------------------------------------------------------------------
 
-  // Text compared the way background.js checks a highlight: case, spaces, curly quotes and a last full stop or comma
-  // do not count. fold() changes each character into one, so offsets into the text stay offsets into the page.
-  const fold = (c) => { const l = c.toLowerCase(); return l.length === 1 ? l.replace(/[‘’]/g, "'").replace(/[“”]/g, '"') : c; };
-  const squash = (t) => [...t.replace(/\s+/g, "")].map(fold).join("").replace(/[.,;:]+$/, "");
-
-  // A bullet point's characters without whitespace, each with the text node and offset it came from, as in notes.js.
-  function textIndex(nodes) {
-    const chars = [], at = [];
-    for (const n of nodes) for (let i = 0; i < n.data.length; i++) if (!/\s/.test(n.data[i])) { chars.push(fold(n.data[i])); at.push([n, i]); }
-    return { text: chars.join(""), at };
-  }
-
-  // A phrase is looked for only in its own bullet point's text on the page, so the same words elsewhere stay plain.
+  // A phrase is looked for only in its own bullet point's text on the page, so the same words elsewhere stay plain,
+  // and found the way background.js checked it (phrase.js). Each character found is mapped back to its text node.
   function rangeOf(bullet, phrase) {
-    const idx = textIndex(bullet.nodes);
-    const p = squash(phrase) ? idx.text.indexOf(squash(phrase)) : -1;
-    if (p < 0) return null;
-    const z = p + squash(phrase).length - 1;
+    const at = [];
+    for (const n of bullet.nodes) {
+      for (let i = 0; i < n.data.length;) {
+        const ch = String.fromCodePoint(n.data.codePointAt(i)); // as phrase.js reads it, so an emoji is one character
+        if (!/\s/.test(ch)) at.push([n, i, ch.length]);
+        i += ch.length;
+      }
+    }
+    const f = Phrase.find(Phrase.chars(...bullet.nodes.map((n) => n.data)), phrase);
+    if (!f) return null;
+    const z = at[f.start + f.length - 1];
     const r = document.createRange();
-    r.setStart(...idx.at[p]);
-    r.setEnd(idx.at[z][0], idx.at[z][1] + 1);
+    r.setStart(at[f.start][0], at[f.start][1]);
+    r.setEnd(z[0], z[1] + z[2]);
     return r;
   }
 

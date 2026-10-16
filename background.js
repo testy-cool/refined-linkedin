@@ -1,7 +1,7 @@
 // Asks the model chosen in the settings which passages of a job description to fold, and caches the answer per job,
 // text and prompt. The content script sends {type: "fold", id, text, again} and gets {sections} or {error}; "again"
 // asks the model anew instead of using the saved answer. It also compares a job with the person's CV, see match().
-importScripts("prompt.js", "match-prompt.js", "providers.js", "build.js", "chatgpt.js", "folds.js");
+importScripts("prompt.js", "match-prompt.js", "phrase.js", "providers.js", "build.js", "chatgpt.js", "folds.js");
 try { importScripts("config.local.js"); } catch { /* only Vlad's build seeds a provider */ }
 
 const inflight = new Map();
@@ -157,8 +157,8 @@ async function match({ id, text, bullets, again = false, peek = false }) {
   return inflight.get(key);
 }
 
-// Only what can be found stays: a phrase must be in its bullet point, and a MATCH or UNWANTED must quote the
-// material. Case, spaces, curly quotes and a quote's last full stop do not count. A bullet point keeps only its
+// Only what can be found stays: a phrase must be in its bullet point, as whole words, and a MATCH or UNWANTED must
+// quote the material. Case, spaces, curly quotes and a quote's last full stop do not count. A bullet point keeps only its
 // first phrase, so the page stays calm even when the model gives more (issue #61).
 function checked(answer, bullets, material) {
   const squash = (t) => (t || "").toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, "").replace(/[.,;:]+$/, "");
@@ -167,8 +167,7 @@ function checked(answer, bullets, material) {
   const highlights = (answer.highlights || []).filter((h) => {
     const b = bullets[h.bullet - 1];
     if (used.has(h.bullet)) return false;
-    const phrase = squash(h.phrase);
-    return b && phrase && squash(b).includes(phrase) && ["MATCH", "GAP", "UNWANTED"].includes(h.label)
+    return b && Phrase.find(Phrase.chars(b), h.phrase) && ["MATCH", "GAP", "UNWANTED"].includes(h.label)
       && (h.label === "GAP" || (squash(h.material_quote) && all.includes(squash(h.material_quote))))
       && used.add(h.bullet);
   });

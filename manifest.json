@@ -52,6 +52,7 @@
         "content.js",
         "notes.js",
         "keywords.js",
+        "phrase.js",
         "match.js"
       ],
       "css": [
