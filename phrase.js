@@ -3,18 +3,19 @@
 // and a phrase's last full stop or comma is dropped. A phrase matches whole words only, so "AI" is not found inside
 // "Maintain", and "Go" is not found in "g o".
 self.Phrase = (() => {
-  const fold = (c) => { const l = c.toLowerCase(); return l.length === 1 ? l.replace(/[‘’]/g, "'").replace(/[“”]/g, '"') : c; };
-  const word = (c) => /[\p{L}\p{N}]/u.test(c);
-  // A text as its characters without spaces, each folded and marked with whether space came before it. Several
-  // pieces of text, such as a bullet point's text nodes, read as one when passed one after another.
-  function chars(...texts) {
+  const fold = (c) => { const l = c.toLowerCase(); return [...l].length === 1 ? l.replace(/[‘’]/g, "'").replace(/[“”]/g, '"') : c; };
+  // Letters, digits and the accents that combine with them belong to a word.
+  const word = (c) => /[\p{L}\p{N}\p{M}]/u.test(c);
+  // A text as its characters without spaces, each folded, marked with whether space came before it, and with its
+  // position and length in the text, in UTF-16 units as the page's ranges count them.
+  function chars(text) {
     const out = [];
     let gap = true;
-    for (const text of texts) {
-      for (const ch of text) {
-        if (/\s/.test(ch)) gap = true;
-        else { out.push({ c: fold(ch), gap }); gap = false; }
-      }
+    for (let i = 0; i < text.length;) {
+      const ch = String.fromCodePoint(text.codePointAt(i));
+      if (/\s/.test(ch)) gap = true;
+      else { out.push({ c: fold(ch), gap, at: i, size: ch.length }); gap = false; }
+      i += ch.length;
     }
     return out;
   }
@@ -29,9 +30,11 @@ self.Phrase = (() => {
         // Between two letters or digits, a space must be where the phrase has one.
         if (k && word(p[k - 1].c) && word(p[k].c) && seq[i + k].gap !== p[k].gap) continue next;
       }
-      const first = seq[i], last = seq[i + p.length - 1], before = seq[i - 1], after = seq[i + p.length];
-      if (before && !first.gap && word(before.c) && word(first.c)) continue;
-      if (after && !after.gap && word(after.c) && word(last.c)) continue;
+      // A letter or digit right against either end means the phrase is part of a longer name, as "C++" in
+      // "C++Builder" or "AI" in "Maintain".
+      const before = seq[i - 1], after = seq[i + p.length];
+      if (before && !seq[i].gap && word(before.c)) continue;
+      if (after && !after.gap && word(after.c)) continue;
       return { start: i, length: p.length };
     }
     return null;
