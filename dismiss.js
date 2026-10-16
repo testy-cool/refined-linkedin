@@ -34,35 +34,35 @@
     return b;
   }
 
+  // The bar is built once for each state, idle, running and done, and only its words change after that: a bar
+  // built anew under the pointer would swallow a click on Stop.
+  function build(kind) {
+    const b = document.createElement("div");
+    b.className = "rl-dismiss-bar rl-ui";
+    b.dataset.kind = kind;
+    if (kind === "idle") {
+      const hint = document.createElement("span");
+      hint.className = "rl-hint";
+      hint.textContent = "LinkedIn stops recommending them";
+      b.append(link("", dismissAll), hint);
+    } else if (kind === "running") b.append(document.createElement("span"), link("Stop", () => { run.stop = true; }));
+    else b.append(document.createElement("span"));
+    return b;
+  }
+
   function draw() {
     // "Dismissed 7 jobs" stays five seconds.
     if (run?.end && Date.now() - run.end >= 5000) run = null;
     const first = cards.find((c) => c.el.isConnected && c.item.parentElement);
     const n = cards.filter(due).length;
     if (!first || (!run && !n)) { bar?.remove(); bar = null; return; }
-    const sig = run ? `${run.done}/${run.total}/${!!run.end}/${run.stop}` : `n${n}`;
+    const kind = !run ? "idle" : run.end ? "done" : "running";
+    if (bar?.dataset.kind !== kind) { bar?.remove(); bar = build(kind); }
     const list = first.item.parentElement;
-    if (bar?.dataset.sig === sig && bar.isConnected && bar.nextElementSibling === list) return;
-    bar?.remove();
-    bar = document.createElement("div");
-    bar.className = "rl-dismiss-bar rl-ui";
-    bar.dataset.sig = sig;
-    if (!run) {
-      bar.append(link(`Dismiss the ${n} grey job${n === 1 ? "" : "s"}`, dismissAll));
-      const hint = document.createElement("span");
-      hint.className = "rl-hint";
-      hint.textContent = "LinkedIn stops recommending them";
-      bar.append(hint);
-    } else if (!run.end) {
-      const s = document.createElement("span");
-      s.textContent = `Dismissing ${run.done} of ${run.total}`;
-      bar.append(s, link("Stop", () => { run.stop = true; }));
-    } else {
-      const s = document.createElement("span");
-      s.textContent = `Dismissed ${run.done} job${run.done === 1 ? "" : "s"}`;
-      bar.append(s);
-    }
-    list.before(bar);
+    if (bar.nextElementSibling !== list) list.before(bar);
+    const words = kind === "idle" ? `Dismiss the ${n} grey job${n === 1 ? "" : "s"}`
+      : kind === "running" ? `Dismissing ${run.done} of ${run.total}` : `Dismissed ${run.done} job${run.done === 1 ? "" : "s"}`;
+    if (bar.firstChild.textContent !== words) bar.firstChild.textContent = words;
   }
 
   async function dismissAll() {
