@@ -435,8 +435,9 @@
     el.classList.toggle("jfold-off", why.length > 0);
     // With "Hide them instead" ticked, those jobs leave the list, as do jobs dismissed with LinkedIn's ×. The open
     // job stays, and so does a seen job, grey.
-    // LinkedIn says "Success, the job <title> was dismissed. We won’t show you this job again."
-    const dismissed = !!labelled(/We won.t show you this job again/);
+    // A dismissed card says "We won't show you this job again" on the classic list, "We won't recommend this job
+    // anymore" on the new search page.
+    const dismissed = !!labelled(/We won.t (show you this job again|recommend this job anymore)/);
     const gone = !!self.RLFilters?.hide && (why.length > 0 || dismissed) && (!id || id !== openId) && !rec && !viewed;
     for (const e of listItem(el)) e.classList.toggle("rl-gone", gone);
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
