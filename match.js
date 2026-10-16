@@ -86,7 +86,7 @@
         line.append(`Could not compare with your CV: ${res.error} · `, link("try again", () => run(true)));
         return;
       }
-      shown = { id: job.id, highlights: res.highlights.map((h) => ({ ...h, bulletText: bullets[h.bullet - 1] || "" })) };
+      shown = { id: job.id, highlights: res.highlights, bullets };
       painted.sig = "";
       const n = (label) => res.highlights.filter((h) => h.label === label).length;
       const said = Object.entries(LABELS).filter(([k]) => n(k)).map(([k, l]) => el("span", `rl-cv-key ${l.css}-text`, `${n(k)} ${l.word}`));
@@ -110,31 +110,45 @@
 
   // ---- the marks ------------------------------------------------------------------------------------------------
 
-  // The description's characters without whitespace, each with the text node and offset it came from, as in notes.js.
+  // Text compared the way background.js checks a highlight: case, spaces, curly quotes and a last full stop or comma
+  // do not count. fold() changes each character into one, so offsets into the text stay offsets into the page.
+  const fold = (c) => { const l = c.toLowerCase(); return l.length === 1 ? l.replace(/[‘’]/g, "'").replace(/[“”]/g, '"') : c; };
+  const squash = (t) => [...t.replace(/\s+/g, "")].map(fold).join("").replace(/[.,;:]+$/, "");
+
+  // The visible description's characters without whitespace, each with the text node and offset it came from, as in
+  // notes.js. Folded lines are left out, so a phrase never lands in one.
   function textIndex(root) {
     const chars = [], at = [];
     const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode: (n) => (n.parentElement?.closest(".jfold-chip, .rl-ui") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+      acceptNode: (n) => (n.parentElement?.closest(".jfold-chip, .jfold-hide, .rl-ui") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
     });
     while (tw.nextNode()) {
       const n = tw.currentNode;
-      for (let i = 0; i < n.data.length; i++) if (!/\s/.test(n.data[i])) { chars.push(n.data[i]); at.push([n, i]); }
+      for (let i = 0; i < n.data.length; i++) if (!/\s/.test(n.data[i])) { chars.push(fold(n.data[i])); at.push([n, i]); }
     }
-    return { text: chars.join("").toLowerCase(), at };
+    return { text: chars.join(""), at };
   }
 
-  const squash = (t) => t.toLowerCase().replace(/\s+/g, "");
+  // Where each bullet point starts in the index, found in their order on the page, so bullet 2 "Python" is never
+  // found inside bullet 1 "Mentor engineers using Python". -1 for one not found.
+  function bulletStarts(idx, bullets) {
+    let pos = 0;
+    return bullets.map((b) => {
+      const k = idx.text.indexOf(squash(b), pos);
+      if (k >= 0) pos = k + squash(b).length;
+      return k;
+    });
+  }
 
-  // A phrase is looked for inside its bullet point, so the same words elsewhere in the description stay plain.
-  function rangeOf(idx, bullet, phrase) {
-    const b = idx.text.indexOf(squash(bullet));
-    if (b < 0) return null;
-    const p = idx.text.slice(b, b + squash(bullet).length).indexOf(squash(phrase));
+  // A phrase is looked for inside its own bullet point, so the same words elsewhere in the description stay plain.
+  function rangeOf(idx, start, bullet, phrase) {
+    if (start < 0 || !squash(phrase)) return null;
+    const p = idx.text.slice(start, start + squash(bullet).length).indexOf(squash(phrase));
     if (p < 0) return null;
-    const start = b + p, end = start + squash(phrase).length - 1;
+    const a = start + p, z = a + squash(phrase).length - 1;
     const r = document.createRange();
-    r.setStart(...idx.at[start]);
-    r.setEnd(idx.at[end][0], idx.at[end][1] + 1);
+    r.setStart(...idx.at[a]);
+    r.setEnd(idx.at[z][0], idx.at[z][1] + 1);
     return r;
   }
 
@@ -152,8 +166,9 @@
     const marks = [];
     for (const root of list.length ? roots : []) {
       const idx = textIndex(root);
+      const starts = bulletStarts(idx, shown.bullets);
       for (const h of list) {
-        const r = rangeOf(idx, h.bulletText, h.phrase);
+        const r = rangeOf(idx, starts[h.bullet - 1] ?? -1, shown.bullets[h.bullet - 1] || "", h.phrase);
         if (r) marks.push({ range: r, h });
       }
     }
