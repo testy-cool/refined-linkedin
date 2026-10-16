@@ -158,15 +158,19 @@ async function match({ id, text, bullets, again = false, peek = false }) {
 }
 
 // Only what can be found stays: a phrase must be in its bullet point, and a MATCH or UNWANTED must quote the
-// material. Case, spaces, curly quotes and a quote's last full stop do not count.
+// material. Case, spaces, curly quotes and a quote's last full stop do not count. A bullet point keeps only its
+// first phrase, so the page stays calm even when the model gives more (issue #61).
 function checked(answer, bullets, material) {
   const squash = (t) => (t || "").toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, "").replace(/[.,;:]+$/, "");
   const all = squash(material);
+  const used = new Set();
   const highlights = (answer.highlights || []).filter((h) => {
     const b = bullets[h.bullet - 1];
+    if (used.has(h.bullet)) return false;
     const phrase = squash(h.phrase);
     return b && phrase && squash(b).includes(phrase) && ["MATCH", "GAP", "UNWANTED"].includes(h.label)
-      && (h.label === "GAP" || (squash(h.material_quote) && all.includes(squash(h.material_quote))));
+      && (h.label === "GAP" || (squash(h.material_quote) && all.includes(squash(h.material_quote))))
+      && used.add(h.bullet);
   });
   return { highlights, dropped: (answer.highlights || []).length - highlights.length };
 }

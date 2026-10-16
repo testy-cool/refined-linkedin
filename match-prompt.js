@@ -1,13 +1,16 @@
 // What the model is asked when a job is compared with the person's CV and notes (issue #57), and the format of its
 // answer. {TEXT} is the job description, {BULLETS} its bullet points left visible after folding, numbered, and
-// {MATERIAL} what the person wrote under "About you" in the settings. Vlad approved this prompt on 2026-10-16.
+// {MATERIAL} what the person wrote under "About you" in the settings. Vlad approved this prompt on 2026-10-16, and its
+// short phrases, at most one per bullet point, the same day (issue #61).
 self.MATCH_PROMPT = `You will read a job description and the candidate's own material: their
 CV and notes they wrote about themselves.
 
-Under the description is a numbered list of its bullet points. Go through
-each bullet point and pick out the phrases that ask something of the
-candidate or describe the work. Copy each phrase exactly from its bullet
-point; a phrase can be the whole bullet point. Give each phrase one label:
+Under the description is a numbered list of its bullet points. In each
+bullet point, find the main thing it asks of the candidate or the work it
+describes, and pick the 1 to 4 words that name it: a skill, a tool, a
+kind of experience or a condition of the job. Copy those words exactly
+from the bullet point. Pick at most one phrase per bullet point, and skip
+a bullet point that names nothing specific. Give each phrase one label:
 
 MATCH: the candidate's material shows they have done this or have this.
 GAP: the job asks for this and nothing in the candidate's material shows it.
@@ -15,7 +18,7 @@ UNWANTED: the candidate's notes say plainly that they do not want this.
 
 For each phrase, fill the fields in the order given:
 1. \`bullet\`: the number of its bullet point.
-2. \`phrase\`: the words, copied exactly from that bullet point.
+2. \`phrase\`: the 1 to 4 words, copied exactly from that bullet point.
 3. \`material_quote\`: the line of the candidate's material the label rests
    on, copied exactly. Leave it empty for a GAP.
 4. \`reasoning\`: one sentence to the candidate, in plain words, saying why.
@@ -30,25 +33,27 @@ Example. Bullet points:
 1. 5+ years of product management in B2B SaaS
 2. Travel to client sites 50% of the time
 3. Experience with Kubernetes
+4. Be part of a friendly, fast-moving team
 
 Material: "Product Manager, Acme Logistics (B2B SaaS), 2017-2024." and
 "Notes: I don't want a job with a lot of travel."
 
 Answer:
 {"highlights": [
- {"bullet": 1, "phrase": "5+ years of product management in B2B SaaS",
+ {"bullet": 1, "phrase": "product management",
   "material_quote": "Product Manager, Acme Logistics (B2B SaaS), 2017-2024.",
   "reasoning": "You were a B2B SaaS product manager for seven years.",
   "label": "MATCH"},
- {"bullet": 2, "phrase": "Travel to client sites 50% of the time",
+ {"bullet": 2, "phrase": "Travel to client sites",
   "material_quote": "I don't want a job with a lot of travel.",
   "reasoning": "Your notes say you don't want much travel.",
   "label": "UNWANTED"},
- {"bullet": 3, "phrase": "Experience with Kubernetes",
+ {"bullet": 3, "phrase": "Kubernetes",
   "material_quote": "",
   "reasoning": "Nothing in your material mentions Kubernetes.",
   "label": "GAP"}
 ]}
+Bullet point 4 names nothing specific, so it has no phrase.
 
 <description>
 {TEXT}
