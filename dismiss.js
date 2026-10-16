@@ -77,7 +77,10 @@
     const now = (id) => {
       if (search() !== from) run.stop = true;
       const c = cards.find((k) => k.id === id);
-      return !run.stop && c && due(c) && self.RL?.openJob()?.id !== id ? c : null;
+      // The job just picked counts as open from the moment the address names it, before its details replace the
+      // previous job's.
+      const picked = new URL(location.href).searchParams.get("currentJobId");
+      return !run.stop && c && due(c) && id !== picked && self.RL?.openJob()?.id !== id ? c : null;
     };
     for (const id of ids) {
       if (run.stop) break;
