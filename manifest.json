@@ -48,6 +48,7 @@
         "folds.js",
         "details.js",
         "filters.js",
+        "dismiss.js",
         "content.js",
         "notes.js",
         "keywords.js"

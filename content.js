@@ -435,9 +435,7 @@
     el.classList.toggle("jfold-off", why.length > 0);
     // With "Hide them instead" ticked, those jobs leave the list, as do jobs dismissed with LinkedIn's ×. The open
     // job stays, and so does a seen job, grey.
-    // A dismissed card says "We won't show you this job again" on the classic list, "We won't recommend this job
-    // anymore" on the new search page.
-    const dismissed = !!labelled(/We won.t (show you this job again|recommend this job anymore)/);
+    const dismissed = !!labelled(self.RLDismiss.DISMISSED);
     const gone = !!self.RLFilters?.hide && (why.length > 0 || dismissed) && (!id || id !== openId) && !rec && !viewed;
     for (const e of listItem(el)) e.classList.toggle("rl-gone", gone);
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
@@ -551,16 +549,20 @@
 
   function paintLists() {
     const openId = openJob()?.id;
+    const cards = []; // for "Dismiss the grey jobs" above the list, see dismiss.js
     // classic search and collections
     for (const li of document.querySelectorAll("li[data-occludable-job-id]")) {
       const id = li.getAttribute("data-occludable-job-id");
       mark(li, lookup(id, keyOf(...cardNames(li))), id, openId);
+      cards.push({ el: li, id, item: li, open: id === openId });
     }
     // new search-results page
     for (const card of document.querySelectorAll('[role="button"][componentkey^="job-card-component-ref-"]')) {
       const id = card.getAttribute("componentkey").split("-").pop();
       mark(card, lookup(id, keyOf(...cardNames(card))), id, openId);
+      cards.push({ el: card, id, item: listItem(card)[0], open: id === openId });
     }
+    self.RLDismiss?.tick(cards);
     // "More jobs" under a job: no id, only title and employer
     for (const a of document.querySelectorAll('[componentkey^="JobDetailsSimilarJobsSlot_"] a[href]')) {
       const l = leaves(a);
