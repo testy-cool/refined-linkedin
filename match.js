@@ -49,6 +49,7 @@
 
   // The line under the fold's status: a link to compare, the comparison running, or what it found.
   async function ready(job, text, bullets, view) {
+    const texts = bullets.map((b) => b.text);
     last = [job, text, bullets, view];
     view.querySelector(".rl-match")?.remove();
     if (!bullets.length) return;
@@ -66,7 +67,7 @@
       spin();
       const spinning = setInterval(() => (line.isConnected ? spin() : clearInterval(spinning)), 80);
       line.replaceChildren(glyph, "Comparing with your CV…");
-      const res = await ask({ id: job.id, text, bullets, again });
+      const res = await ask({ id: job.id, text, bullets: texts, again });
       clearInterval(spinning);
       if (!line.isConnected) return;
       show(res);
@@ -97,7 +98,7 @@
       line.append(" · ", link("compare again", () => run(true)));
     };
     // A saved answer shows at once. Otherwise the job is compared now, or on a click.
-    const saved = await ask({ id: job.id, text, bullets, peek: true });
+    const saved = await ask({ id: job.id, text, bullets: texts, peek: true });
     if (!line.isConnected) return;
     if (saved && !saved.error) show(saved);
     else if (auto) run(false);
@@ -116,62 +117,35 @@
   const fold = (c) => { const l = c.toLowerCase(); return l.length === 1 ? l.replace(/[‘’]/g, "'").replace(/[“”]/g, '"') : c; };
   const squash = (t) => [...t.replace(/\s+/g, "")].map(fold).join("").replace(/[.,;:]+$/, "");
 
-  // The visible description's characters without whitespace, each with the text node and offset it came from, as in
-  // notes.js. Folded lines are left out, so a phrase never lands in one.
-  function textIndex(root) {
+  // A bullet point's characters without whitespace, each with the text node and offset it came from, as in notes.js.
+  function textIndex(nodes) {
     const chars = [], at = [];
-    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode: (n) => (n.parentElement?.closest(".jfold-chip, .jfold-hide, .rl-ui") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
-    });
-    while (tw.nextNode()) {
-      const n = tw.currentNode;
-      for (let i = 0; i < n.data.length; i++) if (!/\s/.test(n.data[i])) { chars.push(fold(n.data[i])); at.push([n, i]); }
-    }
+    for (const n of nodes) for (let i = 0; i < n.data.length; i++) if (!/\s/.test(n.data[i])) { chars.push(fold(n.data[i])); at.push([n, i]); }
     return { text: chars.join(""), at };
   }
 
-  // Where each bullet point starts in the index, found in their order on the page, so bullet 2 "Python" is never
-  // found inside bullet 1 "Mentor engineers using Python". -1 for one not found.
-  function bulletStarts(idx, bullets) {
-    let pos = 0;
-    return bullets.map((b) => {
-      const k = idx.text.indexOf(squash(b), pos);
-      if (k >= 0) pos = k + squash(b).length;
-      return k;
-    });
-  }
-
-  // A phrase is looked for inside its own bullet point, so the same words elsewhere in the description stay plain.
-  function rangeOf(idx, start, bullet, phrase) {
-    if (start < 0 || !squash(phrase)) return null;
-    const p = idx.text.slice(start, start + squash(bullet).length).indexOf(squash(phrase));
+  // A phrase is looked for only in its own bullet point's text on the page, so the same words elsewhere stay plain.
+  function rangeOf(bullet, phrase) {
+    const idx = textIndex(bullet.nodes);
+    const p = squash(phrase) ? idx.text.indexOf(squash(phrase)) : -1;
     if (p < 0) return null;
-    const a = start + p, z = a + squash(phrase).length - 1;
+    const z = p + squash(phrase).length - 1;
     const r = document.createRange();
-    r.setStart(...idx.at[a]);
+    r.setStart(...idx.at[p]);
     r.setEnd(idx.at[z][0], idx.at[z][1] + 1);
     return r;
   }
 
-  function containers() {
-    const box = self.RL.descriptionBox();
-    return [document.querySelector(".jfold-clone"), box && box.style.display !== "none" ? box : null].filter(Boolean);
-  }
-
   function paint(job) {
     if (!window.CSS?.highlights) return;
-    const list = shown && job && shown.id === job.id ? shown.highlights : [];
-    const roots = containers();
-    const sig = `${job?.id}|${list.length}|${roots.map((c) => c.textContent.length).join(",")}`;
-    if (sig === painted.sig && painted.marks.every((m) => m.range.startContainer.isConnected)) return;
+    const on = shown && job && shown.id === job.id && shown.bullets.some((b) => b.nodes[0]?.isConnected) ? shown : null;
+    const sig = on ? `${on.id}|${on.highlights.length}` : "";
+    if (sig === painted.sig) return;
     const marks = [];
-    for (const root of list.length ? roots : []) {
-      const idx = textIndex(root);
-      const starts = bulletStarts(idx, shown.bullets);
-      for (const h of list) {
-        const r = rangeOf(idx, starts[h.bullet - 1] ?? -1, shown.bullets[h.bullet - 1] || "", h.phrase);
-        if (r) marks.push({ range: r, h });
-      }
+    for (const h of on?.highlights || []) {
+      const b = on.bullets[h.bullet - 1];
+      const r = b && rangeOf(b, h.phrase);
+      if (r) marks.push({ range: r, h });
     }
     for (const [k, l] of Object.entries(LABELS)) {
       const ranges = marks.filter((m) => m.h.label === k).map((m) => m.range);
