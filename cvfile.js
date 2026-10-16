@@ -81,9 +81,13 @@ const MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
 function docxText(xml) {
   const isW = (el, name) => DOCX_NS.has(el.namespaceURI) && el.localName === name;
-  // Word writes a modern drawing and an older copy of the same text box side by side; read only the first choice.
-  const choice = (alt) => [...alt.children].find((c) => c.namespaceURI === MC_NS && c.localName === "Choice")
-    || [...alt.children].find((c) => c.namespaceURI === MC_NS && c.localName === "Fallback");
+  // Word writes a modern drawing and an older copy of the same text box side by side. Read only the first branch
+  // that holds Word text, so the text comes once, and a branch only another program understands is passed over.
+  const hasText = (el) => [...el.getElementsByTagName("*")].some((d) => isW(d, "t"));
+  const choice = (alt) => {
+    const branches = [...alt.children].filter((c) => c.namespaceURI === MC_NS && (c.localName === "Choice" || c.localName === "Fallback"));
+    return branches.find(hasText) || null;
+  };
   const isAlt = (el) => el.namespaceURI === MC_NS && el.localName === "AlternateContent";
   const hidden = (run) => isW(run, "r") && [...run.children].some((rPr) => isW(rPr, "rPr")
     && [...rPr.children].some((x) => isW(x, "vanish") && !["0", "false", "off"].includes(x.getAttributeNS(x.namespaceURI, "val"))));
