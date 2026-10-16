@@ -113,22 +113,20 @@
   // ---- the marks ------------------------------------------------------------------------------------------------
 
   // A phrase is looked for only in its own bullet point's text on the page, so the same words elsewhere stay plain,
-  // and found the way background.js checked it (phrase.js). Each character found is mapped back to its text node.
+  // and found the way background.js checked it (phrase.js): in the bullet point's text nodes joined into one, then
+  // mapped back to the node each end falls in.
   function rangeOf(bullet, phrase) {
-    const at = [];
-    for (const n of bullet.nodes) {
-      for (let i = 0; i < n.data.length;) {
-        const ch = String.fromCodePoint(n.data.codePointAt(i)); // as phrase.js reads it, so an emoji is one character
-        if (!/\s/.test(ch)) at.push([n, i, ch.length]);
-        i += ch.length;
-      }
-    }
-    const f = Phrase.find(Phrase.chars(...bullet.nodes.map((n) => n.data)), phrase);
+    const seq = Phrase.chars(bullet.nodes.map((n) => n.data).join(""));
+    const f = Phrase.find(seq, phrase);
     if (!f) return null;
-    const z = at[f.start + f.length - 1];
+    const node = (i) => { // the text node holding character i of the joined text, and i's offset in it
+      for (const n of bullet.nodes) { if (i < n.data.length) return [n, i]; i -= n.data.length; }
+    };
+    const first = seq[f.start], last = seq[f.start + f.length - 1];
+    const [endNode, endAt] = node(last.at + last.size - 1);
     const r = document.createRange();
-    r.setStart(at[f.start][0], at[f.start][1]);
-    r.setEnd(z[0], z[1] + z[2]);
+    r.setStart(...node(first.at));
+    r.setEnd(endNode, endAt + 1);
     return r;
   }
 
