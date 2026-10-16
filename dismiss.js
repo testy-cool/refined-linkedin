@@ -69,17 +69,22 @@
     const ids = cards.filter(due).map((c) => c.id);
     run = { done: 0, total: ids.length, stop: false, end: 0 };
     draw();
+    // The card as content.js last painted it: LinkedIn may have drawn it anew, and it may have been opened, saved or
+    // turned white since the click.
+    const now = (id) => {
+      const c = cards.find((k) => k.id === id);
+      return !run.stop && c && due(c) && self.RL?.openJob()?.id !== id ? c : null;
+    };
     for (const id of ids) {
       if (run.stop) break;
-      // LinkedIn may have drawn the card anew since the click, so it is looked up again.
-      const c = cards.find((k) => k.id === id);
-      if (!c || !due(c)) { run.total--; draw(); continue; }
-      let x = cross(c.el);
-      for (let t = 0; !x && t < 10; t++) {
+      let c = now(id);
+      for (let t = 0; c && !cross(c.el) && t < 10 && !run.stop; t++) {
         if (!t) c.el.scrollIntoView({ block: "nearest" });
         await sleep(200);
-        x = cross(c.el);
+        c = now(id);
       }
+      if (run.stop) break;
+      const x = c && cross(c.el);
       if (!x) { run.total--; draw(); continue; }
       x.click();
       run.done++;
