@@ -74,22 +74,25 @@ $("cog").setAttribute("d", (() => {
   return d + "Z";
 })());
 
-// What the AI service needs before folds and comparisons work, or which one is ready. The background answers with
-// the saved provider, without its key.
+// Whether folds and comparisons work now, or what they need first. The background runs the same check a fold does
+// and answers with the saved provider, without its key.
+const NEEDS = {
+  NO_CONSENT: "not allowed to send job descriptions yet",
+  NO_KEY: "no API key yet",
+  NO_ACCESS: "Chrome has not allowed calls to its address yet",
+  NO_SIGNIN: "signed out",
+};
 async function status() {
-  const [{ consent, aboutMe }, s] = await Promise.all([chrome.storage.local.get(["consent", "aboutMe"]),
-    chrome.runtime.sendMessage({ type: "settings" }).catch(() => null)]);
+  const [{ aboutMe }, r] = await Promise.all([chrome.storage.local.get("aboutMe"),
+    chrome.runtime.sendMessage({ type: "ready" }).catch((e) => ({ error: String(e.message || e) }))]);
   $("noCV").hidden = !!aboutMe?.trim();
+  const s = r?.provider;
   const name = s && PROVIDERS[s.kind] ? PROVIDERS[s.kind].label.replace(/,.*/, "") : "";
   let state = "needs", words;
-  if (!s) { state = "none"; words = "No AI service chosen"; }
-  else if (!consent) words = `${name}: not allowed to send job descriptions yet`;
-  else if (s.kind === "chatgpt") {
-    const { signedIn } = await ChatGPT.status();
-    if (signedIn) { state = "ready"; words = `${name} · ${s.model || "no model chosen"}`; }
-    else words = `${name}: signed out`;
-  } else if (!s.hasKey) words = `${name}: no API key yet`;
-  else { state = "ready"; words = `${name} · ${s.model}`; }
+  if (!s) { state = r?.error ? "needs" : "none"; words = r?.error ? `No answer from the extension: ${r.error}` : "No AI service chosen"; }
+  else if (!r.error) { state = "ready"; words = `${name} · ${s.model}`; }
+  else if (/^choose a ChatGPT model/.test(r.error)) words = `${name}: no model chosen`;
+  else words = `${name}: ${NEEDS[r.error] || r.error}`;
   $("status").dataset.state = state;
   const text = [words];
   if (state !== "ready") {
@@ -104,6 +107,8 @@ async function status() {
 }
 status();
 chrome.storage.onChanged.addListener((ch) => { if (ch.consent || ch.provider || ch.chatgpt || ch.aboutMe) status(); });
+chrome.permissions.onAdded.addListener(status);
+chrome.permissions.onRemoved.addListener(status);
 chrome.storage.onChanged.addListener((ch) => { for (const key of LISTS) if (ch[key]) draw(key); });
 LISTS.forEach(draw);
 $("word").focus();

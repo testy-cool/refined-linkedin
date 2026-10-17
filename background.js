@@ -40,6 +40,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
       .then(() => chrome.runtime.openOptionsPage());
     return;
   }
+  // The pop-up's status line: the saved provider without its key, and what a fold would fail on now, if anything.
+  if (msg.type === "ready") {
+    settings().then(async (s) => {
+      if (!s) return send({ provider: null });
+      const provider = { ...s, key: undefined, hasKey: !!s.key };
+      try { await ready(s); send({ provider }); } catch (e) { send({ provider, error: String(e.message || e) }); }
+    });
+    return true;
+  }
   // "3 filters on" above a job list opens the pop-up where they are set, or the settings where Chrome won't open it.
   if (msg.type === "popup") { Promise.resolve().then(() => chrome.action.openPopup()).catch(() => chrome.runtime.openOptionsPage()); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
