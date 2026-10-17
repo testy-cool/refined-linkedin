@@ -16,6 +16,9 @@
     if (showing && search() !== showingFor) showing = false;
     return showing;
   };
+  // A search with no results paints no card, so nothing asks; this notices it leave even then, and a Back to the
+  // first search finds its jobs hidden again.
+  setInterval(() => { if (showing && !shown()) changed(); }, 500);
   const listeners = [];
   const links = new Set(); // the company links on the page, see companyLink
   const changed = () => {
