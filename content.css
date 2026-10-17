@@ -40,7 +40,7 @@
 
 /* Notes (issue #1). */
 ::highlight(rl-note) { background-color: #fff0a6; }
-.rl-notes { margin: 12px 0; font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
+.rl-notes { margin: 0; font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
 .rl-job-note { margin: 0 0 10px; padding: 10px 12px; border-radius: 6px; background: #f4f2ee; }
 .rl-job-note-text { font-size: 15px; white-space: pre-wrap; }
 .rl-mark { margin: 0 0 10px; }
@@ -72,7 +72,6 @@
 .jfold-slot > span + .rl-why, .jfold-slot > .rl-why + span { margin-left: 8px; }
 /* With "Hide them instead" ticked, a greyed-out job leaves the list. */
 .rl-gone { display: none !important; }
-.rl-foot .rl-company-link { margin-left: auto; }
 
 /* Highlight words (issue #9): light blue, apart from the yellow of noted passages. */
 ::highlight(rl-keyword) { background-color: #cde4ff; }
@@ -105,5 +104,31 @@
 .rl-cv-match-text { color: #1d7a35; font-weight: 600; }
 .rl-cv-gap-text { color: #8a6100; font-weight: 600; }
 .rl-cv-unwanted-text { color: #b3201b; font-weight: 600; }
-.rl-match.jfold-status { margin-top: -4px; }
 .rl-cv-quote { margin-top: 6px; }
+
+/* One box under the open job holds what the extension adds (issue #63): a header with the way to the settings,
+   then a row per feature, each with a small icon. Rows are kept apart by space, not lines. */
+.rl-box { margin: 0 0 16px; padding: 12px 16px; border: 1px solid #e0dfdc; border-radius: 8px; background: #fff;
+  font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
+.rl-box-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 4px; font-weight: 600; }
+.rl-box-settings { display: inline-flex; padding: 4px; border: 0; border-radius: 4px; background: none; color: #666;
+  cursor: pointer; }
+.rl-box-settings:hover { background: #f3f3f1; color: #1d1d1d; }
+.rl-row { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
+.rl-row > .rl-icon { flex: none; margin-top: 3px; color: #666; }
+.rl-row-body { flex: 1; min-width: 0; }
+.rl-row .jfold-status { margin: 0; }
+.rl-note-field { display: block; box-sizing: border-box; width: 100%; padding: 6px 10px; border: 1px solid #b9b9b6;
+  border-radius: 4px; background: #fff; font: inherit; font-size: 14px; color: #777; text-align: left; cursor: text; }
+.rl-note-field:hover { border-color: #0a66c2; }
+.rl-notes > .rl-hint { display: block; margin-top: 4px; }
+/* "Grey out jobs from Wolt" as a switch: on while the company is in the pop-up's list. */
+.rl-switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 0;
+  border: 0; background: none; font: inherit; font-size: 14px; color: #1d1d1d; text-align: left; cursor: pointer; }
+.rl-track { position: relative; flex: none; width: 32px; height: 18px; border-radius: 9px; background: #b9b9b6;
+  transition: background 0.15s; }
+.rl-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; transition: left 0.15s; }
+.rl-switch[aria-checked="true"] .rl-track { background: #0a66c2; }
+.rl-switch[aria-checked="true"] .rl-track::after { left: 16px; }
+.rl-switch:focus-visible { outline: 2px solid #0a66c2; outline-offset: 2px; }

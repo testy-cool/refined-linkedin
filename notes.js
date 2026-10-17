@@ -136,11 +136,10 @@
     return wrap;
   }
 
-  // In the About the job section, under the line saying when the job was last seen, above the fold's status.
+  // In the note row of the open job's box, see content.js.
   function placePanel(panel, view) {
-    const seenNote = view.querySelector(".jfold-seen-note");
-    const want = seenNote ? seenNote.nextElementSibling : view.firstElementChild;
-    if (panel !== want) { if (seenNote) seenNote.after(panel); else view.prepend(panel); }
+    const body = self.RL.row(view, "note");
+    if (body && panel.parentElement !== body) body.append(panel);
   }
 
   // A note being written survives the panel being redrawn, as when LinkedIn redraws the job: {id, key, node}, where
@@ -189,15 +188,17 @@
       }
       panel.append(item);
     }
-    const foot = el("div", "rl-foot");
+    // With no note on the job yet, a field that looks like a text box opens the editor.
     if (!n.job?.text && !open("job")) {
-      foot.append(linkButton("+ Note on this job", () => write("job", "", (t) => { if (t) entry(job).job = { text: t, at: Date.now() }; }, "What you think of this job")));
+      const field = el("button", "rl-note-field", "Add a note on this job…");
+      field.type = "button";
+      field.addEventListener("click", (e) => {
+        e.stopPropagation();
+        write("job", "", (t) => { if (t) entry(job).job = { text: t, at: Date.now() }; }, "What you think of this job");
+      });
+      panel.append(field);
     }
-    foot.append(el("span", "rl-hint", n.marks.length ? "Select more text in the description to note it." : "or select text in the description"));
-    // The way to grey out every job from this company, see filters.js.
-    const company = self.RLFilters?.companyLink(job.company);
-    if (company) foot.append(company);
-    panel.append(foot);
+    panel.append(el("div", "rl-hint", n.marks.length ? "Select more text in the description to note it." : "Or select text in the description to note a passage."));
     if (writing && (hadFocus || document.activeElement === document.body)) writing.node.querySelector("textarea").focus();
   }
 

@@ -63,13 +63,17 @@
     } catch { /* the extension was updated; this page reloads */ }
   }
 
-  // "Grey out jobs from Wolt" under the open job, or the way back once it is greyed out.
+  // "Grey out jobs from Wolt" under the open job, as a switch that is on while that company is in the list.
   function companyLink(company) {
     if (!company) return null;
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "rl-link rl-company-link";
-    b.draw = () => { b.textContent = hasCompany(company) ? `Stop greying out jobs from ${company}` : `Grey out jobs from ${company}`; };
+    b.className = "rl-switch rl-company-link";
+    b.setAttribute("role", "switch");
+    const track = document.createElement("span");
+    track.className = "rl-track";
+    b.append(`Grey out jobs from ${company}`, track);
+    b.draw = () => { b.setAttribute("aria-checked", String(hasCompany(company))); };
     b.draw();
     links.add(b);
     b.addEventListener("click", (e) => { e.stopPropagation(); setCompany(company, !hasCompany(company)); });
