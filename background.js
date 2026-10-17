@@ -34,8 +34,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
     return true;
   }
   // A settings link on a LinkedIn page names the section that fixes what it reports; the settings page opens there.
+  // Each request is stamped, so two in a row each change the stored value and a page opened later ignores old ones.
   if (msg.type === "options") {
-    (msg.section ? chrome.storage.local.set({ optionsSection: msg.section }) : Promise.resolve()).then(() => chrome.runtime.openOptionsPage());
+    (msg.section ? chrome.storage.local.set({ optionsSection: { section: msg.section, at: Date.now() } }) : Promise.resolve())
+      .then(() => chrome.runtime.openOptionsPage());
     return;
   }
   // "3 filters on" above a job list opens the pop-up where they are set, or the settings where Chrome won't open it.

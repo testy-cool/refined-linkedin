@@ -29,14 +29,11 @@ function openSection(name) {
 }
 addEventListener("hashchange", () => openSection(location.hash.slice(1)));
 openSection(location.hash.slice(1));
-const sectionAsked = async () => {
-  const { optionsSection } = await chrome.storage.local.get("optionsSection");
-  if (!optionsSection) return;
-  await chrome.storage.local.remove("optionsSection");
-  openSection(optionsSection);
-};
-sectionAsked();
-chrome.storage.onChanged.addListener((ch) => { if (ch.optionsSection?.newValue) sectionAsked(); });
+// Changes arrive in the order they were made, so the latest request wins; a page opening uses one made just before.
+chrome.storage.local.get("optionsSection").then(({ optionsSection: a }) => {
+  if (a?.section && Date.now() - a.at < 10e3) openSection(a.section);
+});
+chrome.storage.onChanged.addListener((ch) => { if (ch.optionsSection?.newValue?.section) openSection(ch.optionsSection.newValue.section); });
 
 // The providers, one choice each with what it needs.
 for (const [kind, p] of Object.entries(PROVIDERS)) {
