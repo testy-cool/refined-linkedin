@@ -11,7 +11,7 @@
   let postedDirty = false;
   let current = null; // {id, prior, timer}
   let again = null; // the job whose description is being folded again, asking the model anew
-  self.RL = { openJob, descriptionBox, textColumn, row, dropRow }; // for notes.js, keywords.js and match.js
+  self.RL = { openJob, descriptionBox, textColumn, row, dropRow, icon: (k, size) => lineIcon(ICONS[k], size) }; // for notes.js, keywords.js, match.js and dismiss.js
 
   const norm = (s) => (s || "").toLowerCase().replace(/\(verified job\)|with verification/g, " ")
     .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -455,7 +455,10 @@
     // With "Hide them instead" ticked, those jobs leave the list, as do jobs dismissed with LinkedIn's ×. The open
     // job stays, and so does a seen job, grey.
     const dismissed = !!labelled(self.RLDismiss.DISMISSED);
-    const gone = !!self.RLFilters?.hide && (why.length > 0 || dismissed) && (!id || id !== openId) && !rec && !viewed;
+    // "show them" above the list brings them back for a while; the bar counts them by "rl-hideable".
+    const hideable = !!self.RLFilters?.hiding && (why.length > 0 || dismissed) && (!id || id !== openId) && !rec && !viewed;
+    el.classList.toggle("rl-hideable", hideable);
+    const gone = hideable && !!self.RLFilters?.hide;
     for (const e of listItem(el)) e.classList.toggle("rl-gone", gone);
     if (age) age.toggleAttribute("data-jfold-repost", !!first);
     const parts = [];
@@ -552,6 +555,8 @@
     note: ["M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z", "M5 6h6M5 8h4"], // a speech bubble with lines
     fold: ["M4 2.5h5.5L12 5v8.5H4z", "M9.5 2.5V5H12", "M6 8.5h4M6 11h4"], // a page with a folded corner
     match: ["M2.5 4.5l1.3 1.3L6.3 3.3", "M8.5 4.5h5", "M2.5 10.5l1.3 1.3 2.5-2.5", "M8.5 10.5h5"], // a ticked list
+    filter: ["M2.5 3.5h11l-4.3 5v4.2l-2.4 1.3V8.5z"], // a funnel
+    dismiss: ["M4.5 4.5l7 7M11.5 4.5l-7 7"], // LinkedIn's ×
     company: ["M1.8 8s2.3-4.2 6.2-4.2S14.2 8 14.2 8s-2.3 4.2-6.2 4.2S1.8 8 1.8 8z", "M8 6.3a1.7 1.7 0 1 1 0 3.4a1.7 1.7 0 1 1 0-3.4",
       "M2.5 2.5l11 11"], // an eye, struck through
   };

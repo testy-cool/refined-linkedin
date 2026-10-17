@@ -7,6 +7,9 @@
     "greyTitleWords"];
   const CROWDED = 100; // a job with more applicants than this counts as crowded
   let s = {};
+  // "show them" in the bar above a list (issue #65): the hidden jobs come back on this page, until it is turned off
+  // or the page reloads. The setting itself stays on.
+  let showing = false;
   const listeners = [];
   const links = new Set(); // the company links on the page, see companyLink
   const changed = () => {
@@ -80,9 +83,22 @@
     return b;
   }
 
+  // How many kinds of job the pop-up greys out: each switch that is on, and each list with something in it.
+  const SWITCHES = ["remoteOnly", "greyReposts", "greyCrowded", "greyPromoted", "greyApplied"];
+  const count = () => SWITCHES.filter((k) => s[k]).length + ["greyCompanies", "greyTitleWords"].filter((k) => s[k]?.length).length;
+
   self.RLFilters = {
     reasons, label, companyLink,
-    get hide() { return !!s.hideGrey; },
+    // Whether greyed-out jobs leave the list now; "hiding" is the setting, which "show them" overrides for a while.
+    get hide() { return !!s.hideGrey && !showing; },
+    get hiding() { return !!s.hideGrey; },
+    get showing() { return showing; },
+    setShowing(on) { showing = on; changed(); },
+    setHiding(on) {
+      showing = false;
+      try { chrome.storage.local.set({ hideGrey: on }); } catch { /* the extension was updated; this page reloads */ }
+    },
+    get count() { return count(); },
     get counts() { return !!s.greyCrowded; },
     onChange: (f) => listeners.push(f),
   };
