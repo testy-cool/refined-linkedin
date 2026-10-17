@@ -1,13 +1,54 @@
 /* Text sizes stay at 12px or more. */
 body { margin: 0; background: #f4f2ee; color: #1d1d1d; font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
-main { max-width: 640px; margin: 48px auto; padding: 28px 32px; background: #fff; border: 1px solid #e0dfdc; border-radius: 8px; }
-h1 { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; font-size: 22px; }
+/* One width for every section: the page is fixed, the list of sections takes 200px and the section the rest. */
+.page { box-sizing: border-box; width: 920px; max-width: 100%; margin: 0 auto; padding: 32px 16px 48px; }
+h1 { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; font-size: 22px; }
+.layout { display: flex; gap: 24px; align-items: flex-start; }
+nav { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 2px; flex: none; width: 200px; }
+nav a { padding: 8px 12px; border-radius: 6px; color: #1d1d1d; font-size: 15px; text-decoration: none; }
+nav a:hover { background: #e9e6e0; }
+nav a[aria-current="page"] { background: #dce8f6; color: #0a4f96; font-weight: 600; }
+main { box-sizing: border-box; flex: 1; min-width: 0; padding: 24px 32px 32px; background: #fff; border: 1px solid #e0dfdc;
+  border-radius: 8px; }
+h2 { margin: 0 0 12px; font-size: 19px; }
 .consent { margin: 0 0 8px; padding: 14px 16px; background: #f4f2ee; border-radius: 6px; }
 .consent p { margin: 0 0 10px; }
 label.check { display: flex; align-items: center; gap: 10px; margin: 0; }
 label.check input { width: 16px; height: 16px; margin: 0; flex: none; }
-label { display: block; margin: 16px 0 6px; font-weight: 600; }
-h2 { margin: 32px 0 6px; padding-top: 24px; border-top: 1px solid #e0dfdc; font-size: 17px; }
+label, legend { display: block; margin: 20px 0 6px; padding: 0; font-weight: 600; }
+/* A legend takes no top margin, so its fieldset does. */
+fieldset { margin: 20px 0 0; padding: 0; border: 0; min-width: 0; }
+legend { margin: 0 0 6px; }
+
+/* The providers: one row each, its name and what it needs. */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choices label { display: flex; gap: 12px; align-items: flex-start; margin: 0; padding: 12px 14px; border: 1px solid #d6d4cf;
+  border-radius: 8px; font-weight: 400; cursor: pointer; }
+.choices label:hover { background: #f8f7f4; }
+.choices label:has(input:checked) { border-color: #0a66c2; background: #f1f6fc; }
+.choices input { flex: none; width: 16px; height: 16px; margin: 3px 0 0; accent-color: #0a66c2; }
+.choices b { display: block; font-weight: 600; }
+.choices span { color: #555; font-size: 13px; }
+
+/* Effort: three buttons side by side, one of them chosen. */
+.segments { display: inline-flex; border: 1px solid #b9b9b6; border-radius: 8px; overflow: hidden; }
+.segments label { position: relative; display: block; margin: 0; padding: 7px 16px; font-weight: 400; cursor: pointer; }
+.segments label + label { border-left: 1px solid #b9b9b6; }
+.segments label:hover { background: #f4f2ee; }
+.segments label:has(input:checked) { background: #0a66c2; color: #fff; font-weight: 600; }
+.segments label:has(input:focus-visible) { outline: 2px solid #0a66c2; outline-offset: -2px; }
+.segments input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; pointer-events: none; }
+
+/* A switch is a check box drawn as a track with a knob. */
+label.switch-row { display: flex; align-items: center; gap: 12px; margin: 20px 0 0; font-weight: 400; cursor: pointer; }
+input.switch { appearance: none; position: relative; flex: none; width: 36px; height: 20px; margin: 0; padding: 0;
+  border: 0; border-radius: 10px; background: #b9b9b6; cursor: pointer; transition: background .15s; }
+input.switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .15s; }
+input.switch:checked { background: #0a66c2; }
+input.switch:checked::before { transform: translateX(16px); }
+input.switch:focus-visible { outline: 2px solid #0a66c2; outline-offset: 2px; }
+
 textarea { box-sizing: border-box; width: 100%; padding: 8px 10px; font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace; border: 1px solid #b9b9b6; border-radius: 4px; resize: vertical; }
 textarea:focus { outline: 2px solid #0a66c2; outline-offset: 0; border-color: #0a66c2; }
 code { font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace; }
@@ -19,7 +60,7 @@ input:focus, select:focus { outline: 2px solid #0a66c2; outline-offset: 0; borde
 .hint { margin: 6px 0 0; color: #666; font-size: 13px; }
 .hint:empty { display: none; }
 .hint a { color: #0a66c2; }
-.note { margin: 16px 0 0; }
+.note { margin: 20px 0 0; }
 .actions { display: flex; align-items: baseline; gap: 16px; }
 .actions button { margin-top: 12px; }
 button.link { padding: 0; color: #0a66c2; background: none; font-weight: 400; text-decoration: underline; }
@@ -27,10 +68,9 @@ button.link:hover { background: none; color: #004182; }
 button { margin-top: 24px; padding: 8px 20px; font: inherit; font-weight: 600; color: #fff; background: #0a66c2; border: 0; border-radius: 20px; cursor: pointer; }
 button:hover { background: #004182; }
 button:disabled { background: #8db3dc; cursor: default; }
-#result { min-height: 21px; margin: 16px 0 0; }
-#result.ok { color: #057642; }
-#result.bad { color: #b24020; }
-#cvState + label.check { margin-top: 12px; }
+.result { min-height: 21px; margin: 16px 0 0; }
+.result.ok { color: #057642; }
+.result.bad { color: #b24020; }
 #aboutMe { font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
 #cvLoad { margin-top: 12px; }
 #cvState .link { margin: 0; }

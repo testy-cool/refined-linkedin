@@ -15,7 +15,38 @@ const $ = (id) => document.getElementById(id);
   chrome.runtime.reload();
 })();
 
-for (const [kind, p] of Object.entries(PROVIDERS)) $("kind").append(new Option(p.label, kind));
+// The page shows one section at a time, named in the address after #.
+const SECTIONS = ["ai", "about", "prompt", "jobs"];
+function openSection(name) {
+  if (!SECTIONS.includes(name)) name = "ai";
+  for (const s of SECTIONS) $(s).hidden = s !== name;
+  for (const a of document.querySelectorAll("nav a")) {
+    if (a.dataset.section === name) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  }
+  if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
+}
+addEventListener("hashchange", () => openSection(location.hash.slice(1)));
+openSection(location.hash.slice(1));
+
+// The providers, one choice each with what it needs.
+for (const [kind, p] of Object.entries(PROVIDERS)) {
+  const row = document.createElement("label");
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.name = "kind";
+  radio.value = kind;
+  const words = document.createElement("div");
+  const name = document.createElement("b");
+  name.textContent = p.label;
+  const about = document.createElement("span");
+  about.textContent = p.about || "";
+  words.append(name, about);
+  row.append(radio, words);
+  $("kinds").append(row);
+}
+const chosen = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || "";
+const choose = (name, value) => { const r = document.querySelector(`input[name="${name}"][value="${value}"]`); if (r) r.checked = true; };
 
 // Nothing is sent to an AI service until this box is ticked; unticking it stops folding again.
 chrome.storage.local.get("consent").then(({ consent }) => { $("consent").checked = !!consent; });
@@ -112,7 +143,7 @@ function show(kind, fill) {
   $("key").placeholder = saved?.kind === kind && saved.hasKey ? "Saved; type a new one to replace it" : "";
 }
 
-$("kind").addEventListener("change", () => show($("kind").value, true));
+$("kinds").addEventListener("change", () => show(chosen("kind"), true));
 
 // Signed in: who, and the models that account may use. Signed out: what signing in does.
 async function showChatGPT() {
@@ -134,13 +165,15 @@ async function showChatGPT() {
   }
 }
 
+const aiResult = document.querySelector("#ai .result");
+
 $("signIn").addEventListener("click", async () => {
-  const result = $("result");
-  result.className = "";
+  const result = aiResult;
+  result.className = "result";
   // Chrome asks for access to OpenAI's addresses only inside the click.
   const granted = await chrome.permissions.request({ origins: ChatGPT.ORIGINS }).catch((e) => e);
   if (granted !== true) {
-    result.className = "bad";
+    result.className = "result bad";
     result.textContent = granted instanceof Error ? `Chrome refused access to OpenAI: ${granted.message}` : "Chrome did not allow calls to OpenAI.";
     return;
   }
@@ -148,10 +181,10 @@ $("signIn").addEventListener("click", async () => {
   const here = await chrome.tabs.getCurrent();
   try {
     const { email } = await ChatGPT.signIn();
-    result.className = "ok";
+    result.className = "result ok";
     result.textContent = `Signed in as ${email || "your account"}. Choose a model, then Save and test.`;
   } catch (e) {
-    result.className = "bad";
+    result.className = "result bad";
     result.textContent = e.message;
   }
   if (here) chrome.tabs.update(here.id, { active: true });
@@ -160,8 +193,8 @@ $("signIn").addEventListener("click", async () => {
 
 $("signOut").addEventListener("click", async () => {
   await ChatGPT.signOut();
-  $("result").className = "";
-  $("result").textContent = "Signed out of ChatGPT.";
+  aiResult.className = "result";
+  aiResult.textContent = "Signed out of ChatGPT.";
   showChatGPT();
 });
 
@@ -190,59 +223,66 @@ function preview(text, sections) {
 chrome.runtime.sendMessage({ type: "settings" }, (s) => {
   saved = s;
   const kind = s?.kind || "gemini";
-  $("kind").value = kind;
+  choose("kind", kind);
   show(kind, !s);
-  if (s) { $("base").value = s.base; $("model").value = s.model; $("effort").value = s.effort || "medium"; }
-  else $("effort").value = "medium";
+  if (s) { $("base").value = s.base; $("model").value = s.model; }
+  choose("effort", s?.effort || "medium");
 });
 
-$("save").addEventListener("click", async () => {
-  const kind = $("kind").value;
+// Both sections' Save and test save the provider and the prompt together, and test them on the test description.
+// The answer shows in the section clicked; the folding prompt's section also shows what would fold.
+for (const b of document.querySelectorAll("button.save")) b.addEventListener("click", () => save(b.closest("section")));
+async function save(section) {
+  const button = section.querySelector("button.save");
+  const kind = chosen("kind");
   const base = kind === "custom" ? $("base").value.trim() : PROVIDERS[kind].base || "";
-  const result = $("result");
-  result.className = "";
+  for (const r of document.querySelectorAll(".result")) { r.className = "result"; r.textContent = ""; }
+  const result = section.querySelector(".result");
+  result.className = "result";
   $("preview").hidden = true;
   const prompt = $("promptBox").value.trim();
-  if (!$("consent").checked) { result.className = "bad"; result.textContent = "Tick the box at the top to allow sending job descriptions."; return; }
-  if (!prompt.includes("{TEXT}")) { result.className = "bad"; result.textContent = "The prompt needs {TEXT} where the job description goes."; return; }
-  if (kind === "chatgpt" && !(await ChatGPT.status()).signedIn) { result.className = "bad"; result.textContent = "Sign in with ChatGPT first."; return; }
-  if (kind === "chatgpt" && !$("chatgptModel").value) { result.className = "bad"; result.textContent = "Choose a model first."; return; }
+  // The settings a failure points at sit under AI service; from the prompt's section it says so.
+  const there = section.id === "ai" ? "" : " under AI service";
+  if (!$("consent").checked) { result.className = "result bad"; result.textContent = `Tick the box${there || " at the top"} to allow sending job descriptions.`; return; }
+  if (!prompt.includes("{TEXT}")) { result.className = "result bad"; result.textContent = "The prompt needs {TEXT} where the job description goes."; return; }
+  if (kind === "chatgpt" && !(await ChatGPT.status()).signedIn) { result.className = "result bad"; result.textContent = `Sign in with ChatGPT${there} first.`; return; }
+  if (kind === "chatgpt" && !$("chatgptModel").value) { result.className = "result bad"; result.textContent = `Choose a model${there} first.`; return; }
   if (kind !== "chatgpt") {
-    if (!/^https:\/\/[^/]+/.test(base)) { result.className = "bad"; result.textContent = "The API address must start with https://"; return; }
+    if (!/^https:\/\/[^/]+/.test(base)) { result.className = "result bad"; result.textContent = "The API address must start with https://"; return; }
     // A custom address needs permission to reach its host; Chrome asks only inside the click.
     const granted = await chrome.permissions.request({ origins: [`${new URL(base).origin}/*`] }).catch(() => false);
-    if (!granted) { result.className = "bad"; result.textContent = `Chrome did not allow calls to ${new URL(base).host}.`; return; }
+    if (!granted) { result.className = "result bad"; result.textContent = `Chrome did not allow calls to ${new URL(base).host}.`; return; }
   }
 
   const { provider: old } = await chrome.storage.local.get("provider");
   const typed = $("key").value.trim();
   const key = typed || (old && old.kind === kind ? old.key : "");
   const model = kind === "chatgpt" ? $("chatgptModel").value : $("model").value.trim() || PROVIDERS[kind].model || "";
-  await chrome.storage.local.set({ provider: { kind, base, key, model, effort: $("effort").value } });
+  await chrome.storage.local.set({ provider: { kind, base, key, model, effort: chosen("effort") || "medium" } });
   // The default prompt is not saved, so a newer default reaches everyone who did not change it.
   if (prompt === self.PROMPT.trim()) await chrome.storage.local.remove("prompt");
   else await chrome.storage.local.set({ prompt });
   const sample = $("sample").value.trim() || Folds.SAMPLE;
   $("key").value = "";
 
-  $("save").disabled = true;
+  for (const b of document.querySelectorAll("button.save")) b.disabled = true;
   result.textContent = "Testing on the test description…";
   chrome.runtime.sendMessage({ type: "test", text: sample }, (r) => {
-    $("save").disabled = false;
+    for (const b of document.querySelectorAll("button.save")) b.disabled = false;
     if (!r || r.error) {
-      result.className = "bad";
+      result.className = "result bad";
       result.textContent = r?.error === "NO_KEY" ? "Saved, but there is no API key yet."
         : r?.error === "NO_ACCESS" ? "Saved, but Chrome has not allowed calls to that address."
         : r?.error === "NO_SIGNIN" ? "Saved, but you are not signed in with ChatGPT." : `Saved, but the test failed: ${r ? r.error : "no answer"}`;
       return;
     }
     saved = { kind, hasKey: true, model };
-    result.className = "ok";
+    result.className = "result ok";
     result.textContent = `Saved. ${r.model} answered in ${r.seconds} s and named ${r.passages} passage${r.passages === 1 ? "" : "s"} to fold.`;
-    preview(sample, r.sections);
+    if (section.id === "prompt") preview(sample, r.sections);
     show(kind, false);
   });
-});
+}
 
 // "Download my jobs": everything kept about the jobs, as one JSON file.
 const jobsFile = async () => JobsFile.build(await chrome.storage.local.get(null));

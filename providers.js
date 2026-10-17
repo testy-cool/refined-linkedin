@@ -8,15 +8,18 @@ self.PROVIDERS = {
     base: "https://generativelanguage.googleapis.com/v1beta/openai",
     model: "gemini-3.8-flash",
     keyHint: "Create a key at https://aistudio.google.com/apikey",
+    about: "Needs an API key from Google AI Studio. Google offers a free tier.",
   },
   chatgpt: {
     label: "ChatGPT, with your Plus or Pro plan",
     model: "",
+    about: "Sign in with your ChatGPT account. No API key.",
   },
   custom: {
     label: "Other OpenAI-compatible API",
     base: "",
     model: "",
     keyHint: "The API's key, sent as a Bearer token",
+    about: "Any service that speaks OpenAI's chat format, with its address and key.",
   },
 };
