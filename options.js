@@ -55,9 +55,10 @@ $("consent").addEventListener("change", () => chrome.storage.local.set({ consent
 
 // About you (issue #57): the CV and notes a job is compared with, and whether each job is compared as it opens.
 // Saved as you type.
+let matchAutoChanged = false; // a change seen before the first read came back is newer than it
 chrome.storage.local.get(["aboutMe", "matchAuto"]).then(({ aboutMe, matchAuto }) => {
   $("aboutMe").value = aboutMe || "";
-  $("matchAuto").checked = !!matchAuto;
+  if (!matchAutoChanged) $("matchAuto").checked = !!matchAuto;
 });
 let aboutTimer = 0;
 $("aboutMe").addEventListener("input", () => {
@@ -69,7 +70,11 @@ $("aboutMe").addEventListener("input", () => {
 });
 $("matchAuto").addEventListener("change", () => chrome.storage.local.set({ matchAuto: $("matchAuto").checked }));
 // The pop-up has the same switch.
-chrome.storage.onChanged.addListener((ch) => { if (ch.matchAuto) $("matchAuto").checked = !!ch.matchAuto.newValue; });
+chrome.storage.onChanged.addListener((ch) => {
+  if (!ch.matchAuto) return;
+  matchAutoChanged = true;
+  $("matchAuto").checked = !!ch.matchAuto.newValue;
+});
 
 // Load my CV from a file (issue #59): the file's text replaces the box and is saved, with an Undo that puts the
 // earlier text back. Only the latest file chosen may fill the box, and the Undo stays until another file loads.

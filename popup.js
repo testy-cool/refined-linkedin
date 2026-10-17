@@ -55,10 +55,16 @@ for (const form of document.querySelectorAll("form.add")) {
   });
 }
 for (const box of document.querySelectorAll("input[type=checkbox][data-key]")) {
-  chrome.storage.local.get(box.dataset.key).then((r) => { box.checked = !!r[box.dataset.key]; });
+  // The settings page and a job list's bar change some of these too. A change seen before the first read came back
+  // is newer than it.
+  let changed = false;
+  chrome.storage.local.get(box.dataset.key).then((r) => { if (!changed) box.checked = !!r[box.dataset.key]; });
   box.addEventListener("change", () => chrome.storage.local.set({ [box.dataset.key]: box.checked }));
-  // The settings page and a job list's bar change some of these too.
-  chrome.storage.onChanged.addListener((ch) => { if (ch[box.dataset.key]) box.checked = !!ch[box.dataset.key].newValue; });
+  chrome.storage.onChanged.addListener((ch) => {
+    if (!ch[box.dataset.key]) return;
+    changed = true;
+    box.checked = !!ch[box.dataset.key].newValue;
+  });
 }
 // The settings, at the section asked for (see options.js).
 const openSettings = (section) => chrome.runtime.sendMessage({ type: "options", section });
