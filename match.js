@@ -152,25 +152,30 @@
     return list;
   }
 
-  // The phrase itself is brought to the middle of whatever scrolls around it, LinkedIn's job pane or the page: its
-  // paragraph can be far taller than the screen when the bullet points are lines split by <br>.
+  // A phrase still on the page, with a place on screen; false once LinkedIn has redrawn the text away.
+  const drawn = (range) => range.startContainer.isConnected && range.getClientRects().length > 0;
+
+  // The phrase itself is brought to the middle of whatever scrolls around it, LinkedIn's job pane, and then into the
+  // window too if the pane itself is partly out of it. Its paragraph can be far taller than the screen when the
+  // bullet points are lines split by <br>, so the phrase's own position counts, not its paragraph's.
   function scrollToRange(range) {
-    const r = range.getBoundingClientRect();
     let box = range.startContainer.parentElement;
     while (box && box !== document.body && box !== document.documentElement) {
       if (/(auto|scroll)/.test(getComputedStyle(box).overflowY) && box.scrollHeight > box.clientHeight) break;
       box = box.parentElement;
     }
+    const middle = (r) => r.top + r.height / 2;
     if (box && box !== document.body && box !== document.documentElement) {
-      const b = box.getBoundingClientRect();
-      box.scrollBy({ top: r.top + r.height / 2 - (b.top + b.height / 2), behavior: "instant" });
-    } else window.scrollBy({ top: r.top + r.height / 2 - innerHeight / 2, behavior: "instant" });
+      box.scrollBy({ top: middle(range.getBoundingClientRect()) - middle(box.getBoundingClientRect()), behavior: "instant" });
+    }
+    const r = range.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > innerHeight) window.scrollBy({ top: middle(r) - innerHeight / 2, behavior: "instant" });
   }
 
   let focusTimer = 0;
   function focus(h) {
     const m = painted.marks.find((x) => x.h === h);
-    if (!m || !window.CSS?.highlights) return;
+    if (!m || !window.CSS?.highlights || !drawn(m.range)) return;
     scrollToRange(m.range);
     CSS.highlights.set("rl-cv-focus", new Highlight(m.range));
     clearTimeout(focusTimer);
