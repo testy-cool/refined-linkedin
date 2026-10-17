@@ -132,3 +132,24 @@
 .rl-switch[aria-checked="true"] .rl-track { background: #0a66c2; }
 .rl-switch[aria-checked="true"] .rl-track::after { left: 16px; }
 .rl-switch:focus-visible { outline: 2px solid #0a66c2; outline-offset: 2px; }
+/* The compare row: counts as chips in the underline colours, and the list of underlined phrases under it. */
+.rl-match { font-size: 13px; line-height: 22px; color: #666; }
+.rl-match button { padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #0a66c2;
+  cursor: pointer; text-decoration: underline; }
+.rl-chip { display: inline-block; margin: 0 2px; padding: 0 8px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  line-height: 20px; }
+.rl-cv-match-chip { background: #e3f3e8; color: #1d6b31; }
+.rl-cv-gap-chip { background: #fbefc8; color: #6e4d00; }
+.rl-cv-unwanted-chip { background: #fbe3e2; color: #a01c18; }
+.rl-cv-list { margin: 6px 0 0; padding: 0; list-style: none; }
+.rl-cv-list[hidden] { display: none; }
+.rl-cv-list li { margin: 0; padding: 0; }
+.rl-cv-item { display: block; box-sizing: border-box; width: calc(100% + 16px); margin: 0 -8px; padding: 6px 8px;
+  border: 0; border-radius: 6px; background: none; font: inherit; font-size: 14px; line-height: 1.5; color: #1d1d1d;
+  text-align: left; cursor: pointer; }
+.rl-cv-item:hover { background: #f3f3f1; }
+.rl-cv-item .rl-chip { margin: 0 4px 0 0; }
+.rl-cv-phrase { font-weight: 600; }
+.rl-cv-why { display: block; margin-top: 2px; font-size: 13px; color: #666; }
+/* Clicking a phrase in the list lights its underline up for a moment. */
+::highlight(rl-cv-focus) { background-color: #c7def8; }

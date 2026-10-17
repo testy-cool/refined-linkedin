@@ -13,8 +13,12 @@
   };
   const SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
 
-  let hasMaterial = false, auto = false;
-  chrome.storage.local.get(["aboutMe", "matchAuto"]).then((r) => { hasMaterial = !!r.aboutMe?.trim(); auto = !!r.matchAuto; });
+  let hasMaterial = false, auto = false, listOpen = false;
+  chrome.storage.local.get(["aboutMe", "matchAuto", "matchListOpen"]).then((r) => {
+    hasMaterial = !!r.aboutMe?.trim();
+    auto = !!r.matchAuto;
+    listOpen = !!r.matchListOpen;
+  });
   // CV or notes written, or the switch turned on, while a job is open: its line is drawn again.
   let last = null; // the arguments of the last ready()
   chrome.storage.onChanged.addListener((ch) => {
@@ -47,14 +51,19 @@
     catch (e) { resolve({ error: String(e.message || e) }); }
   });
 
-  // The line under the fold's status: a link to compare, the comparison running, or what it found.
+  // A label's colour as a small filled chip: "6 match", or "green" in the line that explains the colours.
+  const chip = (label, text) => el("span", `rl-chip ${LABELS[label].css}-chip`, text);
+
+  // The compare row of the open job's box (see content.js): a link to compare, the comparison running, or what it
+  // found, with a list of every underlined phrase under it that opens and closes.
   async function ready(job, text, bullets, view) {
     const texts = bullets.map((b) => b.text);
     last = [job, text, bullets, view];
-    view.querySelector(".rl-match")?.remove();
-    if (!bullets.length) return;
-    const line = el("div", "jfold-status rl-match rl-ui");
-    view.querySelector(".jfold-status")?.after(line);
+    if (!bullets.length) { self.RL.dropRow(view, "match"); return; }
+    const body = self.RL.row(view, "match");
+    if (!body) return;
+    const line = el("div", "rl-match");
+    body.replaceChildren(line);
     const settings = () => link("Refined LinkedIn settings", () => chrome.runtime.sendMessage({ type: "options" }));
     if (!hasMaterial) {
       line.append("Compare this job with your CV: add it under About you in ", settings());
@@ -67,6 +76,7 @@
       spin();
       const spinning = setInterval(() => (line.isConnected ? spin() : clearInterval(spinning)), 80);
       line.replaceChildren(glyph, "Comparing with your CV…");
+      body.querySelector(".rl-cv-list")?.remove();
       const res = await ask({ id: job.id, text, bullets: texts, again });
       clearInterval(spinning);
       if (!line.isConnected) return;
@@ -74,6 +84,7 @@
     };
     const show = (res) => {
       line.replaceChildren();
+      body.querySelector(".rl-cv-list")?.remove();
       if (["NO_CONSENT", "NO_KEY", "NO_ACCESS", "NO_SIGNIN", "NO_MATERIAL"].includes(res?.error)) {
         line.append({
           NO_CONSENT: "Not compared: allow sending job descriptions to an AI service in ",
@@ -91,11 +102,26 @@
       shown = { id: job.id, highlights: res.highlights, bullets };
       painted.sig = "";
       const n = (label) => res.highlights.filter((h) => h.label === label).length;
-      const said = Object.entries(LABELS).filter(([k]) => n(k)).map(([k, l]) => el("span", `rl-cv-key ${l.css}-text`, `${n(k)} ${l.word}`));
-      line.append("Compared with your CV: ");
-      if (said.length) said.forEach((s, i) => line.append(...(i ? [", ", s] : [s])));
-      else line.append("nothing to mark");
+      const said = Object.entries(LABELS).filter(([k]) => n(k)).map(([k, l]) => chip(k, `${n(k)} ${l.word}`));
+      line.append("Compared with your CV ");
+      if (said.length) line.append(...said);
+      else line.append("· nothing to mark");
       line.append(" · ", link("compare again", () => run(true)));
+      if (!res.highlights.length) return;
+      const list = checklist(res.highlights);
+      const toggle = link("", () => {
+        listOpen = !listOpen;
+        chrome.storage.local.set({ matchListOpen: listOpen });
+        draw();
+      });
+      const draw = () => {
+        list.hidden = !listOpen;
+        toggle.textContent = listOpen ? "hide the list" : "show the list";
+        toggle.setAttribute("aria-expanded", String(listOpen));
+      };
+      draw();
+      line.append(" · ", toggle);
+      line.after(list);
     };
     // A saved answer shows at once. Otherwise the job is compared now, or on a click.
     const saved = await ask({ id: job.id, text, bullets: texts, peek: true });
@@ -104,10 +130,36 @@
     else if (auto) run(false);
     else {
       const hint = el("span", "rl-hint", " underlines ");
-      hint.append(el("span", "rl-cv-match-text", "green"), " where you have it, ", el("span", "rl-cv-gap-text", "yellow"),
-        " where it's missing, ", el("span", "rl-cv-unwanted-text", "red"), " where you don't want it");
+      hint.append(chip("MATCH", "green"), " where you have it, ", chip("GAP", "yellow"), " where it's missing, ",
+        chip("UNWANTED", "red"), " where you don't want it");
       line.append(link("Compare with my CV", () => run(false)), hint);
     }
+  }
+
+  // Every underlined phrase in bullet point order, with its reason. Clicking one scrolls to its underline and lights
+  // it up for a moment.
+  function checklist(highlights) {
+    const list = el("ul", "rl-cv-list");
+    for (const h of [...highlights].sort((a, b) => a.bullet - b.bullet)) {
+      const item = el("li");
+      const b = el("button", "rl-cv-item");
+      b.type = "button";
+      b.append(chip(h.label, LABELS[h.label].word), " ", el("span", "rl-cv-phrase", h.phrase), el("span", "rl-cv-why", h.reasoning));
+      b.addEventListener("click", (e) => { e.stopPropagation(); focus(h); });
+      item.append(b);
+      list.append(item);
+    }
+    return list;
+  }
+
+  let focusTimer = 0;
+  function focus(h) {
+    const m = painted.marks.find((x) => x.h === h);
+    if (!m || !window.CSS?.highlights) return;
+    m.range.startContainer.parentElement?.scrollIntoView({ block: "center", behavior: "instant" });
+    CSS.highlights.set("rl-cv-focus", new Highlight(m.range));
+    clearTimeout(focusTimer);
+    focusTimer = setTimeout(() => CSS.highlights.delete("rl-cv-focus"), 1800);
   }
 
   // ---- the marks ------------------------------------------------------------------------------------------------
