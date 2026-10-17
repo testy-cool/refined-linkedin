@@ -73,6 +73,8 @@ $("aboutMe").addEventListener("input", () => {
   }, 500);
 });
 $("matchAuto").addEventListener("change", () => chrome.storage.local.set({ matchAuto: $("matchAuto").checked }));
+// The pop-up has the same switch.
+chrome.storage.onChanged.addListener((ch) => { if (ch.matchAuto) $("matchAuto").checked = !!ch.matchAuto.newValue; });
 
 // Load my CV from a file (issue #59): the file's text replaces the box and is saved, with an Undo that puts the
 // earlier text back. Only the latest file chosen may fill the box, and the Undo stays until another file loads.
