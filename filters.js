@@ -7,9 +7,15 @@
     "greyTitleWords"];
   const CROWDED = 100; // a job with more applicants than this counts as crowded
   let s = {};
-  // "show them" in the bar above a list (issue #65): the hidden jobs come back on this page, until it is turned off
-  // or the page reloads. The setting itself stays on.
-  let showing = false;
+  // "show them" in the bar above a list (issue #65): the hidden jobs come back for this search, until it is turned
+  // off, the search changes, or hiding is switched off and on anywhere. The setting itself stays on. Opening another
+  // job keeps the same search: only currentJobId changes in the address.
+  let showing = false, showingFor = "";
+  const search = () => { const u = new URL(location.href); u.searchParams.delete("currentJobId"); return u.pathname + u.search; };
+  const shown = () => {
+    if (showing && search() !== showingFor) showing = false;
+    return showing;
+  };
   const listeners = [];
   const links = new Set(); // the company links on the page, see companyLink
   const changed = () => {
@@ -21,6 +27,7 @@
   chrome.storage.onChanged.addListener((ch) => {
     if (!KEYS.some((k) => k in ch)) return;
     for (const k of KEYS) if (k in ch) s[k] = ch[k].newValue;
+    if ("hideGrey" in ch) showing = false;
     changed();
   });
 
@@ -90,10 +97,10 @@
   self.RLFilters = {
     reasons, label, companyLink,
     // Whether greyed-out jobs leave the list now; "hiding" is the setting, which "show them" overrides for a while.
-    get hide() { return !!s.hideGrey && !showing; },
+    get hide() { return !!s.hideGrey && !shown(); },
     get hiding() { return !!s.hideGrey; },
-    get showing() { return showing; },
-    setShowing(on) { showing = on; changed(); },
+    get showing() { return shown(); },
+    setShowing(on) { showing = on; showingFor = search(); changed(); },
     setHiding(on) {
       showing = false;
       try { chrome.storage.local.set({ hideGrey: on }); } catch { /* the extension was updated; this page reloads */ }
