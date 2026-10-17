@@ -11,7 +11,7 @@
   let postedDirty = false;
   let current = null; // {id, prior, timer}
   let again = null; // the job whose description is being folded again, asking the model anew
-  self.RL = { openJob, descriptionBox, textColumn }; // for notes.js and keywords.js
+  self.RL = { openJob, descriptionBox, textColumn, row, dropRow }; // for notes.js, keywords.js and match.js
 
   const norm = (s) => (s || "").toLowerCase().replace(/\(verified job\)|with verification/g, " ")
     .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -308,7 +308,10 @@
     spin();
     const spinning = setInterval(() => (v.isConnected ? spin() : clearInterval(spinning)), 80);
     status.classList.add("jfold-folding");
-    v.append(seenNote(job), status);
+    v.append(seenNote(job), jobBox());
+    row(v, "fold").append(status);
+    const company = self.RLFilters?.companyLink(job.company);
+    if (company) row(v, "company").append(company);
     box.before(v);
 
     // Folding again drops this view and builds a new one, asking the model instead of using its saved answer.
@@ -531,18 +534,77 @@
     return col && col !== card && card.contains(col) ? col : null;
   }
 
-  // A speech bubble with lines, drawn in the text colour.
-  function noteIcon() {
+  // A small line drawing in the text colour, from 16 by 16 paths.
+  function lineIcon(paths, size) {
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
-    for (const [k, v] of Object.entries({ viewBox: "0 0 16 16", width: 14, height: 14, "aria-hidden": "true", fill: "none",
+    for (const [k, v] of Object.entries({ viewBox: "0 0 16 16", width: size, height: size, "aria-hidden": "true", fill: "none",
       stroke: "currentColor", "stroke-width": 1.5, "stroke-linejoin": "round", "stroke-linecap": "round", class: "rl-icon" })) svg.setAttribute(k, v);
-    for (const d of ["M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z", "M5 6h6M5 8h4"]) {
+    for (const d of paths) {
       const path = document.createElementNS(ns, "path");
       path.setAttribute("d", d);
       svg.append(path);
     }
     return svg;
+  }
+
+  const ICONS = {
+    note: ["M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z", "M5 6h6M5 8h4"], // a speech bubble with lines
+    fold: ["M4 2.5h5.5L12 5v8.5H4z", "M9.5 2.5V5H12", "M6 8.5h4M6 11h4"], // a page with a folded corner
+    match: ["M2.5 4.5l1.3 1.3L6.3 3.3", "M8.5 4.5h5", "M2.5 10.5l1.3 1.3 2.5-2.5", "M8.5 10.5h5"], // a ticked list
+    company: ["M1.8 8s2.3-4.2 6.2-4.2S14.2 8 14.2 8s-2.3 4.2-6.2 4.2S1.8 8 1.8 8z", "M8 6.3a1.7 1.7 0 1 1 0 3.4a1.7 1.7 0 1 1 0-3.4",
+      "M2.5 2.5l11 11"], // an eye, struck through
+    settings: ["M2.5 4h11M2.5 8h11M2.5 12h11", "M5.5 2.8v2.4M10.5 6.8v2.4M7 10.8v2.4"], // three sliders
+  };
+
+  // A speech bubble with lines, drawn in the text colour.
+  const noteIcon = () => lineIcon(ICONS.note, 14);
+
+  // Under the open job, one box holds what the extension adds (issue #63): a header with the way to the settings,
+  // then a row for each feature, always in this order. A row is made when a feature first needs it.
+  const ROWS = ["note", "fold", "match", "company"];
+
+  function jobBox() {
+    const box = document.createElement("section");
+    box.className = "rl-box rl-ui";
+    const head = document.createElement("div");
+    head.className = "rl-box-head";
+    const name = document.createElement("span");
+    name.textContent = "Refined LinkedIn";
+    const gear = document.createElement("button");
+    gear.type = "button";
+    gear.className = "rl-box-settings";
+    gear.title = "Refined LinkedIn settings";
+    gear.setAttribute("aria-label", gear.title);
+    gear.append(lineIcon(ICONS.settings, 16));
+    gear.addEventListener("click", (e) => { e.stopPropagation(); chrome.runtime.sendMessage({ type: "options" }); });
+    head.append(name, gear);
+    box.append(head);
+    return box;
+  }
+
+  // The body of a row in the open job's box, made in its place when missing; null when there is no box.
+  function row(view, kind) {
+    const box = view?.querySelector(".rl-box");
+    if (!box) return null;
+    const find = (k) => box.querySelector(`:scope > .rl-row[data-row="${k}"]`);
+    let r = find(kind);
+    if (!r) {
+      r = document.createElement("div");
+      r.className = "rl-row";
+      r.dataset.row = kind;
+      const body = document.createElement("div");
+      body.className = "rl-row-body";
+      r.append(lineIcon(ICONS[kind], 16), body);
+      const next = ROWS.slice(ROWS.indexOf(kind) + 1).map(find).find(Boolean);
+      if (next) next.before(r);
+      else box.append(r);
+    }
+    return r.querySelector(".rl-row-body");
+  }
+
+  function dropRow(view, kind) {
+    view?.querySelector(`.rl-box > .rl-row[data-row="${kind}"]`)?.remove();
   }
 
   function postedLabel(t) {
