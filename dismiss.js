@@ -120,10 +120,11 @@
     const search = () => { const u = new URL(location.href); u.searchParams.delete("currentJobId"); return u.pathname + u.search; };
     const from = search();
     // The card as content.js last painted it: LinkedIn may have drawn it anew, and it may have been opened, saved or
-    // turned white since the click.
+    // turned white since the click. Only a card in the list under the bar counts, and the run ends when the bar
+    // moves to another list, so it never clicks a card the bar does not stand over.
     const now = (id) => {
-      if (search() !== from) run.stop = true;
-      const c = cards.find((k) => k.id === id);
+      if (search() !== from || bar?.nextElementSibling !== list) run.stop = true;
+      const c = cards.find((k) => k.id === id && k.item.parentElement === list);
       // The job just picked counts as open from the moment the address names it, before its details replace the
       // previous job's.
       const picked = new URL(location.href).searchParams.get("currentJobId");
