@@ -1,5 +1,6 @@
-// The toolbar pop-up: the words to highlight in job descriptions, what to grey out in job lists (see filters.js), and
-// the way to the settings. Each list and switch is saved in chrome.storage.local under its data-key.
+// The toolbar pop-up: whether an AI service is ready, the switch to compare every job opened, the words to highlight
+// in job descriptions, what to grey out in job lists (see filters.js), and the way to the settings. Each list and
+// switch is saved in chrome.storage.local under its data-key.
 const $ = (id) => document.getElementById(id);
 const LISTS = ["keywords", "greyCompanies", "greyTitleWords"];
 
@@ -57,7 +58,52 @@ for (const box of document.querySelectorAll("input[type=checkbox][data-key]")) {
   chrome.storage.local.get(box.dataset.key).then((r) => { box.checked = !!r[box.dataset.key]; });
   box.addEventListener("change", () => chrome.storage.local.set({ [box.dataset.key]: box.checked }));
 }
-$("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+// The settings, at the section asked for (see options.js).
+const openSettings = (section) => chrome.runtime.sendMessage({ type: "options", section });
+$("settings").addEventListener("click", () => openSettings());
+$("aboutLink").addEventListener("click", () => openSettings("about"));
+
+// The gear: a wheel with eight flat teeth, the same as on a LinkedIn page.
+$("cog").setAttribute("d", (() => {
+  const pt = (r, a) => `${(8 + r * Math.cos(a)).toFixed(2)} ${(8 + r * Math.sin(a)).toFixed(2)}`;
+  let d = "";
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    d += `${i ? "L" : "M"}${pt(5, a - 0.3)} L${pt(6.6, a - 0.2)} L${pt(6.6, a + 0.2)} L${pt(5, a + 0.3)} `;
+  }
+  return d + "Z";
+})());
+
+// What the AI service needs before folds and comparisons work, or which one is ready. The background answers with
+// the saved provider, without its key.
+async function status() {
+  const [{ consent, aboutMe }, s] = await Promise.all([chrome.storage.local.get(["consent", "aboutMe"]),
+    chrome.runtime.sendMessage({ type: "settings" }).catch(() => null)]);
+  $("noCV").hidden = !!aboutMe?.trim();
+  const name = s && PROVIDERS[s.kind] ? PROVIDERS[s.kind].label.replace(/,.*/, "") : "";
+  let state = "needs", words;
+  if (!s) { state = "none"; words = "No AI service chosen"; }
+  else if (!consent) words = `${name}: not allowed to send job descriptions yet`;
+  else if (s.kind === "chatgpt") {
+    const { signedIn } = await ChatGPT.status();
+    if (signedIn) { state = "ready"; words = `${name} · ${s.model || "no model chosen"}`; }
+    else words = `${name}: signed out`;
+  } else if (!s.hasKey) words = `${name}: no API key yet`;
+  else { state = "ready"; words = `${name} · ${s.model}`; }
+  $("status").dataset.state = state;
+  const text = [words];
+  if (state !== "ready") {
+    const fix = document.createElement("button");
+    fix.type = "button";
+    fix.className = "link";
+    fix.textContent = "Set up";
+    fix.addEventListener("click", () => openSettings("ai"));
+    text.push(" · ", fix);
+  }
+  $("statusText").replaceChildren(...text);
+}
+status();
+chrome.storage.onChanged.addListener((ch) => { if (ch.consent || ch.provider || ch.chatgpt || ch.aboutMe) status(); });
 chrome.storage.onChanged.addListener((ch) => { for (const key of LISTS) if (ch[key]) draw(key); });
 LISTS.forEach(draw);
 $("word").focus();
