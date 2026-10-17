@@ -152,11 +152,26 @@
     return list;
   }
 
+  // The phrase itself is brought to the middle of whatever scrolls around it, LinkedIn's job pane or the page: its
+  // paragraph can be far taller than the screen when the bullet points are lines split by <br>.
+  function scrollToRange(range) {
+    const r = range.getBoundingClientRect();
+    let box = range.startContainer.parentElement;
+    while (box && box !== document.body && box !== document.documentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(box).overflowY) && box.scrollHeight > box.clientHeight) break;
+      box = box.parentElement;
+    }
+    if (box && box !== document.body && box !== document.documentElement) {
+      const b = box.getBoundingClientRect();
+      box.scrollBy({ top: r.top + r.height / 2 - (b.top + b.height / 2), behavior: "instant" });
+    } else window.scrollBy({ top: r.top + r.height / 2 - innerHeight / 2, behavior: "instant" });
+  }
+
   let focusTimer = 0;
   function focus(h) {
     const m = painted.marks.find((x) => x.h === h);
     if (!m || !window.CSS?.highlights) return;
-    m.range.startContainer.parentElement?.scrollIntoView({ block: "center", behavior: "instant" });
+    scrollToRange(m.range);
     CSS.highlights.set("rl-cv-focus", new Highlight(m.range));
     clearTimeout(focusTimer);
     focusTimer = setTimeout(() => CSS.highlights.delete("rl-cv-focus"), 1800);
