@@ -37,9 +37,6 @@
   color: #666; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: normal; white-space: normal;
   list-style: none; cursor: pointer; }
 .jfold-chip:hover, .jfold-chip.jfold-opened { background: #e2e2dc; }
-
-/* Notes (issue #1). */
-::highlight(rl-note) { background-color: #fff0a6; }
 .rl-notes { margin: 0; font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
 .rl-job-note { margin: 0 0 10px; padding: 10px 12px; border-radius: 6px; background: #f4f2ee; }
 .rl-job-note-text { font-size: 15px; white-space: pre-wrap; }
@@ -108,16 +105,20 @@
 
 /* One box under the open job holds what the extension adds (issue #63): a header with the way to the settings,
    then a row per feature, each with a small icon. Rows are kept apart by space, not lines. */
-.rl-box { margin: 0 0 16px; padding: 12px 16px; border: 1px solid #e0dfdc; border-radius: 8px; background: #fff;
+.rl-box { margin: 0 0 20px; padding: 14px 18px 6px; border: 1px solid #e3e6ea; border-radius: 10px; background: #f8f9fb;
   font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
-.rl-box-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 4px; font-weight: 600; }
-.rl-box-settings { display: inline-flex; padding: 4px; border: 0; border-radius: 4px; background: none; color: #666;
+.rl-box-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; }
+.rl-box-name { display: inline-flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; color: #1d1d1d; }
+.rl-box-name .rl-brand { flex: none; }
+.rl-box-settings { display: inline-flex; padding: 5px; border: 0; border-radius: 6px; background: none; color: #666;
   cursor: pointer; }
-.rl-box-settings:hover { background: #f3f3f1; color: #1d1d1d; }
-.rl-row { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
-.rl-row > .rl-icon { flex: none; margin-top: 3px; color: #666; }
+.rl-box-settings:hover { background: #eceef2; color: #1d1d1d; }
+.rl-row { display: flex; gap: 14px; align-items: flex-start; padding: 10px 0; }
+.rl-row + .rl-row { border-top: 1px solid #e3e6ea; }
+.rl-row > .rl-icon { flex: none; margin-top: 2px; color: #5e6670; }
 .rl-row-body { flex: 1; min-width: 0; }
-.rl-row .jfold-status { margin: 0; }
+.rl-row .jfold-status { margin: 0; font-size: 14px; color: #1d1d1d; }
+.rl-row .jfold-status button { font-size: 14px; }
 .rl-note-field { display: block; box-sizing: border-box; width: 100%; padding: 6px 10px; border: 1px solid #b9b9b6;
   border-radius: 4px; background: #fff; font: inherit; font-size: 14px; color: #777; text-align: left; cursor: text; }
 .rl-note-field:hover { border-color: #0a66c2; }
@@ -133,9 +134,10 @@
 .rl-switch[aria-checked="true"] .rl-track::after { left: 16px; }
 .rl-switch:focus-visible { outline: 2px solid #0a66c2; outline-offset: 2px; }
 /* The compare row: counts as chips in the underline colours, and the list of underlined phrases under it. */
-.rl-match { font-size: 13px; line-height: 22px; color: #666; }
-.rl-match button { padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #0a66c2;
+.rl-match { font-size: 14px; line-height: 22px; color: #1d1d1d; }
+.rl-match button { padding: 0; border: 0; background: none; font: inherit; font-size: 14px; color: #0a66c2;
   cursor: pointer; text-decoration: underline; }
+.rl-match .rl-hint { font-size: 14px; color: #1d1d1d; }
 .rl-chip { display: inline-block; margin: 0 2px; padding: 0 8px; border-radius: 10px; font-size: 13px; font-weight: 600;
   line-height: 20px; }
 .rl-cv-match-chip { background: #e3f3e8; color: #1d6b31; }
@@ -147,7 +149,7 @@
 .rl-cv-item { display: block; box-sizing: border-box; width: calc(100% + 16px); margin: 0 -8px; padding: 6px 8px;
   border: 0; border-radius: 6px; background: none; font: inherit; font-size: 14px; line-height: 1.5; color: #1d1d1d;
   text-align: left; cursor: pointer; }
-.rl-cv-item:hover { background: #f3f3f1; }
+.rl-cv-item:hover { background: #eceef2; }
 .rl-cv-item .rl-chip { margin: 0 4px 0 0; }
 .rl-cv-phrase { font-weight: 600; }
 .rl-cv-why { display: block; margin-top: 2px; font-size: 13px; color: #666; }

@@ -554,15 +554,38 @@
     match: ["M2.5 4.5l1.3 1.3L6.3 3.3", "M8.5 4.5h5", "M2.5 10.5l1.3 1.3 2.5-2.5", "M8.5 10.5h5"], // a ticked list
     company: ["M1.8 8s2.3-4.2 6.2-4.2S14.2 8 14.2 8s-2.3 4.2-6.2 4.2S1.8 8 1.8 8z", "M8 6.3a1.7 1.7 0 1 1 0 3.4a1.7 1.7 0 1 1 0-3.4",
       "M2.5 2.5l11 11"], // an eye, struck through
-    settings: ["M2.5 4h11M2.5 8h11M2.5 12h11", "M5.5 2.8v2.4M10.5 6.8v2.4M7 10.8v2.4"], // three sliders
   };
+  // A cog with eight teeth, built from its outline: each tooth is a short flat step out from the wheel.
+  ICONS.settings = [(() => {
+    const pt = (r, a) => `${(8 + r * Math.cos(a)).toFixed(2)} ${(8 + r * Math.sin(a)).toFixed(2)}`;
+    let d = "";
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4, w = 0.2, s = 0.3;
+      d += `${i ? "L" : "M"}${pt(5, a - s)} L${pt(6.6, a - w)} L${pt(6.6, a + w)} L${pt(5, a + s)} `;
+    }
+    return d + "Z";
+  })(), "M8 6a2 2 0 1 1 0 4a2 2 0 1 1 0-4"];
+
+  // The extension's own mark, as on its toolbar icon: two folds meeting on a line, white on LinkedIn blue.
+  function brandIcon() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    for (const [k, v] of Object.entries({ viewBox: "0 0 16 16", width: 20, height: 20, "aria-hidden": "true", class: "rl-brand" })) svg.setAttribute(k, v);
+    const bg = document.createElementNS(ns, "rect");
+    for (const [k, v] of Object.entries({ width: 16, height: 16, rx: 3.5, fill: "#0a66c2" })) bg.setAttribute(k, v);
+    const lines = document.createElementNS(ns, "path");
+    for (const [k, v] of Object.entries({ d: "M5 3.6l3 2.4 3-2.4M4 8h8M5 12.4l3-2.4 3 2.4", fill: "none", stroke: "#fff", "stroke-width": 1.6,
+      "stroke-linecap": "round", "stroke-linejoin": "round" })) lines.setAttribute(k, v);
+    svg.append(bg, lines);
+    return svg;
+  }
 
   // A speech bubble with lines, drawn in the text colour.
   const noteIcon = () => lineIcon(ICONS.note, 14);
 
   // Under the open job, one box holds what the extension adds (issue #63): a header with the way to the settings,
   // then a row for each feature, always in this order. A row is made when a feature first needs it.
-  const ROWS = ["note", "fold", "match", "company"];
+  const ROWS = ["note", "company", "fold", "match"];
 
   function jobBox() {
     const box = document.createElement("section");
@@ -570,13 +593,14 @@
     const head = document.createElement("div");
     head.className = "rl-box-head";
     const name = document.createElement("span");
-    name.textContent = "Refined LinkedIn";
+    name.className = "rl-box-name";
+    name.append(brandIcon(), "Refined LinkedIn");
     const gear = document.createElement("button");
     gear.type = "button";
     gear.className = "rl-box-settings";
     gear.title = "Refined LinkedIn settings";
     gear.setAttribute("aria-label", gear.title);
-    gear.append(lineIcon(ICONS.settings, 16));
+    gear.append(lineIcon(ICONS.settings, 18));
     gear.addEventListener("click", (e) => { e.stopPropagation(); chrome.runtime.sendMessage({ type: "options" }); });
     head.append(name, gear);
     box.append(head);
@@ -595,7 +619,7 @@
       r.dataset.row = kind;
       const body = document.createElement("div");
       body.className = "rl-row-body";
-      r.append(lineIcon(ICONS[kind], 16), body);
+      r.append(lineIcon(ICONS[kind], 18), body);
       const next = ROWS.slice(ROWS.indexOf(kind) + 1).map(find).find(Boolean);
       if (next) next.before(r);
       else box.append(r);
