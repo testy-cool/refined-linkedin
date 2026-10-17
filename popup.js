@@ -84,9 +84,12 @@ const NEEDS = {
   NO_ACCESS: "Chrome has not allowed calls to its address yet",
   NO_SIGNIN: "signed out",
 };
+let statusRun = 0; // only the latest check may draw, as an older one can finish after it
 async function status() {
+  const run = ++statusRun;
   const [{ aboutMe }, r] = await Promise.all([chrome.storage.local.get("aboutMe"),
     chrome.runtime.sendMessage({ type: "ready" }).catch((e) => ({ error: String(e.message || e) }))]);
+  if (run !== statusRun) return;
   $("noCV").hidden = !!aboutMe?.trim();
   const s = r?.provider;
   const name = s && PROVIDERS[s.kind] ? PROVIDERS[s.kind].label.replace(/,.*/, "") : "";
@@ -94,15 +97,17 @@ async function status() {
   if (!s) { state = r?.error ? "needs" : "none"; words = r?.error ? `No answer from the extension: ${r.error}` : "No AI service chosen"; }
   else if (!r.error) { state = "ready"; words = `${name} · ${s.model}`; }
   else if (/^choose a ChatGPT model/.test(r.error)) words = `${name}: no model chosen`;
-  else words = `${name}: ${NEEDS[r.error] || r.error}`;
+  else if (NEEDS[r.error]) words = `${name}: ${NEEDS[r.error]}`;
+  else { state = "failed"; words = `${name}: could not check it just now (${r.error})`; }
   $("status").dataset.state = state;
   const text = [words];
+  // Something to set up opens the settings; a check that failed, on the network say, can be run again.
   if (state !== "ready") {
     const fix = document.createElement("button");
     fix.type = "button";
     fix.className = "link";
-    fix.textContent = "Set up";
-    fix.addEventListener("click", () => openSettings("ai"));
+    fix.textContent = state === "failed" ? "Try again" : "Set up";
+    fix.addEventListener("click", () => (state === "failed" ? status() : openSettings("ai")));
     text.push(" · ", fix);
   }
   $("statusText").replaceChildren(...text);

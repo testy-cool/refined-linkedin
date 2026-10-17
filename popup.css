@@ -8,7 +8,7 @@ h1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; }
 .status { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 10px; background: #f4f2ee; border-radius: 6px; }
 .status .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #9a9a96; }
 .status[data-state="ready"] .dot { background: #1f8a4c; }
-.status[data-state="needs"] .dot { background: #d08700; }
+.status[data-state="needs"] .dot, .status[data-state="failed"] .dot { background: #d08700; }
 .status .link { display: inline; margin: 0; }
 .switch-row { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; font-weight: 400; cursor: pointer; }
 input.switch { appearance: none; position: relative; flex: none; width: 32px; height: 18px; margin: 0; padding: 0;
