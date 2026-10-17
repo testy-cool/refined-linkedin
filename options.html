@@ -6,94 +6,123 @@
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <main>
-    <h1><img src="icons/icon48.png" alt="" width="32" height="32">Refined LinkedIn</h1>
-    <div class="consent">
-      <p>To fold a job description, Refined LinkedIn sends its text to the AI service you choose below, once per job.
-        To compare a job with your CV, it sends the description with what you write under About you. Nothing else
-        leaves your browser: your notes, highlight words and the jobs you saw stay in Chrome on this computer.</p>
-      <label class="check"><input type="checkbox" id="consent"> I agree to send the job descriptions I open to the AI
-        service I choose.</label>
+  <div class="page">
+    <h1><img src="icons/icon48.png" alt="" width="32" height="32">Refined LinkedIn settings</h1>
+    <div class="layout">
+      <nav aria-label="Settings sections">
+        <a href="#ai" data-section="ai">AI service</a>
+        <a href="#about" data-section="about">About you</a>
+        <a href="#prompt" data-section="prompt">Folding prompt</a>
+        <a href="#jobs" data-section="jobs">Your jobs</a>
+      </nav>
+      <main>
+        <section id="ai" hidden>
+          <h2>AI service</h2>
+          <div class="consent">
+            <p>To fold a job description, Refined LinkedIn sends its text to the AI service you choose below, once per
+              job. To compare a job with your CV, it sends the description with what you write under About you.
+              Nothing else leaves your browser: your notes, highlight words and the jobs you saw stay in Chrome on
+              this computer.</p>
+            <label class="check"><input type="checkbox" id="consent"> I agree to send the job descriptions I open to
+              the AI service I choose.</label>
+          </div>
+
+          <fieldset>
+            <legend>Model provider</legend>
+            <div id="kinds" class="choices"></div>
+          </fieldset>
+
+          <div id="baseRow">
+            <label for="base">API address</label>
+            <input id="base" type="url" placeholder="https://example.com/v1" spellcheck="false">
+          </div>
+
+          <div id="keyRow">
+            <label for="key">API key</label>
+            <input id="key" type="password" autocomplete="off" spellcheck="false">
+            <p class="hint" id="keyHint"></p>
+          </div>
+
+          <div id="chatgptRow" hidden>
+            <p class="note" id="chatgptState"></p>
+            <div class="actions">
+              <button type="button" id="signIn">Sign in with ChatGPT</button>
+              <button type="button" id="signOut" class="link" hidden>Sign out</button>
+            </div>
+            <div id="chatgptModelRow" hidden>
+              <label for="chatgptModel">Model</label>
+              <select id="chatgptModel"></select>
+            </div>
+          </div>
+
+          <div id="modelRow">
+            <label for="model">Model</label>
+            <input id="model" spellcheck="false">
+          </div>
+
+          <fieldset>
+            <legend>Reasoning effort</legend>
+            <div class="segments" id="effort">
+              <label><input type="radio" name="effort" value="low"> Low: fastest</label>
+              <label><input type="radio" name="effort" value="medium"> Medium</label>
+              <label><input type="radio" name="effort" value="high"> High: slowest</label>
+            </div>
+          </fieldset>
+
+          <button type="button" class="save">Save and test</button>
+          <p class="result" role="status"></p>
+        </section>
+
+        <section id="about" hidden>
+          <h2>About you</h2>
+          <p class="hint">Paste your CV, and add anything else about you: what you have done that the CV leaves out,
+            what you want, and what you don't want. Under an open job, Compare with my CV underlines its bullet points:
+            green where this shows you have it, yellow where it doesn't, red where you said you don't want it.</p>
+          <textarea id="aboutMe" rows="16" spellcheck="false" placeholder="Your CV, then notes such as: I don't want a job with a lot of travel."></textarea>
+          <div class="actions">
+            <button type="button" id="cvLoad">Load my CV from a file</button>
+            <input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,application/pdf,text/plain" hidden>
+          </div>
+          <p class="hint">PDF, Word (.docx) or text, or drop the file on the box. Its text replaces what is in the box.
+            The file stays on this computer.</p>
+          <p class="hint" id="cvState" role="status"></p>
+          <label class="switch-row"><input type="checkbox" role="switch" class="switch" id="matchAuto"> Compare every
+            job I open, without waiting for a click</label>
+          <p class="hint" id="aboutSaved"></p>
+        </section>
+
+        <section id="prompt" hidden>
+          <h2>Folding prompt</h2>
+          <p class="hint">What the model is asked for each job. <code>{TEXT}</code> is where the job description goes.
+            The answer always comes back in the same format, a list of passages to fold, so only the instructions
+            change.</p>
+          <textarea id="promptBox" rows="14" spellcheck="false"></textarea>
+          <button type="button" id="defaultPrompt" class="link">Restore the default prompt</button>
+
+          <label for="sample">Test description</label>
+          <textarea id="sample" rows="8" spellcheck="false"></textarea>
+          <p class="hint">Save and test folds this description with the prompt above. Paste any job description to try
+            it on that.</p>
+
+          <button type="button" class="save">Save and test</button>
+          <p class="result" role="status"></p>
+          <div id="preview" hidden>
+            <p class="hint">Grey parts would be folded.</p>
+            <div id="previewText"></div>
+          </div>
+        </section>
+
+        <section id="jobs" hidden>
+          <h2>Your jobs</h2>
+          <p>Refined LinkedIn keeps every job you open or scroll past in a list, on this computer: its description,
+            title, employer and place, when you opened it, and your notes. Download them all as one file, which an AI
+            chat or a script can read.</p>
+          <button type="button" id="download">Download my jobs</button>
+          <p class="hint" id="jobsCount"></p>
+        </section>
+      </main>
     </div>
-
-    <label for="kind">Model provider</label>
-    <select id="kind"></select>
-
-    <div id="baseRow">
-      <label for="base">API address</label>
-      <input id="base" type="url" placeholder="https://example.com/v1" spellcheck="false">
-    </div>
-
-    <div id="keyRow">
-      <label for="key">API key</label>
-      <input id="key" type="password" autocomplete="off" spellcheck="false">
-      <p class="hint" id="keyHint"></p>
-    </div>
-
-    <div id="chatgptRow" hidden>
-      <p class="note" id="chatgptState"></p>
-      <div class="actions">
-        <button type="button" id="signIn">Sign in with ChatGPT</button>
-        <button type="button" id="signOut" class="link" hidden>Sign out</button>
-      </div>
-      <div id="chatgptModelRow" hidden>
-        <label for="chatgptModel">Model</label>
-        <select id="chatgptModel"></select>
-      </div>
-    </div>
-
-    <div id="modelRow">
-      <label for="model">Model</label>
-      <input id="model" spellcheck="false">
-    </div>
-
-    <label for="effort">Reasoning effort</label>
-    <select id="effort">
-      <option value="low">Low: fastest</option>
-      <option value="medium">Medium</option>
-      <option value="high">High: slowest</option>
-    </select>
-
-    <h2>About you</h2>
-    <p class="hint">Paste your CV, and add anything else about you: what you have done that the CV leaves out, what
-      you want, and what you don't want. Under an open job, Compare with my CV underlines its bullet points: green
-      where this shows you have it, yellow where it doesn't, red where you said you don't want it.</p>
-    <textarea id="aboutMe" rows="14" spellcheck="false" placeholder="Your CV, then notes such as: I don't want a job with a lot of travel."></textarea>
-    <div class="actions">
-      <button type="button" id="cvLoad">Load my CV from a file</button>
-      <input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,application/pdf,text/plain" hidden>
-    </div>
-    <p class="hint">PDF, Word (.docx) or text, or drop the file on the box. Its text replaces what is in the box. The
-      file stays on this computer.</p>
-    <p class="hint" id="cvState" role="status"></p>
-    <label class="check"><input type="checkbox" id="matchAuto"> Compare every job I open, without waiting for a click</label>
-    <p class="hint" id="aboutSaved"></p>
-
-    <h2>Folding prompt</h2>
-    <p class="hint">What the model is asked for each job. <code>{TEXT}</code> is where the job description goes. The
-      answer always comes back in the same format, a list of passages to fold, so only the instructions change.</p>
-    <textarea id="promptBox" rows="14" spellcheck="false"></textarea>
-    <button type="button" id="defaultPrompt" class="link">Restore the default prompt</button>
-
-    <label for="sample">Test description</label>
-    <textarea id="sample" rows="8" spellcheck="false"></textarea>
-    <p class="hint">Save and test folds this description with the prompt above. Paste any job description to try
-      it on that.</p>
-
-    <button id="save">Save and test</button>
-    <p id="result" role="status"></p>
-    <div id="preview" hidden>
-      <p class="hint">Grey parts would be folded.</p>
-      <div id="previewText"></div>
-    </div>
-
-    <h2>Your jobs</h2>
-    <p>Refined LinkedIn keeps every job you open or scroll past in a list, on this computer: its description, title,
-      employer and place, when you opened it, and your notes. Download them all as one file, which an AI chat or a
-      script can read.</p>
-    <button type="button" id="download">Download my jobs</button>
-    <p class="hint" id="jobsCount"></p>
-  </main>
+  </div>
   <script src="providers.js"></script>
   <script src="prompt.js"></script>
   <script src="folds.js"></script>

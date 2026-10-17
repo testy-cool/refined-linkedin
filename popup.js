@@ -1,5 +1,6 @@
-// The toolbar pop-up: the words to highlight in job descriptions, what to grey out in job lists (see filters.js), and
-// the way to the settings. Each list and switch is saved in chrome.storage.local under its data-key.
+// The toolbar pop-up: whether an AI service is ready, the switch to compare every job opened, the words to highlight
+// in job descriptions, what to grey out in job lists (see filters.js), and the way to the settings. Each list and
+// switch is saved in chrome.storage.local under its data-key.
 const $ = (id) => document.getElementById(id);
 const LISTS = ["keywords", "greyCompanies", "greyTitleWords"];
 
@@ -54,10 +55,73 @@ for (const form of document.querySelectorAll("form.add")) {
   });
 }
 for (const box of document.querySelectorAll("input[type=checkbox][data-key]")) {
-  chrome.storage.local.get(box.dataset.key).then((r) => { box.checked = !!r[box.dataset.key]; });
+  // The settings page and a job list's bar change some of these too. A change seen before the first read came back
+  // is newer than it.
+  let changed = false;
+  chrome.storage.local.get(box.dataset.key).then((r) => { if (!changed) box.checked = !!r[box.dataset.key]; });
   box.addEventListener("change", () => chrome.storage.local.set({ [box.dataset.key]: box.checked }));
+  chrome.storage.onChanged.addListener((ch) => {
+    if (!ch[box.dataset.key]) return;
+    changed = true;
+    box.checked = !!ch[box.dataset.key].newValue;
+  });
 }
-$("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+// The settings, at the section asked for (see options.js).
+const openSettings = (section) => chrome.runtime.sendMessage({ type: "options", section });
+$("settings").addEventListener("click", () => openSettings());
+$("aboutLink").addEventListener("click", () => openSettings("about"));
+
+// The gear: a wheel with eight flat teeth, the same as on a LinkedIn page.
+$("cog").setAttribute("d", (() => {
+  const pt = (r, a) => `${(8 + r * Math.cos(a)).toFixed(2)} ${(8 + r * Math.sin(a)).toFixed(2)}`;
+  let d = "";
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    d += `${i ? "L" : "M"}${pt(5, a - 0.3)} L${pt(6.6, a - 0.2)} L${pt(6.6, a + 0.2)} L${pt(5, a + 0.3)} `;
+  }
+  return d + "Z";
+})());
+
+// Whether folds and comparisons work now, or what they need first. The background runs the same check a fold does
+// and answers with the saved provider, without its key.
+const NEEDS = {
+  NO_CONSENT: "not allowed to send job descriptions yet",
+  NO_KEY: "no API key yet",
+  NO_ACCESS: "Chrome has not allowed calls to its address yet",
+  NO_SIGNIN: "signed out",
+};
+let statusRun = 0; // only the latest check may draw, as an older one can finish after it
+async function status() {
+  const run = ++statusRun;
+  const [{ aboutMe }, r] = await Promise.all([chrome.storage.local.get("aboutMe"),
+    chrome.runtime.sendMessage({ type: "ready" }).catch((e) => ({ error: String(e.message || e) }))]);
+  if (run !== statusRun) return;
+  $("noCV").hidden = !!aboutMe?.trim();
+  const s = r?.provider;
+  const name = s && PROVIDERS[s.kind] ? PROVIDERS[s.kind].label.replace(/,.*/, "") : "";
+  let state = "needs", words;
+  if (!s) { state = r?.error ? "needs" : "none"; words = r?.error ? `No answer from the extension: ${r.error}` : "No AI service chosen"; }
+  else if (!r.error) { state = "ready"; words = `${name} · ${s.model}`; }
+  else if (/^choose a ChatGPT model/.test(r.error)) words = `${name}: no model chosen`;
+  else if (NEEDS[r.error]) words = `${name}: ${NEEDS[r.error]}`;
+  else { state = "failed"; words = `${name}: could not check it just now (${r.error})`; }
+  $("status").dataset.state = state;
+  const text = [words];
+  // Something to set up opens the settings; a check that failed, on the network say, can be run again.
+  if (state !== "ready") {
+    const fix = document.createElement("button");
+    fix.type = "button";
+    fix.className = "link";
+    fix.textContent = state === "failed" ? "Try again" : "Set up";
+    fix.addEventListener("click", () => (state === "failed" ? status() : openSettings("ai")));
+    text.push(" · ", fix);
+  }
+  $("statusText").replaceChildren(...text);
+}
+status();
+chrome.storage.onChanged.addListener((ch) => { if (ch.consent || ch.provider || ch.chatgpt || ch.aboutMe) status(); });
+chrome.permissions.onAdded.addListener(status);
+chrome.permissions.onRemoved.addListener(status);
 chrome.storage.onChanged.addListener((ch) => { for (const key of LISTS) if (ch[key]) draw(key); });
 LISTS.forEach(draw);
 $("word").focus();

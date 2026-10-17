@@ -33,7 +33,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
     run.then(() => send({ ok: true }), (e) => send({ error: String(e.message || e) }));
     return true;
   }
-  if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
+  // A settings link on a LinkedIn page names the section that fixes what it reports; the settings page opens there.
+  if (msg.type === "options") { openOptions(msg.section); return; }
+  // The pop-up's status line: the saved provider without its key, and what a fold would fail on now, if anything.
+  if (msg.type === "ready") {
+    settings().then(async (s) => {
+      if (!s) return send({ provider: null });
+      const provider = { ...s, key: undefined, hasKey: !!s.key };
+      try { await ready(s); send({ provider }); } catch (e) { send({ provider, error: String(e.message || e) }); }
+    });
+    return true;
+  }
   // "3 filters on" above a job list opens the pop-up where they are set, or the settings where Chrome won't open it.
   if (msg.type === "popup") { Promise.resolve().then(() => chrome.action.openPopup()).catch(() => chrome.runtime.openOptionsPage()); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
@@ -46,6 +56,19 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   fold(msg.id, msg.text, msg.again).then(send, (e) => send({ error: String(e.message || e) }));
   return true;
 });
+
+// The settings page, at a section when one is named: an open settings tab moves to it and comes forward, or a new
+// tab opens there. The section is the part of the address after #, which the page follows.
+async function openOptions(section) {
+  if (!section) return chrome.runtime.openOptionsPage();
+  const page = chrome.runtime.getURL("options.html");
+  const url = `${page}#${section}`;
+  const tabs = await chrome.runtime.getContexts({ contextTypes: ["TAB"] }).catch(() => []);
+  const tab = tabs.find((c) => c.documentUrl?.startsWith(page));
+  if (!tab) return chrome.tabs.create({ url });
+  await chrome.tabs.update(tab.tabId, { url, active: true });
+  chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+}
 
 // The saved provider. Vlad's build seeds his Bifrost as an "Other OpenAI-compatible API", saved like any other,
 // and a provider saved by an older build as "bifrost" becomes one too. The Codex CLI bridge became Sign in with
