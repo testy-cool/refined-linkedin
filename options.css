@@ -74,3 +74,12 @@ button:disabled { background: #8db3dc; cursor: default; }
 #aboutMe { font: 14px/1.5 -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
 #cvLoad { margin-top: 12px; }
 #cvState .link { margin: 0; }
+
+/* In a narrow window the sections list goes above the section, in a row, and the effort buttons may wrap. */
+@media (max-width: 720px) {
+  .layout { flex-direction: column; gap: 12px; }
+  nav { position: static; flex-direction: row; flex-wrap: wrap; width: auto; }
+  main { width: 100%; padding: 20px; }
+  .segments { display: flex; flex-wrap: wrap; }
+  .segments label { flex: 1 1 auto; text-align: center; }
+}
