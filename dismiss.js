@@ -97,10 +97,13 @@
     const count = f?.count || 0;
     setText(parts.filters.lastChild, count ? `${count} filter${count === 1 ? "" : "s"} on` : "No filters on");
     parts.hide.setAttribute("aria-checked", String(!!f?.hiding));
-    const k = f?.hiding ? cards.filter((c) => c.el.isConnected && c.el.classList.contains("rl-hideable")).length : 0;
+    // Only the cards of the list under the bar count. LinkedIn shows one list per page, but a redraw can briefly
+    // leave an old one beside the new.
+    const mine = cards.filter((c) => c.item.parentElement === list);
+    const k = f?.hiding ? mine.filter((c) => c.el.isConnected && c.el.classList.contains("rl-hideable")).length : 0;
     parts.hidden.hidden = !k;
     setText(parts.hidden.lastChild, f?.showing ? `${k} shown · hide them` : `${k} hidden · show them`);
-    const n = cards.filter(due).length;
+    const n = mine.filter(due).length;
     const kind = run ? (run.end ? "done" : "running") : n ? "idle" : "none";
     if (parts.dismiss.dataset.kind !== kind) buildDismiss(kind);
     if (kind === "none") return;
@@ -109,7 +112,8 @@
   }
 
   async function dismissAll() {
-    const ids = cards.filter(due).map((c) => c.id);
+    const list = bar?.nextElementSibling;
+    const ids = cards.filter((c) => c.item.parentElement === list && due(c)).map((c) => c.id);
     run = { done: 0, total: ids.length, stop: false, end: 0 };
     draw();
     // Going to another search ends the run. Opening a job changes only currentJobId in the address.
