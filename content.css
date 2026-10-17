@@ -94,10 +94,22 @@
 .rl-pop .rl-add-word:hover { background: #eef5fc; }
 
 
-/* "Dismiss the 7 grey jobs" above a job list (issue #55). */
-.rl-dismiss-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; padding: 8px 12px; font-size: 14px;
+/* The bar above a job list (issue #65): the filters, the switch that hides what they catch, and "Dismiss the 7 grey
+   jobs" (issue #55). */
+.rl-list-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 12px; font-size: 14px;
   line-height: 1.5; color: #1d1d1d; }
-.rl-dismiss-bar .rl-link { font-size: 14px; }
+.rl-list-bar .rl-link { font-size: 14px; }
+.rl-bar-chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 0;
+  border-radius: 15px; background: #e8f0f9; color: #0a4f96; font: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; }
+.rl-bar-chip:hover { background: #d6e6f7; }
+.rl-bar-chip.rl-bar-plain { background: #eef0f2; color: #1d1d1d; font-weight: 400; }
+.rl-bar-chip.rl-bar-plain:hover { background: #e2e5e9; }
+.rl-bar-chip[hidden] { display: none; }
+.rl-list-bar .rl-switch { width: auto; justify-content: flex-start; gap: 8px; }
+.rl-bar-dismiss { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rl-bar-dismiss:empty { display: none; }
+.rl-bar-note { color: #555; }
 
 /* The open job compared with the person's CV (issue #57): bullet points underlined green where the CV shows it,
    amber where it doesn't, red where the person said they don't want it. */

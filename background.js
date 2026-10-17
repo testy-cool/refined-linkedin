@@ -34,6 +34,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
     return true;
   }
   if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
+  // "3 filters on" above a job list opens the pop-up where they are set, or the settings where Chrome won't open it.
+  if (msg.type === "popup") { Promise.resolve().then(() => chrome.action.openPopup()).catch(() => chrome.runtime.openOptionsPage()); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
   if (msg.type === "test") { test(msg.text).then(send, (e) => send({ error: String(e.message || e) })); return true; }
   if (msg.type === "match") {

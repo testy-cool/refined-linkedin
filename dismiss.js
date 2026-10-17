@@ -1,6 +1,8 @@
-// "Dismiss the 7 grey jobs" above a job list clicks LinkedIn's own × on every grey card in it (issue #55): jobs seen,
-// and jobs the pop-up's Grey out switches and lists catch. LinkedIn then stops recommending them. The open job, saved
-// jobs and jobs already dismissed are left alone. content.js hands over the list's cards each time it paints them.
+// The bar above a job list (issue #65): how many Grey out filters are on, which opens the pop-up where they are set;
+// the switch that hides the jobs they catch, with how many are hidden and a way to show them; and "Dismiss the 7 grey
+// jobs", which clicks LinkedIn's own × on every grey card in the list (issue #55): jobs seen, and jobs the filters
+// catch. LinkedIn then stops recommending them. The open job, saved jobs and jobs already dismissed are left alone.
+// content.js hands over the list's cards each time it paints them.
 (() => {
   const GAP_MS = 600; // between two clicks, so they reach LinkedIn one at a time, as a person's would
   // What a card says once dismissed: "We won't show you this job again" on the classic list, "We won't recommend
@@ -25,44 +27,85 @@
     draw();
   }
 
-  function link(text, onClick) {
+  // The bar and its parts are built once, and only their words and switches change after that: a part built anew
+  // under the pointer would swallow a click, on Stop above all. The dismiss part is built once per state: idle,
+  // running and done.
+  let parts = null; // {filters, hide, hidden, dismiss, words}
+
+  // A rounded button with an icon and words; its words are its last child.
+  function chip(icon, onClick, plain) {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "rl-link";
-    b.textContent = text;
+    b.className = plain ? "rl-bar-chip rl-bar-plain" : "rl-bar-chip";
+    b.append(self.RL?.icon(icon, 16) || "", document.createElement("span"));
     b.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
     return b;
   }
 
-  // The bar is built once for each state, idle, running and done, and only its words change after that: a bar
-  // built anew under the pointer would swallow a click on Stop.
-  function build(kind) {
+  function build() {
     const b = document.createElement("div");
-    b.className = "rl-dismiss-bar rl-ui";
-    b.dataset.kind = kind;
-    if (kind === "idle") {
-      const hint = document.createElement("span");
-      hint.className = "rl-hint";
-      hint.textContent = "LinkedIn stops recommending them";
-      b.append(link("", dismissAll), hint);
-    } else if (kind === "running") b.append(document.createElement("span"), link("Stop", () => { run.stop = true; }));
-    else b.append(document.createElement("span"));
-    return b;
+    b.className = "rl-list-bar rl-ui";
+    const filters = chip("filter", () => chrome.runtime.sendMessage({ type: "popup" }));
+    filters.title = "Choose what greys out, in the Refined LinkedIn pop-up";
+    const hide = document.createElement("button");
+    hide.type = "button";
+    hide.className = "rl-switch";
+    hide.setAttribute("role", "switch");
+    const track = document.createElement("span");
+    track.className = "rl-track";
+    hide.append("Hide filtered jobs", track);
+    hide.addEventListener("click", (e) => { e.stopPropagation(); self.RLFilters?.setHiding(!self.RLFilters.hiding); });
+    const hidden = chip("company", () => self.RLFilters?.setShowing(!self.RLFilters.showing), true);
+    const dismiss = document.createElement("span");
+    dismiss.className = "rl-bar-dismiss";
+    b.append(filters, hide, hidden, dismiss);
+    bar = b;
+    parts = { filters, hide, hidden, dismiss, words: null };
   }
+
+  function buildDismiss(kind) {
+    const d = parts.dismiss;
+    d.dataset.kind = kind;
+    parts.words = document.createElement("span");
+    if (kind === "idle") {
+      const b = chip("dismiss", dismissAll, true);
+      b.title = "Clicks LinkedIn's × on each grey job, so LinkedIn stops recommending them";
+      parts.words = b.lastChild;
+      d.replaceChildren(b);
+    } else if (kind === "running") {
+      parts.words.className = "rl-bar-note";
+      const stop = chip("dismiss", () => { run.stop = true; }, true);
+      stop.lastChild.textContent = "Stop";
+      d.replaceChildren(parts.words, stop);
+    } else if (kind === "done") {
+      parts.words.className = "rl-bar-note";
+      d.replaceChildren(parts.words);
+    } else d.replaceChildren();
+  }
+
+  const setText = (el, text) => { if (el.textContent !== text) el.textContent = text; };
 
   function draw() {
     // "Dismissed 7 jobs" stays five seconds.
     if (run?.end && Date.now() - run.end >= 5000) run = null;
     const first = cards.find((c) => c.el.isConnected && c.item.parentElement);
-    const n = cards.filter(due).length;
-    if (!first || (!run && !n)) { bar?.remove(); bar = null; return; }
-    const kind = !run ? "idle" : run.end ? "done" : "running";
-    if (bar?.dataset.kind !== kind) { bar?.remove(); bar = build(kind); }
+    if (!first) { bar?.remove(); bar = null; parts = null; return; }
+    if (!bar) build();
     const list = first.item.parentElement;
     if (bar.nextElementSibling !== list) list.before(bar);
-    const words = kind === "idle" ? `Dismiss the ${n} grey job${n === 1 ? "" : "s"}`
-      : kind === "running" ? `Dismissing ${run.done} of ${run.total}` : `Dismissed ${run.done} job${run.done === 1 ? "" : "s"}`;
-    if (bar.firstChild.textContent !== words) bar.firstChild.textContent = words;
+    const f = self.RLFilters;
+    const count = f?.count || 0;
+    setText(parts.filters.lastChild, count ? `${count} filter${count === 1 ? "" : "s"} on` : "No filters on");
+    parts.hide.setAttribute("aria-checked", String(!!f?.hiding));
+    const k = f?.hiding ? cards.filter((c) => c.el.isConnected && c.el.classList.contains("rl-hideable")).length : 0;
+    parts.hidden.hidden = !k;
+    setText(parts.hidden.lastChild, f?.showing ? `${k} shown · hide them` : `${k} hidden · show them`);
+    const n = cards.filter(due).length;
+    const kind = run ? (run.end ? "done" : "running") : n ? "idle" : "none";
+    if (parts.dismiss.dataset.kind !== kind) buildDismiss(kind);
+    if (kind === "none") return;
+    setText(parts.words, kind === "idle" ? `Dismiss the ${n} grey job${n === 1 ? "" : "s"}`
+      : kind === "running" ? `Dismissing ${run.done} of ${run.total}` : `Dismissed ${run.done} job${run.done === 1 ? "" : "s"}`);
   }
 
   async function dismissAll() {
