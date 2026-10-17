@@ -16,7 +16,7 @@ const $ = (id) => document.getElementById(id);
 })();
 
 // The page shows one section at a time, named in the address after #. A link on a LinkedIn page names the section
-// that fixes what it reports, through "optionsSection", whether this page is open already or not.
+// that fixes what it reports, and the background opens this page there or moves an open one to it.
 const SECTIONS = ["ai", "about", "prompt", "jobs"];
 function openSection(name) {
   if (!SECTIONS.includes(name)) name = "ai";
@@ -29,11 +29,6 @@ function openSection(name) {
 }
 addEventListener("hashchange", () => openSection(location.hash.slice(1)));
 openSection(location.hash.slice(1));
-// Changes arrive in the order they were made, so the latest request wins; a page opening uses one made just before.
-chrome.storage.local.get("optionsSection").then(({ optionsSection: a }) => {
-  if (a?.section && Date.now() - a.at < 10e3) openSection(a.section);
-});
-chrome.storage.onChanged.addListener((ch) => { if (ch.optionsSection?.newValue?.section) openSection(ch.optionsSection.newValue.section); });
 
 // The providers, one choice each with what it needs.
 for (const [kind, p] of Object.entries(PROVIDERS)) {

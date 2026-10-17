@@ -34,12 +34,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
     return true;
   }
   // A settings link on a LinkedIn page names the section that fixes what it reports; the settings page opens there.
-  // Each request is stamped, so two in a row each change the stored value and a page opened later ignores old ones.
-  if (msg.type === "options") {
-    (msg.section ? chrome.storage.local.set({ optionsSection: { section: msg.section, at: Date.now() } }) : Promise.resolve())
-      .then(() => chrome.runtime.openOptionsPage());
-    return;
-  }
+  if (msg.type === "options") { openOptions(msg.section); return; }
   // The pop-up's status line: the saved provider without its key, and what a fold would fail on now, if anything.
   if (msg.type === "ready") {
     settings().then(async (s) => {
@@ -61,6 +56,19 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
   fold(msg.id, msg.text, msg.again).then(send, (e) => send({ error: String(e.message || e) }));
   return true;
 });
+
+// The settings page, at a section when one is named: an open settings tab moves to it and comes forward, or a new
+// tab opens there. The section is the part of the address after #, which the page follows.
+async function openOptions(section) {
+  if (!section) return chrome.runtime.openOptionsPage();
+  const page = chrome.runtime.getURL("options.html");
+  const url = `${page}#${section}`;
+  const tabs = await chrome.runtime.getContexts({ contextTypes: ["TAB"] }).catch(() => []);
+  const tab = tabs.find((c) => c.documentUrl?.startsWith(page));
+  if (!tab) return chrome.tabs.create({ url });
+  await chrome.tabs.update(tab.tabId, { url, active: true });
+  chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+}
 
 // The saved provider. Vlad's build seeds his Bifrost as an "Other OpenAI-compatible API", saved like any other,
 // and a provider saved by an older build as "bifrost" becomes one too. The Codex CLI bridge became Sign in with
