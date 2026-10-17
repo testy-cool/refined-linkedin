@@ -33,10 +33,16 @@
 .jfold-hide { display: none !important; }
 .jfold-nobullet { list-style: none !important; }
 .jfold-shown { color: #666; }
-.jfold-chip { display: block; width: fit-content; margin: 4px 0; padding: 1px 8px; border-radius: 4px; background: #efefeb;
-  color: #666; font-size: 13px; line-height: 1.6; font-weight: 400; font-style: normal; white-space: normal;
-  list-style: none; cursor: pointer; }
-.jfold-chip:hover, .jfold-chip.jfold-opened { background: #e2e2dc; }
+/* A folded passage is a bar the width of the text, with an arrow at its end that opens it. */
+.jfold-chip { display: block; margin: 8px 0; padding: 7px 40px 7px 12px; border-radius: 8px; color: #555; font-size: 14px;
+  line-height: 1.5; font-weight: 400; font-style: normal; white-space: normal; list-style: none; cursor: pointer;
+  background: #f1f3f6 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23666' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center / 16px 16px; }
+.jfold-chip:hover { background-color: #e7eaef; }
+.jfold-chip.jfold-opened { background-color: #e7eaef;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 10l4-4 4 4' fill='none' stroke='%23666' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+/* Notes (issue #1). */
+::highlight(rl-note) { background-color: #fff0a6; }
 .rl-notes { margin: 0; font-size: 14px; line-height: 1.5; color: #1d1d1d; white-space: normal; }
 .rl-job-note { margin: 0 0 10px; padding: 10px 12px; border-radius: 6px; background: #f4f2ee; }
 .rl-job-note-text { font-size: 15px; white-space: pre-wrap; }
