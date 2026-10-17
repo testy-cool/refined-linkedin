@@ -342,7 +342,7 @@
         }[res.error];
         const open = document.createElement("button");
         open.textContent = "Refined LinkedIn settings";
-        open.onclick = () => chrome.runtime.sendMessage({ type: "options" });
+        open.onclick = () => chrome.runtime.sendMessage({ type: "options", section: "ai" });
         status.append(open);
         return;
       }

@@ -15,7 +15,8 @@ const $ = (id) => document.getElementById(id);
   chrome.runtime.reload();
 })();
 
-// The page shows one section at a time, named in the address after #.
+// The page shows one section at a time, named in the address after #. A link on a LinkedIn page names the section
+// that fixes what it reports, through "optionsSection", whether this page is open already or not.
 const SECTIONS = ["ai", "about", "prompt", "jobs"];
 function openSection(name) {
   if (!SECTIONS.includes(name)) name = "ai";
@@ -28,6 +29,14 @@ function openSection(name) {
 }
 addEventListener("hashchange", () => openSection(location.hash.slice(1)));
 openSection(location.hash.slice(1));
+const sectionAsked = async () => {
+  const { optionsSection } = await chrome.storage.local.get("optionsSection");
+  if (!optionsSection) return;
+  await chrome.storage.local.remove("optionsSection");
+  openSection(optionsSection);
+};
+sectionAsked();
+chrome.storage.onChanged.addListener((ch) => { if (ch.optionsSection?.newValue) sectionAsked(); });
 
 // The providers, one choice each with what it needs.
 for (const [kind, p] of Object.entries(PROVIDERS)) {

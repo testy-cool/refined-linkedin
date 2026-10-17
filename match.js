@@ -64,9 +64,9 @@
     if (!body) return;
     const line = el("div", "rl-match");
     body.replaceChildren(line);
-    const settings = () => link("Refined LinkedIn settings", () => chrome.runtime.sendMessage({ type: "options" }));
+    const settings = (section) => link("Refined LinkedIn settings", () => chrome.runtime.sendMessage({ type: "options", section }));
     if (!hasMaterial) {
-      line.append("Compare this job with your CV: add it under About you in ", settings());
+      line.append("Compare this job with your CV: add it under About you in ", settings("about"));
       return;
     }
     const run = async (again) => {
@@ -92,7 +92,7 @@
           NO_ACCESS: "Not compared: allow calls to the model's address by saving it once in ",
           NO_SIGNIN: "Not compared: sign in with ChatGPT in ",
           NO_MATERIAL: "Compare this job with your CV: add it under About you in ",
-        }[res.error], settings());
+        }[res.error], settings(res.error === "NO_MATERIAL" ? "about" : "ai"));
         return;
       }
       if (res?.error) {

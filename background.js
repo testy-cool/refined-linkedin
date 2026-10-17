@@ -33,7 +33,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, send) => {
     run.then(() => send({ ok: true }), (e) => send({ error: String(e.message || e) }));
     return true;
   }
-  if (msg.type === "options") { chrome.runtime.openOptionsPage(); return; }
+  // A settings link on a LinkedIn page names the section that fixes what it reports; the settings page opens there.
+  if (msg.type === "options") {
+    (msg.section ? chrome.storage.local.set({ optionsSection: msg.section }) : Promise.resolve()).then(() => chrome.runtime.openOptionsPage());
+    return;
+  }
   // "3 filters on" above a job list opens the pop-up where they are set, or the settings where Chrome won't open it.
   if (msg.type === "popup") { Promise.resolve().then(() => chrome.action.openPopup()).catch(() => chrome.runtime.openOptionsPage()); return; }
   if (msg.type === "settings") { settings().then((s) => send(s && { ...s, key: undefined, hasKey: !!s.key })); return true; }
