@@ -108,9 +108,18 @@
   // ---- folding -----------------------------------------------------------------------------------------------
 
   function descriptionBox() {
-    return document.querySelector('[componentkey^="JobDetails_AboutTheJob_"] [data-testid="expandable-text-box"]')
+    const expandableText = '[data-testid="expandable-text-box"]';
+    const knownBox = document.querySelector(`[componentkey^="JobDetails_AboutTheJob_"] ${expandableText}`)
       || document.querySelector("#job-details")
       || document.querySelector(".show-more-less-html__markup:not(.jfold-clone)");
+    if (knownBox) return knownBox;
+
+    // New job pages can use an opaque section key but keep the text hook after the heading.
+    for (const box of document.querySelectorAll(`p > ${expandableText}`)) {
+      const heading = box.parentElement.previousElementSibling?.querySelector(":scope > h2");
+      if (heading?.textContent.trim() === "About the job") return box;
+    }
+    return null;
   }
 
   // The description is folded in a copy of LinkedIn's own markup, line by line, so what stays visible keeps its
