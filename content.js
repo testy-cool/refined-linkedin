@@ -3,6 +3,7 @@
 // research/linkedin-descriptions/LINKEDIN-DOM.md.
 (() => {
   const SEEN_AFTER_MS = 1000;
+  const JOB_VIEW = /\/jobs\/view\/(?:[^/]*-)?(\d{6,})/;
 
   let seen = { ids: {}, keys: {} };
   // When each job was posted, worked out from "3 weeks ago" while LinkedIn still shows it: on some lists a card
@@ -48,7 +49,7 @@
 
   function openJob() {
     let id = new URL(location.href).searchParams.get("currentJobId");
-    const path = location.pathname.match(/\/jobs\/view\/(?:[^/]*-)?(\d{6,})/);
+    const path = location.pathname.match(JOB_VIEW);
     if (path) id = path[1];
     const about = document.querySelector('[componentkey^="JobDetails_AboutTheJob_"]');
     if (about) id = about.getAttribute("componentkey").split("_").pop();
@@ -115,9 +116,18 @@
     if (knownBox) return knownBox;
 
     // New job pages can use an opaque section key but keep the text hook after the heading.
+    const standalone = JOB_VIEW.test(location.pathname);
+    const selectedId = new URL(location.href).searchParams.get("currentJobId");
+    if (!standalone && !selectedId) return null;
     for (const box of document.querySelectorAll(`p > ${expandableText}`)) {
       const heading = box.parentElement.previousElementSibling?.querySelector(":scope > h2");
-      if (heading?.textContent.trim() === "About the job") return box;
+      if (heading?.textContent.trim() !== "About the job") continue;
+      if (standalone) return box;
+
+      // Search can change currentJobId before the details pane replaces the previous job.
+      const title = box.closest('[data-testid="lazy-column"]')?.querySelector('p > a[href*="/jobs/view/"]');
+      if (title?.pathname.match(JOB_VIEW)?.[1] === selectedId
+        && (title.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING)) return box;
     }
     return null;
   }
